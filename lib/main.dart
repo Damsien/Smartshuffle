@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:smartshuffle/Controller/LinkRetriever.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
+import 'package:audioplayer/audioplayer.dart';
 
 void main() {
   runApp(MyApp());
@@ -52,6 +54,22 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  AudioPlayer stream = new AudioPlayer();
+
+  void start() async {
+    var link = await TestHtml.retrieve("youtube", "https://youtu.be/rSkuS_srNWI?t=6");
+    print("retrieved !");
+    print(link);
+    await stream.play(link);
+    print("start !");
+    //player.play();
+  }
+  void pause() async {
+    await stream.pause();
+  }
+  void stop() async {
+    await stream.stop();
+  }
 
   void _incrementCounter() async {
     await SpotifySdk.connectToSpotifyRemote(clientId: "80df49f5781b4d648aa528c8ce48f3fd", redirectUrl: "http://localhost:8888/callback");
@@ -106,6 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
+            Text("Spotify"),
             FlatButton(child: Text("Resume"),
             onPressed: () async => {
               SpotifySdk.resume()
@@ -125,6 +144,19 @@ class _MyHomePageState extends State<MyHomePage> {
             FlatButton(child: Text("Disconnect"),
             onPressed: () async => {
               SpotifySdk.disconnect()
+            }),
+            Text("Youtube"),
+            FlatButton(child: Text("Start"),
+            onPressed: () async => {
+              start()
+            }),
+            FlatButton(child: Text("Pause"),
+            onPressed: () async => {
+              pause()
+            }),
+            FlatButton(child: Text("Stop"),
+            onPressed: () async => {
+              stop()
             })
           ],
         ),

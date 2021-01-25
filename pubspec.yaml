@@ -24,6 +24,9 @@ dependencies:
   flutter:
     sdk: flutter
   spotify_sdk: ^1.0.0
+  audioplayer: any
+  http: ^0.12.2
+  html: ^0.14.0+4
 
 
   # The following adds the Cupertino Icons font to your application.
