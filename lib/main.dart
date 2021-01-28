@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/LinkRetriever.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 import 'package:audioplayer/audioplayer.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() {
   runApp(MyApp());
@@ -69,6 +72,22 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   void stop() async {
     await stream.stop();
+  }
+
+  void notif() async {
+    /*FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+    final List<ActiveNotification> activeNotifications =
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.getActiveNotifications();
+    print(activeNotifications);*/
+
+    Process.run('ps', []).then((ProcessResult results) {
+      print(results.stdout);
+    });
+    
   }
 
   void _incrementCounter() async {
@@ -157,6 +176,10 @@ class _MyHomePageState extends State<MyHomePage> {
             FlatButton(child: Text("Stop"),
             onPressed: () async => {
               stop()
+            }),
+            FlatButton(child: Text("Remove notifs"),
+            onPressed: () async => {
+              notif()
             })
           ],
         ),
