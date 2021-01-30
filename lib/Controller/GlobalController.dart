@@ -1,57 +1,38 @@
+import 'package:smartshuffle/Controller/PlatformsLister.dart';
+import 'package:smartshuffle/Controller/Players/PlayersController.dart';
+import 'package:smartshuffle/Model/Object/TrackInformations.dart';
+
 abstract class GlobalController {
 
-  static getCurrentController() {
-    
-  }
-
-  static getPreviousController() {
-
-  }
-
-  static getNextController() {
-    
-  }
-
-
+  
   /*  PLAYER CONTROLLER */
 
-  //Play and resume
-  play({String url});
-  //Pause
-  pause();
-
-  //Add url's track to queue
-  static queue(String url) {}
-  //Skip to the next track in the app's playlist
-  static skipNext() {}
-  //Skip to the previous track in the app's playlist
-  static skipPrevious() {}
-
-  //Seeks to the given position
-  seekTo(int milliseconds);
-  //Adds to the current position
-  seekToRelative(int milliseconds);
-
-  //Toggle shuffle inside the app's playlist
-  toggleShuffle();
-  //Toggle repeat to the current track
-  toggleRepeat();
-
-
-
-  /*  USER'S SERVICES */
-
-  //Add the track to the app's playlist
-  static addToPlaylist(playlistId, trackId) {}
-  //Remove the track from the app's playlist
-  static removeToPlaylist(playlistId, trackId) {}
+  static getPlayerController() {
+    return PlayersController;
+  }
 
 
   /*  PLATFORM SERVICES */
   
+  static getPlatformServices(String platform) {
+    for(MapEntry plat in PlatformsLister.platforms.entries) {
+      if(plat.key == platform)
+        return plat.value;
+    }
+  }
 
+  
 
+  /*  USER'S SERVICES */
 
+  //Add the track to the app's playlist
+  static addTrackToPlaylist(String platform, playlistId, TrackInformations track) {
+    PlatformsLister.platforms[platform].addTrackToPlaylist(playlistId, track);
+  }
+  //Remove the track from the app's playlist
+  static removeTrackFromPlaylist(String platform, playlistId, trackId) {
+    PlatformsLister.platforms[platform].removeTrackFromPlaylist(playlistId, trackId);
+  }
 
 
 }
