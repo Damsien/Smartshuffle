@@ -27,7 +27,7 @@ dependencies:
   audioplayer: any
   http: ^0.12.2
   html: ^0.14.0+4
-  flutter_local_notifications: ^3.0.3
+  device_apps: ^1.2.0
 
 
   # The following adds the Cupertino Icons font to your application.

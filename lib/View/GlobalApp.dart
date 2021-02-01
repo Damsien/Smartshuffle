@@ -34,6 +34,7 @@ class _GlobalApp extends StatefulWidget {
 
 class GlobalApp extends State<_GlobalApp> {
   
+  PageController pageController;
   List<Widget> pages;
 
   int selectedIndex;
@@ -44,10 +45,11 @@ class GlobalApp extends State<_GlobalApp> {
     for(MapEntry elem in PlatformsLister.platforms.entries) {
       PlatformsController ctrl = elem.value;
       for(int i=0; i<10; i++) {
-        int playlistId = ctrl.addPlaylist(PlaylistInformations(
+        PlaylistInformations playlist = ctrl.addPlaylist(PlaylistInformations(
           ctrl.platform.name+" n°$i",
           image: Image(image: NetworkImage('https://picsum.photos/200/300'))
         ));
+        int playlistId = playlist.id;
         for(int j=0; j<Random().nextInt(70); j++) {
           ctrl.addTrackToPlaylist(playlistId, 
             TrackInformations("Track n°$j", "Artist n°$j", 
@@ -78,6 +80,7 @@ class GlobalApp extends State<_GlobalApp> {
       this.pages = [playlistsPage, searchPage, profilePage];
       this.currentPage = this.pages[0];
       this.selectedIndex = 0;
+      this.pageController = PageController(initialPage: selectedIndex);
     });
   }
 
@@ -86,7 +89,7 @@ class GlobalApp extends State<_GlobalApp> {
   void onItemTapped(int index) {
     setState(() {
       this.selectedIndex = index;
-      this.currentPage = this.pages[index];
+      this.pageController.jumpToPage(index);
     });
   }
 
@@ -120,7 +123,6 @@ class GlobalApp extends State<_GlobalApp> {
 
   @override
   Widget build(BuildContext context) {
-    
     return MaterialApp(
       theme: ThemeData(
         brightness: Brightness.dark,
@@ -129,7 +131,11 @@ class GlobalApp extends State<_GlobalApp> {
       ),
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        body: this.currentPage,
+        body: PageView(
+          controller: this.pageController,
+          physics: NeverScrollableScrollPhysics(),
+          children: this.pages,
+        ),
         bottomNavigationBar: BottomNavigationBar(
           items: <BottomNavigationBarItem> [
             BottomNavigationBarItem(

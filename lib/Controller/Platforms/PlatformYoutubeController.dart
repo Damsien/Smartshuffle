@@ -1,8 +1,7 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
+import 'package:smartshuffle/Model/Object/PlaylistInformations.dart';
 import 'package:smartshuffle/View/Pages/Profile/Platforms/PlatformsConnection.dart';
 import 'package:smartshuffle/View/Pages/Profile/Platforms/PlatformsInformation.dart';
 
@@ -23,11 +22,10 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   getPlatformInformations() {
-    Map infos = platform.platformInformations;
-    infos['logo'] = 'assets/logo/youtube_logo.png';
-    infos['icon'] = 'assets/logo/icons/youtube_icon.png';
-    infos['color'] = Colors.red[500];
-    return infos;
+    platform.platformInformations['logo'] = 'assets/logo/youtube_logo.png';
+    platform.platformInformations['icon'] = 'assets/logo/icons/youtube_icon.png';
+    platform.platformInformations['color'] = Colors.red[500];
+    return platform.platformInformations;
   }
 
   @override
@@ -36,7 +34,7 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
-  List getPlaylists() {
+  List<PlaylistInformations> getPlaylists() {
     return platform.playlists;
   }
 
@@ -44,14 +42,14 @@ class PlatformYoutubeController extends PlatformsController {
 
   @override
   connect() {
-    // TODO: implement connect
-    throw UnimplementedError();
+    platform.userInformations['isConnected'] = true;
+    this.updateStates();
   }
 
   @override
   disconnect() {
-    // TODO: implement disconnect
-    throw UnimplementedError();
+    platform.userInformations['isConnected'] = false;
+    this.updateStates();
   }
 
   @override

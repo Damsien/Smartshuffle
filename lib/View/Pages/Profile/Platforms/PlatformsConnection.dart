@@ -1,5 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:smartshuffle/Controller/PlatformsLister.dart';
+
+import '../ProfilePage.dart';
 
 class PlatformsConnection {
 
@@ -12,6 +15,7 @@ class PlatformsConnection {
   //Platforms buttons
 
   static Widget spotifyButton() {
+    var ctrl = PlatformsLister.platforms['spotify'];
     String buttonText = "Connecter Spotify";
 
     return ClipRRect(
@@ -20,7 +24,7 @@ class PlatformsConnection {
         color: Colors.green[800],
         child: OutlineButton(
           splashColor: Colors.green[200],
-          onPressed: () {},
+          onPressed: () => ctrl.connect(),
           highlightElevation: 0,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
@@ -49,6 +53,7 @@ class PlatformsConnection {
 
 
   static Widget youtubeButton() {
+    var ctrl = PlatformsLister.platforms['youtube'];
     String buttonText = "Connecter Youtube";
 
     return ClipRRect(
@@ -57,7 +62,7 @@ class PlatformsConnection {
         color: Colors.red[500],
         child: OutlineButton(
           splashColor: Colors.red[200],
-          onPressed: () {},
+          onPressed: () => ctrl.connect(),
           highlightElevation: 0,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformSpotifyController.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformYoutubeController.dart';
 import 'package:smartshuffle/Controller/PlatformsLister.dart';
+import 'package:smartshuffle/View/Pages/Profile/ProfilePage.dart';
 
 class PlatformsInformation {
 
@@ -44,7 +43,7 @@ class PlatformsInformation {
               child: OutlineButton(
                 splashColor: Colors.red[200],
                 highlightElevation: 0,
-                onPressed: () { ctrl.disconnect(); },
+                onPressed: () => ctrl.disconnect(),
                 child: Icon(Icons.link_off, color: Colors.white)
               )
             )
@@ -91,7 +90,7 @@ class PlatformsInformation {
               child: OutlineButton(
                 splashColor: Colors.red[200],
                 highlightElevation: 0,
-                onPressed: () { ctrl.disconnect(); },
+                onPressed: () => ctrl.disconnect(),
                 child: Icon(Icons.link_off, color: Colors.white)
               )
             )

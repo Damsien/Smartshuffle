@@ -10,8 +10,8 @@ class PlatformsLister {
   static LinkedHashMap platforms = 
   {
     "default": new PlatformDefaultController(Platform("SmartShuffle")),
-    "spotify": new PlatformSpotifyController(Platform("Spotify")),
-    "youtube": new PlatformYoutubeController(Platform("Youtube"))
+    "spotify": new PlatformSpotifyController(Platform("Spotify", platformInformations: {'uri': 'com.spotify.music'})),
+    "youtube": new PlatformYoutubeController(Platform("Youtube", platformInformations: {'uri': 'com.google.android.youtube'}))
   } as LinkedHashMap;
 
 

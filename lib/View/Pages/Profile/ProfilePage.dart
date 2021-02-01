@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/PlatformsLister.dart';
 
 class ProfilePageMain extends StatelessWidget {
@@ -22,12 +23,14 @@ class ProfilePage extends StatefulWidget {
   _ProfilePageState createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientMixin {
+  Key key = UniqueKey();
 
-
+  @override
+    bool get wantKeepAlive => true;
 
   Widget getPlatforms(MapEntry plat) {
-    var platform;
+    Widget platform;
     if(plat.value.getUserInformations()['isConnected'] == false)
       platform = plat.value.getButtonView();
     else
@@ -49,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
             margin: EdgeInsets.only(left: 30, bottom: 30, top: 30),
             child: Text("Connexion", style: TextStyle(fontSize: 35)),
           ),
-          for(var plat in PlatformsLister.platforms.entries) getPlatforms(plat)
+          for(MapEntry plat in PlatformsLister.platforms.entries) getPlatforms(plat)
         ],
       )
     );
@@ -58,7 +61,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    for(MapEntry plat in PlatformsLister.platforms.entries) {
+      plat.value.setProfilePageState(this);
+    }
+
     return MaterialApp(
+      key: this.key,
       theme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.green,
