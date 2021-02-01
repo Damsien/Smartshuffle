@@ -4,11 +4,12 @@ import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/PlaylistInformations.dart';
 import 'package:smartshuffle/View/Pages/Profile/Platforms/PlatformsConnection.dart';
 import 'package:smartshuffle/View/Pages/Profile/Platforms/PlatformsInformation.dart';
-
+import 'package:smartshuffle/Services/spotify/api_controller.dart' as spotify;
 
 class PlatformSpotifyController extends PlatformsController {
-  
   PlatformSpotifyController(Platform platform) : super(platform);
+
+  spotify.API spController = new spotify.API();
 
   @override
   getButtonView() {
@@ -23,7 +24,8 @@ class PlatformSpotifyController extends PlatformsController {
   @override
   getPlatformInformations() {
     platform.platformInformations['logo'] = 'assets/logo/spotify_logo.png';
-    platform.platformInformations['icon'] = 'assets/logo/icons/spotify_icon.png';
+    platform.platformInformations['icon'] =
+        'assets/logo/icons/spotify_icon.png';
     platform.platformInformations['color'] = Colors.green[800];
     return platform.platformInformations;
   }
@@ -38,18 +40,17 @@ class PlatformSpotifyController extends PlatformsController {
     return platform.playlists;
   }
 
-
-
-
   @override
-  connect() {
-    platform.userInformations['isConnected'] = true;
+  connect() async {
+    await spController.login();
+    platform.userInformations['isConnected'] = spController.isLoggedIn;
     this.updateStates();
   }
 
   @override
   disconnect() {
-    platform.userInformations['isConnected'] = false;
+    spController.disconnect();
+    platform.userInformations['isConnected'] = spController.isLoggedIn;
     this.updateStates();
   }
 
@@ -57,8 +58,4 @@ class PlatformSpotifyController extends PlatformsController {
   updateInformations() {
     return null;
   }
-
-
-
-
 }

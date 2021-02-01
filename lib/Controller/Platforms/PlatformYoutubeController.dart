@@ -4,12 +4,13 @@ import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/PlaylistInformations.dart';
 import 'package:smartshuffle/View/Pages/Profile/Platforms/PlatformsConnection.dart';
 import 'package:smartshuffle/View/Pages/Profile/Platforms/PlatformsInformation.dart';
+import 'package:smartshuffle/Services/youtube/api_controller.dart'
+    as ytController;
 
 class PlatformYoutubeController extends PlatformsController {
-  
-  
   PlatformYoutubeController(Platform platform) : super(platform);
 
+  ytController.API yt = new ytController.API();
 
   @override
   getButtonView() {
@@ -23,7 +24,8 @@ class PlatformYoutubeController extends PlatformsController {
 
   getPlatformInformations() {
     platform.platformInformations['logo'] = 'assets/logo/youtube_logo.png';
-    platform.platformInformations['icon'] = 'assets/logo/icons/youtube_icon.png';
+    platform.platformInformations['icon'] =
+        'assets/logo/icons/youtube_icon.png';
     platform.platformInformations['color'] = Colors.red[500];
     return platform.platformInformations;
   }
@@ -38,17 +40,17 @@ class PlatformYoutubeController extends PlatformsController {
     return platform.playlists;
   }
 
-
-
   @override
-  connect() {
-    platform.userInformations['isConnected'] = true;
+  connect() async {
+    await yt.login();
+    platform.userInformations['isConnected'] = yt.isLoggedIn;
     this.updateStates();
   }
 
   @override
-  disconnect() {
-    platform.userInformations['isConnected'] = false;
+  disconnect() async {
+    await yt.disconnect();
+    platform.userInformations['isConnected'] = yt.isLoggedIn;
     this.updateStates();
   }
 
@@ -56,8 +58,4 @@ class PlatformYoutubeController extends PlatformsController {
   updateInformations() {
     return null;
   }
-
-
-
-
 }

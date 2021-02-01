@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "700943721837",
+    "project_id": "ttkcorp-49e73",
+    "storage_bucket": "ttkcorp-49e73.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:700943721837:android:588980f1bcd4b5ac042664",
+        "android_client_info": {
+          "package_name": "com.tqtcorp.smartshuffle"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMZ_UgKPwDMG5qphwTYVhZjDU407Etw4c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
