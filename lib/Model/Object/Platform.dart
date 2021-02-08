@@ -1,7 +1,5 @@
-
-
-import 'package:smartshuffle/Model/Object/PlaylistInformations.dart';
-import 'package:smartshuffle/Model/Object/TrackInformations.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
+import 'package:smartshuffle/Model/Object/Track.dart';
 
 class Platform {
   
@@ -10,11 +8,11 @@ class Platform {
   Map userInformations = {
       'name': 'unknow',
       'account': 'xxx@xxx.com',
-      'isConnected': true
-    };
-  List<PlaylistInformations> playlists = new List<PlaylistInformations>();
+      'isConnected': false
+  };
+  List<Playlist> playlists = new List<Playlist>();
 
-  Platform(String name, {Map platformInformations, Map userInformations, List<PlaylistInformations> playlists}) {
+  Platform(String name, {Map platformInformations, Map userInformations, List<Playlist> playlists}) {
     this.name = name;
     if(platformInformations != null) {
       for(MapEntry plat in platformInformations.entries) {
@@ -26,57 +24,48 @@ class Platform {
     this.platformInformations['name'] = this.name;
   }
 
-  int addTrackToPlaylist(int playlistId, TrackInformations track) {
-    int id;
-    for(PlaylistInformations playlist in playlists) {
-      if(playlist.id == playlistId) id = playlist.addTrack(track);
-    }
+
+
+
+  String addTrackToPlaylistByIndex(int playlistIndex, Track track) {
+    String id = playlists.elementAt(playlistIndex).addTrack(track);
     return id;
   }
-
-  TrackInformations removeTrackFromPlaylist(int playlistId, int trackId) {
-    TrackInformations deletedTrack;
-    for(PlaylistInformations playlist in playlists) {
-      if(playlist.id == playlistId) {
-        deletedTrack = playlist.removeTrack(trackId);
-      }
-    }
+  
+  Track removeTrackFromPlaylistByIndex(int playlistIndex, int trackIndex) {
+    Track deletedTrack = playlists.elementAt(playlistIndex).removeTrack(trackIndex);
     return deletedTrack;
   }
 
-  PlaylistInformations addPlaylist(PlaylistInformations playlist) {
-    for(PlaylistInformations playlist in playlists) {
-      playlist.id = playlist.id+1;
-    }
-    playlists.add(playlist..setId(1));
-    PlaylistInformations newPlaylist = playlists.removeAt(playlists.length-1);
+
+
+  Playlist addPlaylist(Playlist playlist) {
+    playlists.add(playlist);
+    Playlist newPlaylist = playlists.removeAt(playlists.length-1);
     playlists.insert(0, newPlaylist);
     return newPlaylist;
   }
 
-  PlaylistInformations removePlaylist(int playlistId) {
-    PlaylistInformations deletedPlaylist = playlists.removeAt(playlistId-1);
-    for(int i=playlistId-1; i<playlists.length; i++) {
-      playlists.elementAt(i).id = i+1;
-    }
+  Playlist removePlaylist(int playlistIndex) {
+    Playlist deletedPlaylist = playlists.removeAt(playlistIndex);
     return deletedPlaylist;
   }
 
-  void addAppUri(String uri) {
-    platformInformations['uri'] = uri;
+
+
+  List<Playlist> setPlaylist(List<Playlist> playlists) {
+    return this.playlists = playlists;
   }
 
-  List<PlaylistInformations> reorder(int oldIndex, int newIndex) {
-    int id = playlists.elementAt(oldIndex).id;
-    for(int i=id; i<playlists.length; i++) {
-      playlists.elementAt(i).id = i;
-    }
-    PlaylistInformations elem = playlists.removeAt(oldIndex);
-    for(int i=newIndex; i<playlists.length; i++) {
-      playlists.elementAt(i).id = i+2;
-    }
+
+
+  void addAppPackage(String package) {
+    platformInformations['package'] = package;
+  }
+
+  List<Playlist> reorder(int oldIndex, int newIndex) {
+    Playlist elem = playlists.removeAt(oldIndex);
     playlists.insert(newIndex, elem);
-    elem.id = newIndex+1;
     //Save in system
     return playlists;
   }

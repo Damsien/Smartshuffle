@@ -1,10 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/PlatformsLister.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 
-import 'package:smartshuffle/Model/Object/PlaylistInformations.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:smartshuffle/Model/Object/Track.dart';
 
 class PlaylistsPageMain extends StatelessWidget {
   @override
@@ -27,13 +30,18 @@ class PlaylistsPage extends StatefulWidget {
   _PlaylistsPageState createState() => _PlaylistsPageState();
 }
 
-class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveClientMixin {
+class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
 
   Key key = UniqueKey();
+  Key tabKey = UniqueKey();
 
   Map userPlatforms = new Map();
-  List<bool> isTracksListView = new List<bool>();
-  List<Widget> tabView;
+  Map tracksViews = new Map();
+
+  bool exitPage = true;
+  TabController _tabController;
+  int initialTabIndex = 0;
+  List<Widget> tabView = new List<Widget>();
 
   @override
   bool get wantKeepAlive => true;
@@ -46,7 +54,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
   // TODO: Fix try catch doesn't work
   openApp(Platform platform) async {
     try {
-      DeviceApps.openApp(platform.platformInformations['uri']);
+      DeviceApps.openApp(platform.platformInformations['package']);
     } catch (error) {
       showDialog(
         context: context,
@@ -67,6 +75,141 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       );
     }
   }
+
+
+
+  bool returnToPlaylist(ServicesLister element) {
+    setState(() {
+      this.tracksViews[element][1] = false;
+    });
+    //this.tabListener(element: element);
+    setState(() { this.exitPage = true; });
+    return false;
+  }
+  
+
+  
+  openPlaylist(int tabIndex, MapEntry elem, Playlist playlist) {
+    List<Track> tracks = playlist.getTracks();
+    PlatformsController ctrl = elem.value;
+    Key reorderKey = UniqueKey();
+
+    WillPopScope tracksWidget = WillPopScope(
+      key: PageStorageKey('TabBarView:'+ctrl.platform.name+':Playlist['+playlist.id.toString()+']:Tracks'),
+      onWillPop: () async {
+        return returnToPlaylist(elem.key);
+      },
+      child: Theme(
+        data: ThemeData(
+          brightness: Brightness.dark,
+          canvasColor: Colors.transparent
+        ),
+        child: ReorderableListView(
+          key: reorderKey,
+          onReorder: (int oldIndex, int newIndex) {
+            setState(() {
+              tracks = playlist.reorder(oldIndex, newIndex);
+              this.tabKey = UniqueKey();
+            });
+          },
+          header: Container(
+            width: WidgetsBinding.instance.window.physicalSize.width,
+            height: 165,
+            margin: EdgeInsets.only(left: 30, right: 30, bottom: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                InkWell(
+                  onTap: () => renamePlaylist(context, playlist),
+                  child: Container(
+                    margin: EdgeInsets.only(top: 30, bottom: 20),
+                    child: Row(
+                      children: [
+                        InkWell(
+                          onTap: () => returnToPlaylist(elem.key),
+                          child: Container(
+                            child: Icon(Icons.arrow_back),
+                            margin: EdgeInsets.all(5),
+                          ),
+                        ),
+                        Text(playlist.name, style: TextStyle(fontSize: 30))
+                      ],
+                    )
+                  )
+                ),
+                InkWell(
+                  onTap: () => {  },
+                  child: FractionallySizedBox(
+                    heightFactor: 0.5,
+                    child: playlist.image
+                  )
+                )
+              ]
+            )
+          ),
+          children: List.generate(
+            tracks.length,
+            (index) {
+              return Container(
+                key: ValueKey('ReorderableListView:Tracks:$index'),
+                margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
+                child: InkWell(
+                  child: Card(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          flex: 5,
+                          child: ListTile(
+                            title: Text(tracks.elementAt(index).name),
+                            leading: FractionallySizedBox(
+                              heightFactor: 0.8,
+                              child: tracks.elementAt(index).image
+                            ),
+                            subtitle: Text(tracks.elementAt(index).artist),
+                            onLongPress: () {},
+                            onTap: () {},
+                          )
+                        ),
+                        Flexible(
+                          flex: 1,
+                          child: Container(
+                            margin: EdgeInsets.only(left:20, right: 20),
+                            child: Icon(Icons.drag_handle)
+                          )
+                        )
+                      ]
+                    )
+                  )
+                )
+              );
+            }
+          )
+        )
+      )
+    );
+    setState(() {
+      this.tracksViews[elem.key] = [tracksWidget, true];
+      this.tabView[this._tabController.index] = tracksWidget;
+      this.initialTabIndex = tabIndex;
+      this.tabKey = UniqueKey();
+    });
+    this._tabController.notifyListeners();
+  }
+
+
+  void tabListener({ServicesLister element}) {
+    int index = this._tabController.index;
+    if(this.tabView[index].key.toString().contains('Tracks')) {
+      setState(() { this.exitPage = false; this.initialTabIndex = index; });
+    } else {
+      setState(() { this.exitPage = true; this.initialTabIndex = index; });
+    }
+    print(this.tabView[index].key.toString());
+    print(this._tabController.index);
+    print(this.exitPage);
+  }
+
+
 
 
   createPlaylist(PlatformsController ctrl) {
@@ -106,7 +249,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
               onPressed: () {
                 Navigator.pop(dialogContext);
                 setState(() {
-                  ctrl.platform.addPlaylist(PlaylistInformations(value));
+                  ctrl.addPlaylist(value);
                 });
               },
             )
@@ -117,25 +260,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     );
   }
 
-  
-  openPlaylist(int tabIndex, PlaylistInformations playlist) {
-    Container tracks = Container(
-      child: Text(playlist.name)
-    );
-    setState(() {
-      this.tabView.removeAt(tabIndex);
-      this.isTracksListView.insert(tabIndex, true);
-      this.tabView.insert(tabIndex, tracks);
-      this.key = UniqueKey();
-    });
-    for(var el in this.tabView) {
-      print(el);
-    }
-  }
 
-
-
-  void removePlaylist(BuildContext context, PlatformsController ctrl, PlaylistInformations playlist) {
+  void removePlaylist(BuildContext context, PlatformsController ctrl, Playlist playlist, int index) {
     Navigator.pop(context);
     String name = playlist.name;
 
@@ -156,7 +282,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
               onPressed: () {
                 Navigator.pop(dialogContext);
                 setState(() {
-                  ctrl.removePlaylist(playlist.id);
+                  ctrl.removePlaylist(index);
                 });
               },
             )
@@ -166,7 +292,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       }
     );
   }
-  void renamePlaylist(BuildContext context, PlaylistInformations playlist) {
+  void renamePlaylist(BuildContext context, Playlist playlist) {
     Navigator.pop(context);
     String name = playlist.name;
     String value = playlist.name;
@@ -208,7 +334,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       }
     );
   }
-  playlistOption(PlatformsController ctrl, PlaylistInformations playlist) {
+  playlistOption(PlatformsController ctrl, Playlist playlist, int index) {
     String name = playlist.name;
     showDialog(
       context: context,
@@ -227,7 +353,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
               Container(
                 child: FlatButton(
                   child: Text("Supprimer", style: TextStyle(color: Colors.white)),
-                  onPressed: () => removePlaylist(dialogContext, ctrl, playlist),
+                  onPressed: () => removePlaylist(dialogContext, ctrl, playlist, index),
                 ),
               ),
               Container(
@@ -245,11 +371,12 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
   }
 
 
-  Widget generatePlaylist(int tabIndex, PlatformsController ctrl) {
+  Future<Widget> generatePlaylist(int tabIndex, MapEntry elem)  async {
+    PlatformsController ctrl = elem.value;
+    List<Playlist> playlists = await ctrl.getPlaylists();
 
-    List<PlaylistInformations> playlists = ctrl.getPlaylists();
     return Theme(
-      key: PageStorageKey('TabBarView:'+ctrl.platform.name),
+      key: PageStorageKey('TabBarView:'+ctrl.platform.name+':Playlists'),
       data: ThemeData(
         brightness: Brightness.dark,
         canvasColor: Colors.transparent
@@ -304,7 +431,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
           playlists.length,
           (index) {
             return Container(
-              key: ValueKey('ReorderableListView:$index'),
+              key: ValueKey('ReorderableListView:Playlists:$index'),
               margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
               child: InkWell(
                 child: Card(
@@ -319,8 +446,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
                             child: playlists.elementAt(index).image
                           ),
                           subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" tracks"),
-                          onLongPress: () => playlistOption(ctrl, playlists.elementAt(index)),
-                          onTap: () => openPlaylist(tabIndex, playlists.elementAt(index)),
+                          onLongPress: () => playlistOption(ctrl, playlists.elementAt(index), index),
+                          onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
                         )
                       ),
                       Flexible(
@@ -342,12 +469,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
   }
 
 
-  List<Widget> tab() {
-    List elements = new List<Widget>();
+  Future<List<Widget>> tab() async {
+    List<Widget> elements = new List<Widget>();
     int i=0;
     for(MapEntry elem in this.userPlatforms.entries) {
-      //if(this.tabView.elementAt)
-      elements.add(generatePlaylist(i, elem.value));
+      if(this.tracksViews[elem.key] != null && this.tracksViews[elem.key][1] == true)
+        elements.add(this.tracksViews[elem.key][0]);
+      else
+        elements.add(await generatePlaylist(i, elem));
       i++;
     }
     return elements;
@@ -362,26 +491,33 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       elements.add(el);
     }
     return TabBar(
+      controller: this._tabController,
       tabs: elements,
     );
   }
 
 
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
     this.userPlatforms.clear();
     for(MapEntry elem in PlatformsLister.platforms.entries) {
       elem.value.setPlaylistsPageState(this);
-      if(elem.value.getUserInformations()['isConnected'] == true) {
+      if(elem.value.getUserInformations()['isConnected'] == true)
         this.userPlatforms[elem.key] = elem.value;
-        this.isTracksListView.add(false);
-      }
     }
-    this.tabView = tab();
-    for(var el in this.tabView) {
-      print(el);
-    }
+    this.tabView = new List<Widget>(this.userPlatforms.length);
+    if(this.initialTabIndex >= this.userPlatforms.length)
+      this.initialTabIndex = 0;
+
+    this._tabController = new TabController(
+      length: this.userPlatforms.length,
+      initialIndex: this.initialTabIndex,
+      vsync: this
+    );
+    this._tabController.addListener( () => tabListener());
 
     return MaterialApp(
       theme: ThemeData(
@@ -390,24 +526,78 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       debugShowCheckedModeBanner: false,
-      home: DefaultTabController(
-        length: this.userPlatforms.length,
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text("Playlists"),
-            bottom: tabBar()
-          ),
-          body: Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            color: Colors.black54,
-            child: TabBarView(
-              children: this.tabView,
-            ),
-          )
+      home: Container(
+        key: this.tabKey,
+        child: FutureBuilder(
+          future: tab(),
+          builder: (BuildContext context, AsyncSnapshot<List<Widget>> snapshot) {
+            Scaffold scaffold;
+            this.tabView = snapshot.data;
+            if(snapshot.hasData) {
+              scaffold = Scaffold(
+              appBar: AppBar(
+                title: Text("Bibliotèque"),
+                bottom: tabBar()
+              ),
+              body: WillPopScope(
+                onWillPop: () async {
+                  if(this.exitPage) {
+                    if(this._tabController.index != 0) {
+                      setState(() {
+                        this.initialTabIndex = 0;
+                      });
+                      this._tabController.animateTo(0);
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (dialogContext) {
+                          return AlertDialog(
+                            title: Text("Êtes-vous sûr de vouloir quitter l'application ?", style: TextStyle(color: Colors.white)),
+                            actions: [
+                              FlatButton(child: Text("Non", style: TextStyle(color: Colors.white)), onPressed: () => Navigator.pop(dialogContext)),
+                              FlatButton(child: Text("Oui", style: TextStyle(color: Colors.white)), onPressed: () => exit(0)),
+                            ],
+                            backgroundColor: Colors.grey[800],
+                          );
+                        }
+                      );
+                    }
+                  }
+                  return !this.exitPage;
+                },
+                child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                        color: Colors.black54,
+                        child: TabBarView(
+                          controller: this._tabController,
+                          children: this.tabView,
+                        ),
+                      )
+                    )
+              );
+            } else {
+              scaffold = Scaffold(
+                appBar: AppBar(
+                  title: Text("Bibliotèque"),
+                  bottom: tabBar(),
+                ),
+                body: Container(
+                  color: Colors.black54,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator()
+                )
+              );
+            }
+
+            return scaffold;
+
+          },
         )
-      )
-    );
+        
+        
+        )
+      );
     
   }
 }

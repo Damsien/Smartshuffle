@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/models/Song.dart';
 
 import 'api_path.dart';
@@ -6,7 +8,8 @@ import 'package:http/http.dart';
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:smartshuffle/models/Playlist.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
+import 'package:smartshuffle/Model/Object/Track.dart';
 import 'api_auth.dart';
 
 class API {
@@ -31,7 +34,7 @@ class API {
     return _playlistList(json);
   }
 
-  Future<List<Song>> getPlaylistSongs(Playlist playlist) async {
+  Future<List<Track>> getPlaylistSongs(Playlist playlist) async {
     Response response = await get(APIPath.getPlaylistSongs(playlist),
         headers: _prepareHeader());
     Map json = jsonDecode(response.body);
@@ -65,13 +68,13 @@ class API {
     for (int i = 0; i < items.length; i++) {
       String id = items[i]['id'];
       String name = items[i]['snippet']['title'];
-      list.add(Playlist(id: id, name: name));
+      list.add(Playlist(id: id, name: name, service: ServicesLister.YOUTUBE));
     }
     return list;
   }
 
-  List<Song> _songsList(Map json) {
-    List<Song> list = new List();
+  List<Track> _songsList(Map json) {
+    List<Track> list = new List();
     List<dynamic> items = json['items'];
     for (int i = 0; i < items.length; i++) {
       String name = items[i]['snippet']['title'];
@@ -79,7 +82,7 @@ class API {
       //* Le format standard d'image est 640x480
       String imageUrl = items[i]['snippet']['thumbnails']['standard']['url'];
       list.add(
-          Song(id: id, name: name, service: 'youtube', imageUrl: imageUrl));
+          Track(id: id, name: name, service: ServicesLister.YOUTUBE, image: Image(image: NetworkImage(imageUrl)), artist: 'unknow'));
     }
     return list;
   }

@@ -1,11 +1,11 @@
-import 'package:smartshuffle/models/Song.dart';
-import 'package:smartshuffle/models/Playlist.dart';
+import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
 
 class MusicController {
   static final MusicController _instance = MusicController._internal();
-  Song _currentSong;
-  List<Song> _songs = new List();
-  List<Song> _queue = new List();
+  Track _currentSong;
+  List<Track> _songs = new List();
+  List<Track> _queue = new List();
   Playlist _playlist;
 
   factory MusicController() {
@@ -14,11 +14,11 @@ class MusicController {
 
   MusicController._internal();
 
-  Song get currentSong {
+  Track get currentSong {
     return _currentSong;
   }
 
-  List<Song> get queue {
+  List<Track> get queue {
     return _queue;
   }
 
@@ -26,8 +26,8 @@ class MusicController {
     return _playlist;
   }
 
-  void play(Song s, Playlist p) {
-    _songs = p.getSongs;
+  void play(Track s, Playlist p) {
+    _songs = p.getTracks();
   }
 
   void next() {
@@ -49,11 +49,11 @@ class MusicController {
 
   void smartShuffle(Playlist p) {}
 
-  void addToQueue(Song s) {
+  void addToQueue(Track s) {
     _queue.add(s);
   }
 
-  void removeFromQueue(Song s) {
+  void removeFromQueue(Track s) {
     _queue.remove(s);
   }
 }

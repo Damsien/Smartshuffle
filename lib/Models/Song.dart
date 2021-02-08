@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
-class Song extends Equatable {
+/*class Song extends Equatable {
   Song(
       {@required this.name,
       @required this.service,
@@ -46,3 +46,4 @@ class Song extends Equatable {
     });
   }
 }
+*/

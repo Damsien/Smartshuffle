@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'Song.dart';
 
-class Playlist extends Equatable {
+/*class Playlist extends Equatable {
   Playlist({@required this.name, @required this.id, this.track_uri});
   final String name;
   final String id;
@@ -38,4 +38,4 @@ class Playlist extends Equatable {
   void addSong(Song song) {
     _songs.add(song);
   }
-}
+}*/

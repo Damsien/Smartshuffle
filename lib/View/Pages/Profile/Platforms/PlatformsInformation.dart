@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:smartshuffle/Controller/PlatformsLister.dart';
-import 'package:smartshuffle/View/Pages/Profile/ProfilePage.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class PlatformsInformation {
 
 
   static spotifyInformation() {
-    var ctrl = PlatformsLister.platforms['spotify'];
+    var ctrl = PlatformsLister.platforms[ServicesLister.SPOTIFY];
     var name = ctrl.getUserInformations()['name'];
     var account = ctrl.getUserInformations()['account'];
     return Row(
@@ -54,7 +53,7 @@ class PlatformsInformation {
   }
 
   static youtubeInformation() {
-    var ctrl = PlatformsLister.platforms['youtube'];
+    var ctrl = PlatformsLister.platforms[ServicesLister.YOUTUBE];
     var name = ctrl.getUserInformations()['name'];
     var account = ctrl.getUserInformations()['account'];
     return Row(

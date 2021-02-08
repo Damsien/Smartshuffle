@@ -2,9 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/PlatformsLister.dart';
-import 'package:smartshuffle/Model/Object/PlaylistInformations.dart';
-import 'package:smartshuffle/Model/Object/TrackInformations.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
+import 'package:smartshuffle/Model/Object/Track.dart';
 
 import 'Pages/Playlists/PlaylistsPage.dart';
 import 'Pages/Profile/ProfilePage.dart';
@@ -42,27 +42,30 @@ class GlobalApp extends State<_GlobalApp> {
 
 
   void fakers() {
-    for(MapEntry elem in PlatformsLister.platforms.entries) {
-      PlatformsController ctrl = elem.value;
+      PlatformsController ctrl = PlatformsLister.platforms[ServicesLister.DEFAULT];
       for(int i=0; i<10; i++) {
-        PlaylistInformations playlist = ctrl.addPlaylist(PlaylistInformations(
+        ctrl.addPlaylist(
           ctrl.platform.name+" n°$i",
           image: Image(image: NetworkImage('https://picsum.photos/200/300'))
-        ));
-        int playlistId = playlist.id;
+        );
+      }
+      for(int i=0; i<10; i++) {
         for(int j=0; j<Random().nextInt(70); j++) {
-          ctrl.addTrackToPlaylist(playlistId, 
-            TrackInformations("Track n°$j", "Artist n°$j", 
-              Duration(
+          ctrl.addTrackToPlaylist(i, 
+            Track(
+              name: "Track n°$j", 
+              artist: "Artist n°$i", 
+              duration: Duration(
                 minutes: Random().nextInt(4),
                 seconds: Random().nextInt(59)
               ),
-              "some data"
+              service: ServicesLister.DEFAULT,
+              image: Image(image: NetworkImage('https://picsum.photos/400/400')),
+              id: j
             )
           );
         }
       }
-    }
   }
 
   @override

@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:smartshuffle/Controller/PlatformsLister.dart';
-
-import '../ProfilePage.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class PlatformsConnection {
 
@@ -15,7 +13,7 @@ class PlatformsConnection {
   //Platforms buttons
 
   static Widget spotifyButton() {
-    var ctrl = PlatformsLister.platforms['spotify'];
+    var ctrl = PlatformsLister.platforms[ServicesLister.SPOTIFY];
     String buttonText = "Connecter Spotify";
 
     return ClipRRect(
@@ -53,7 +51,7 @@ class PlatformsConnection {
 
 
   static Widget youtubeButton() {
-    var ctrl = PlatformsLister.platforms['youtube'];
+    var ctrl = PlatformsLister.platforms[ServicesLister.SPOTIFY];
     String buttonText = "Connecter Youtube";
 
     return ClipRRect(

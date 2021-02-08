@@ -1,4 +1,4 @@
-import 'package:smartshuffle/models/Playlist.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
 
 class APIPath {
   static String getPlaylistsList() {

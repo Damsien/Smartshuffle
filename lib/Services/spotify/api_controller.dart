@@ -1,3 +1,6 @@
+import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/models/Song.dart';
 
 import 'api_path.dart';
@@ -6,7 +9,7 @@ import 'package:http/http.dart';
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:smartshuffle/models/Playlist.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'api_auth.dart';
 
 class API {
@@ -31,7 +34,7 @@ class API {
     return _playlistList(json);
   }
 
-  Future<List<Song>> getPlaylistSongs(Playlist playlist) async {
+  Future<List<Track>> getPlaylistSongs(Playlist playlist) async {
     Response response = await get(APIPath.getPlaylistSongs(playlist),
         headers: _prepareHeader());
     Map json = jsonDecode(response.body);
@@ -66,13 +69,13 @@ class API {
       String id = items[i]['id'];
       String name = items[i]['name'];
       String trackUri = items[i]['tracks']['href'];
-      list.add(Playlist(id: id, name: name, track_uri: trackUri));
+      list.add(Playlist(id: id, name: name, uri: trackUri, service: ServicesLister.SPOTIFY));
     }
     return list;
   }
 
-  List<Song> _songsList(Map json) {
-    List<Song> list = new List();
+  List<Track> _songsList(Map json) {
+    List<Track> list = new List();
     List<dynamic> items = json['items'];
     for (int i = 0; i < items.length; i++) {
       String name = "None";
@@ -86,11 +89,11 @@ class API {
         artist = items[i]['track']['album']['artists'][0]['name'];
         imageUrl = items[i]['track']['album']['images'][0]['url'];
       } catch (e) {}
-      list.add(Song(
+      list.add(Track(
           id: id,
           name: name,
-          service: 'spotify',
-          imageUrl: imageUrl,
+          service: ServicesLister.SPOTIFY,
+          image: Image(image: NetworkImage(imageUrl)),
           artist: artist));
     }
     return list;

@@ -1,6 +1,6 @@
-import 'package:smartshuffle/Controller/PlatformsLister.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Players/PlayersController.dart';
-import 'package:smartshuffle/Model/Object/TrackInformations.dart';
+import 'package:smartshuffle/Model/Object/Track.dart';
 
 abstract class GlobalController {
 
@@ -26,7 +26,7 @@ abstract class GlobalController {
   /*  USER'S SERVICES */
 
   //Add the track to the app's playlist
-  static addTrackToPlaylist(String platform, playlistId, TrackInformations track) {
+  static addTrackToPlaylist(String platform, playlistId, Track track) {
     PlatformsLister.platforms[platform].addTrackToPlaylist(playlistId, track);
   }
   //Remove the track from the app's playlist

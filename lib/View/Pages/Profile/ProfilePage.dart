@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/PlatformsLister.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class ProfilePageMain extends StatelessWidget {
   @override

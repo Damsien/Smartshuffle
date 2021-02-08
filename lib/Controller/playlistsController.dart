@@ -1,6 +1,6 @@
-import 'package:smartshuffle/models/Playlist.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
 
-class PlaylistsController {
+/*class PlaylistsController {
   static List<Playlist> playlists = new List();
 
   static void addPlaylist(Playlist playlist) {
@@ -16,4 +16,4 @@ class PlaylistsController {
 
 //TODO: supprimer plusieurs playlist
   static void deletePlaylists(List<Playlist> _playlists) {}
-}
+}*/
