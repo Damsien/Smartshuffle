@@ -3,6 +3,7 @@ import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/View/ViewGetter/ViewGetter.dart';
 
 abstract class PlatformsController {
 
@@ -48,9 +49,9 @@ abstract class PlatformsController {
 
   /*  VIEWS   */
 
-  Widget getButtonView();
-
-  Widget getInformationView();
+  Widget getView({@required ServicesLister service, @required ViewType view}) {
+    return ViewGetter.getView(service: service, view: view);
+  }
 
 
   /*  INFORMATIONS  */
@@ -60,6 +61,8 @@ abstract class PlatformsController {
   getUserInformations();
 
   Future<List<Playlist>> getPlaylists();
+
+  Future<List<Track>> getTracks(Playlist playlist);
 
 
   /*  CONNECTION    */
@@ -76,11 +79,11 @@ abstract class PlatformsController {
     return this.platform.addTrackToPlaylistByIndex(playlistIndex, track);
   }
   //Remove the track from the app's playlist
-  Track removeTrackFromPlaylist(int playlistIndex, int trackId) {
-    return this.platform.removeTrackFromPlaylistByIndex(playlistIndex, trackId);
+  Track removeTrackFromPlaylist(int playlistIndex, int trackIndex) {
+    return this.platform.removeTrackFromPlaylistByIndex(playlistIndex, trackIndex);
   }
   //Add the track to the app's playlist
-  Playlist addPlaylist(String name, {Image image, String playlistUri, List<MapEntry<Track, DateTime>> tracks});
+  Playlist addPlaylist({@required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks});
   //Remove the track from the app's playlist
   Playlist removePlaylist(int playlistIndex);
 

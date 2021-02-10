@@ -16,16 +16,6 @@ class PlatformDefaultController extends PlatformsController {
   }
 
   @override
-  getButtonView() {
-    return Container();
-  }
-
-  @override
-  getInformationView() {
-    return Container();
-  }
-
-  @override
   getPlatformInformations() {
     platform.platformInformations['logo'] = 'assets/logo/smartshuffle.png';
     platform.platformInformations['icon'] = 'assets/logo/icons/smartshuffle.png';
@@ -36,6 +26,7 @@ class PlatformDefaultController extends PlatformsController {
   @override
   getUserInformations() {
     platform.userInformations['isConnected'] = true;
+    platform.userInformations['ownerId'] = "";
     return platform.userInformations;
   }
 
@@ -43,6 +34,13 @@ class PlatformDefaultController extends PlatformsController {
   Future<List<Playlist>> getPlaylists() {
     Completer<List<Playlist>> completer = Completer<List<Playlist>>();
     completer.complete(platform.playlists);
+    return completer.future;
+  }
+
+  @override
+  Future<List<Track>> getTracks(Playlist playlist) {
+    Completer<List<Track>> completer = Completer<List<Track>>();
+    completer.complete(playlist.getTracks());
     return completer.future;
   }
 
@@ -67,12 +65,14 @@ class PlatformDefaultController extends PlatformsController {
   }
 
   @override
-  Playlist addPlaylist(String name, {Image image, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
+  Playlist addPlaylist({@required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
     return this.platform.addPlaylist(Playlist(
      name: name, 
+     ownerId: ownerId,
+     ownerName: ownerName,
      id: this.platform.playlists.length.toString(),
      service: ServicesLister.DEFAULT,
-     image: image, 
+     imageUrl: imageUrl, 
      uri: playlistUri,
      tracks: tracks
     ));

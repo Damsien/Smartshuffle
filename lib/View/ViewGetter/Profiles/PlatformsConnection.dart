@@ -5,9 +5,11 @@ import 'package:smartshuffle/Controller/ServicesLister.dart';
 class PlatformsConnection {
 
 
-  //Connection functions
-
-
+  static getView(ServicesLister service) {
+    if(service == ServicesLister.YOUTUBE) return PlatformsConnection.youtubeButton();
+    else if(service == ServicesLister.SPOTIFY) return PlatformsConnection.spotifyButton();
+    else return Container();
+  }
 
 
   //Platforms buttons

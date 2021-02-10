@@ -3,10 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
-import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/View/Pages/Librairie/PlaylistsPage.dart';
 
-import 'Pages/Playlists/PlaylistsPage.dart';
 import 'Pages/Profile/ProfilePage.dart';
 import 'Pages/Search/SearchPage.dart';
 
@@ -45,8 +44,9 @@ class GlobalApp extends State<_GlobalApp> {
       PlatformsController ctrl = PlatformsLister.platforms[ServicesLister.DEFAULT];
       for(int i=0; i<10; i++) {
         ctrl.addPlaylist(
-          ctrl.platform.name+" n°$i",
-          image: Image(image: NetworkImage('https://picsum.photos/200/300'))
+          name: ctrl.platform.name+" n°$i",
+          imageUrl: 'https://source.unsplash.com/random',
+          ownerId: ""
         );
       }
       for(int i=0; i<10; i++) {
@@ -60,8 +60,8 @@ class GlobalApp extends State<_GlobalApp> {
                 seconds: Random().nextInt(59)
               ),
               service: ServicesLister.DEFAULT,
-              image: Image(image: NetworkImage('https://picsum.photos/400/400')),
-              id: j
+              imageUrl: 'https://source.unsplash.com/random',
+              id: j.toString()
             )
           );
         }

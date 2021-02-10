@@ -7,17 +7,21 @@ class Playlist {
   String id;
   String name;
   String uri;
-  Image image;
+  String ownerId;
+  String ownerName;
+  String imageUrl;
   ServicesLister service;
 
   List<MapEntry<Track, DateTime>> tracks = new List<MapEntry<Track, DateTime>>();
 
-  Playlist({@required String name, @required String id, @required ServicesLister service, Image image, String uri, List<MapEntry<Track, DateTime>> tracks}) {
+  Playlist({@required String name, @required String id, @required ServicesLister service, @required String ownerId, String imageUrl, String uri, String ownerName, List<MapEntry<Track, DateTime>> tracks}) {
     this.name = name;
+    this.ownerId = ownerId;
     if(id != null) this.id = id;
-    if(image != null) this.image = image;
+    if(imageUrl != null) this.imageUrl = imageUrl;
     if(tracks != null) this.tracks = tracks;
     if(uri != null) this.uri = uri;
+    if(ownerName != null) this.ownerName = ownerName;
     if(service != null) this.service = service;
   }
 
@@ -57,9 +61,11 @@ class Playlist {
 
   List<Track> setTracks(List<Track> tracks) {
     List<Track> allTracks = tracks;
+    this.tracks.clear();
     for(Track track in allTracks) {
       this.tracks.add(MapEntry(track, DateTime.now())); 
     }
+    return allTracks;
   }
 
 

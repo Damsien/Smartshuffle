@@ -82,7 +82,7 @@ class API {
       //* Le format standard d'image est 640x480
       String imageUrl = items[i]['snippet']['thumbnails']['standard']['url'];
       list.add(
-          Track(id: id, name: name, service: ServicesLister.YOUTUBE, image: Image(image: NetworkImage(imageUrl)), artist: 'unknow'));
+          Track(id: id, name: name, service: ServicesLister.YOUTUBE, imageUrl: imageUrl, artist: 'unknow'));
     }
     return list;
   }

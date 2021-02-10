@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/View/ViewGetter/ViewGetter.dart';
 
 class ProfilePageMain extends StatelessWidget {
   @override
@@ -32,9 +32,9 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
   Widget getPlatforms(MapEntry plat) {
     Widget platform;
     if(plat.value.getUserInformations()['isConnected'] == false)
-      platform = plat.value.getButtonView();
+      platform = plat.value.getView(service: plat.key, view: ViewType.PlatformConnection);
     else
-      platform = plat.value.getInformationView();
+      platform = plat.value.getView(service: plat.key, view: ViewType.PlatformInformation);
     return Container(
       alignment: Alignment.centerLeft,
       margin: EdgeInsets.only(left: 30, bottom: 20),

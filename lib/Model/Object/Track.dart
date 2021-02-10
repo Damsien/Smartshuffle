@@ -9,18 +9,19 @@ class Track {
   String album;
   Duration duration;
   ServicesLister service;
-  Image image;
+  String imageUrl;
 
   Track({@required String name,
    @required String artist,
    @required ServicesLister service,
    @required id,
-   Duration duration, String album, Image image}) {
+   Duration duration, String album, String imageUrl}) {
+    this.id = id;
     this.name = name;
     this.artist = artist;
     this.duration = duration;
     if(album != null) this.album = album;
-    if(image != null) this.image = image;
+    if(imageUrl != null) this.imageUrl = imageUrl;
     if(service != null) this.service = service;
   }
 

@@ -3,8 +3,6 @@ import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:smartshuffle/View/Pages/Profile/Platforms/PlatformsConnection.dart';
-import 'package:smartshuffle/View/Pages/Profile/Platforms/PlatformsInformation.dart';
 import 'package:smartshuffle/Services/youtube/api_controller.dart'
     as ytController;
 
@@ -12,16 +10,6 @@ class PlatformYoutubeController extends PlatformsController {
   PlatformYoutubeController(Platform platform) : super(platform);
 
   ytController.API yt = new ytController.API();
-
-  @override
-  getButtonView() {
-    return PlatformsConnection.youtubeButton();
-  }
-
-  @override
-  getInformationView() {
-    return PlatformsInformation.youtubeInformation();
-  }
 
   getPlatformInformations() {
     platform.platformInformations['logo'] = 'assets/logo/youtube_logo.png';
@@ -39,6 +27,11 @@ class PlatformYoutubeController extends PlatformsController {
   @override
   Future<List<Playlist>> getPlaylists() async {
     return platform.setPlaylist(await yt.getPlaylistsList());
+  }
+
+  @override
+  Future<List<Track>> getTracks(Playlist playlist) async {
+    return playlist.setTracks(await yt.getPlaylistSongs(playlist));
   }
 
   @override
@@ -63,7 +56,7 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
-  Playlist addPlaylist(String name, {Image image, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
+  Playlist addPlaylist({@required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
     // TODO: implement addPlaylist
     throw UnimplementedError();
   }

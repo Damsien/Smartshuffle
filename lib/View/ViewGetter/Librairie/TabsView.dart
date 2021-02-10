@@ -1,0 +1,800 @@
+import 'package:device_apps/device_apps.dart';
+import 'package:pull_to_refresh_notification/pull_to_refresh_notification.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Model/Object/Platform.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
+import 'package:smartshuffle/Model/Object/Track.dart';
+
+class TabsView {
+
+  static TabsView getInstance(State state) {
+    return TabsView(state);
+  }
+
+  State state;
+
+  TabsView(State state) {
+    this.state = state;
+  }
+
+  static final String TracksView = "Tracks";
+  static final String PlaylistsView = "Playlists";
+
+
+
+
+  List<Widget> playlistsCreator(Map<ServicesLister, PlatformsController> userPlatforms, List<String> distribution, Function onReorder, Function openPlaylist) {
+    List elements = new List<Widget>(userPlatforms.length);
+
+    int i=0;
+    for(MapEntry<ServicesLister, PlatformsController> elem in userPlatforms.entries) {
+      if(distribution[i] != TabsView.TracksView)
+        elements[i] = generatePlaylist(i, elem, onReorder, openPlaylist);
+      i++;
+    }
+    return elements;
+  }
+
+
+
+
+
+
+  Widget generatePlaylist(int tabIndex, MapEntry<ServicesLister, PlatformsController> elem, Function onReorder, Function openPlaylist) {
+    PlatformsController ctrl = elem.value;
+
+    return FutureBuilder<List<Playlist>>(
+      future: ctrl.getPlaylists(),
+      builder: (BuildContext context, AsyncSnapshot<List<Playlist>> snapshot) {
+        Widget finalWidget;
+        
+        if(snapshot.hasData) {
+
+          
+          List<Playlist> playlists = snapshot.data;
+          finalWidget = Theme(
+            key: PageStorageKey('TabBarView:'+ctrl.platform.name+':Playlists'),
+            data: ThemeData(
+              brightness: Brightness.dark,
+              canvasColor: Colors.transparent
+            ),
+            child: Container(
+              color: Colors.black54,
+              child: PullToRefreshNotification(
+                onRefresh: () async {
+                  playlists = await ctrl.getPlaylists();
+                  return true;
+                },
+                child: ReorderableListView(
+                  onReorder: (int oldIndex, int newIndex) {
+                    onReorder(ctrl, playlists, oldIndex, newIndex);
+                  },
+                  header: Container(
+                    width: WidgetsBinding.instance.window.physicalSize.width,
+                    height: 165,
+                    margin: EdgeInsets.only(left: 30, right: 30, bottom: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              margin: EdgeInsets.only(top: 30, bottom: 20),
+                              child: Text(ctrl.getPlatformInformations()['name'], style: TextStyle(fontSize: 30))
+                            ),
+                            Container(
+                              child: RaisedButton(
+                                onPressed: () => createPlaylist(ctrl),
+                                colorBrightness: Brightness.dark,
+                                color: Colors.grey[800],
+                                child: Wrap(
+                                  spacing: 8.0,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Icon(Icons.add), Text("Ajouter une playlist")
+                                  ]
+                                )
+                              )
+                            ),
+                          ]
+                        ),
+                        InkWell(
+                          onTap: () => openApp(ctrl.platform),
+                          child: FractionallySizedBox(
+                            heightFactor: 0.5,
+                            child: Image(image: AssetImage(ctrl.platform.platformInformations['logo']))
+                          )
+                        )
+                      ]
+                    )
+                  ),
+                  children: List.generate(
+                    playlists.length,
+                    (index) {
+                      return Container(
+                        key: ValueKey('ReorderableListView:Playlists:$index'),
+                        margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
+                        child: InkWell(
+                          child: Card(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  flex: 5,
+                                  child: ListTile(
+                                    title: Text(playlists.elementAt(index).name),
+                                    leading: FractionallySizedBox(
+                                      heightFactor: 0.8,
+                                      child: AspectRatio(
+                                        aspectRatio: 1,
+                                        child: new Container(
+                                          decoration: new BoxDecoration(
+                                            image: new DecorationImage(
+                                              fit: BoxFit.fitHeight,
+                                              alignment: FractionalOffset.center,
+                                              image: NetworkImage(playlists.elementAt(index).imageUrl),
+                                            )
+                                          ),
+                                        ),
+                                      )
+                                    ),
+                                    subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" tracks"),
+                                    onLongPress: () => playlistOption(ctrl, playlists.elementAt(index), index),
+                                    onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
+                                  )
+                                ),
+                                Flexible(
+                                  flex: 1,
+                                  child: Container(
+                                    margin: EdgeInsets.only(left:20, right: 20),
+                                    child: Icon(Icons.drag_handle)
+                                  )
+                                )
+                              ]
+                            )
+                          )
+                        )
+                      );
+                    }
+                  )
+                )
+              )
+            )
+            
+          );
+
+
+
+        } else {
+
+
+          finalWidget = Container(
+                  color: Colors.black54,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator()
+                );
+                
+        }
+
+        return finalWidget;
+
+      });
+  }
+
+
+  // TODO: Fix try catch doesn't work
+  openApp(Platform platform) async {
+    try {
+      DeviceApps.openApp(platform.platformInformations['package']);
+    } catch (error) {
+      showDialog(
+        context: this.state.context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: Text("Application introuvble", style: TextStyle(color: Colors.white)),
+            content: Text("L'application n'est pas installé ou vous utilisez un appareil IOS"),
+            contentTextStyle: TextStyle(color: Colors.white),
+            actions: [
+              FlatButton(
+                child: Text("Ok", style: TextStyle(color: Colors.white)),
+                onPressed: () => Navigator.pop(dialogContext),
+              )
+            ],
+            backgroundColor: Colors.grey[800],
+          );
+        }
+      );
+    }
+  }
+
+
+
+  /*  TRACKS VIEW   */
+
+  Widget tracksCreator(int tabIndex, PlatformsController ctrl, Playlist playlist, Function onReorder, Function returnToPlaylist) {
+    
+    return FutureBuilder<List<Track>>(
+      future: ctrl.getTracks(playlist),
+      builder: (BuildContext context, AsyncSnapshot<List<Track>> snapshot) {
+        Widget finalWidget;
+
+        if(snapshot.hasData) {
+
+
+          List<Track> tracks = snapshot.data;
+          finalWidget = WillPopScope(
+            child: Theme(
+              data: ThemeData(
+                brightness: Brightness.dark,
+                canvasColor: Colors.transparent
+              ),
+              child: Container(
+                color: Colors.black54,
+                child: ReorderableListView(
+                  //key: reorderKey,
+                  onReorder: (int oldIndex, int newIndex) {
+                    onReorder(ctrl, playlist, tracks, oldIndex, newIndex);
+                  },
+                  header: Column(
+                    children: [
+                      Container(
+                        width: WidgetsBinding.instance.window.physicalSize.width,
+                        height: 165,
+                        margin: EdgeInsets.only(left: 30, right: 30),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              margin: EdgeInsets.only(top: 30, bottom: 20),
+                              child: Row(
+                                children: [
+                                  InkWell(
+                                    onTap: () => returnToPlaylist(tabIndex),
+                                    child: Container(
+                                      child: Icon(Icons.arrow_back, size: 30),
+                                      margin: EdgeInsets.all(5),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: MediaQuery.of(context).size.width/2,
+                                    child: InkWell(
+                                      onTap: () => renamePlaylist(context, playlist),
+                                      child: Text(
+                                        playlist.name, 
+                                        style: ((300/playlist.name.length+5) > 30 ?
+                                          TextStyle(fontSize: 30) :
+                                          TextStyle(fontSize: (300/playlist.name.length+5).toDouble())
+                                        ),
+                                      )
+                                    )
+                                  )
+                                ],
+                              )
+                            ),
+                            InkWell(
+                              onTap: () => {  },
+                              child: FractionallySizedBox(
+                                heightFactor: 0.5,
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: new Container(
+                                    decoration: new BoxDecoration(
+                                      image: new DecorationImage(
+                                        fit: BoxFit.fitHeight,
+                                        alignment: FractionalOffset.center,
+                                        image: NetworkImage(playlist.imageUrl),
+                                      )
+                                    ),
+                                  ),
+                                )
+                              )
+                            ),
+                          ]
+                        ),
+                      ),
+                      Container(
+                        width: WidgetsBinding.instance.window.physicalSize.width,
+                        margin: EdgeInsets.only(left: 30, right: 30, bottom: 10),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Rechercher..',
+                            filled: true,
+                          ),
+                        )
+                      )
+                    ]
+                  ),
+                  children: List.generate(
+                    tracks.length,
+                    (index) {
+                      return Container(
+                        key: ValueKey('ReorderableListView:Tracks:$index'),
+                        margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
+                        child: InkWell(
+                          child: Card(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  flex: 5,
+                                  child: ListTile(
+                                    title: Text(tracks.elementAt(index).name),
+                                    leading: FractionallySizedBox(
+                                      heightFactor: 0.8,
+                                      child: AspectRatio(
+                                        aspectRatio: 1,
+                                        child: new Container(
+                                          decoration: new BoxDecoration(
+                                            image: new DecorationImage(
+                                              fit: BoxFit.fitHeight,
+                                              alignment: FractionalOffset.center,
+                                              image: NetworkImage(tracks.elementAt(index).imageUrl),
+                                            )
+                                          ),
+                                        ),
+                                      )
+                                    ),
+                                    subtitle: Text(tracks.elementAt(index).artist),
+                                    onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), index),
+                                    onTap: () {},
+                                  )
+                                ),
+                                Flexible(
+                                  flex: 1,
+                                  child: Container(
+                                    margin: EdgeInsets.only(left:20, right: 20),
+                                    child: Icon(Icons.drag_handle)
+                                  )
+                                )
+                              ]
+                            )
+                          )
+                        )
+                      );
+                    }
+                  )
+                )
+              )
+            ),
+            onWillPop: () async {
+              returnToPlaylist(tabIndex);
+              return false;
+            },
+          );
+
+
+        } else {
+
+
+          finalWidget = Container(
+                  color: Colors.black54,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator()
+                );
+             
+
+        }
+
+
+
+        return finalWidget;
+      }
+    );
+  }
+
+
+  /* CRUD TRACKS  */
+
+  trackMainDialog(PlatformsController ctrl, Track track, int index) {
+    String name = track.name;
+    showDialog(
+      context: this.state.context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("$name", style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  child: FlatButton(
+                    child: Text("Ajouter à une autre playlist", style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      addToPlaylist(ctrl, track);
+                    },
+                  ),
+                ),
+                Container(
+                  child: FlatButton(
+                    child: Text("Supprimer de la playlist", style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      removeFromPlaylist(ctrl, track, index);
+                    },
+                  ),
+                ),
+                Container(
+                  child: FlatButton(
+                    child: Text("Ajouter en file d'attente", style: TextStyle(color: Colors.white)),
+                    onPressed: () => {},
+                  ),
+                ),
+                Container(
+                  child: FlatButton(
+                    child: Text("Informations", style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      trackInformations(ctrl, track);
+                    },
+                  ),
+                ),
+                Container(
+                  child: FlatButton(
+                    child: Text("Annuler", style: TextStyle(color: Colors.white)),
+                    onPressed: () => Navigator.pop(dialogContext),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          backgroundColor: Colors.grey[800],
+        );
+      }
+    );
+  }
+
+
+  addToPlaylist(PlatformsController ctrl, Track track) {
+    String name = track.name;
+    String ctrlName = ctrl.platform.name;
+    showDialog(
+      context: this.state.context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("$name", style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                child: FlatButton(
+                  child: Text("Ajouter à SmartShuffle", style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    choosePlaylistToAddTrack(PlatformsLister.platforms[ServicesLister.DEFAULT], track);
+                  },
+                ),
+              ),
+              () {
+                if(ctrl.platform.name != PlatformsLister.platforms[ServicesLister.DEFAULT].platform.name) {
+                  return Container(
+                    child: FlatButton(
+                      child: Text("Ajouter à $ctrlName", style: TextStyle(color: Colors.white)),
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        choosePlaylistToAddTrack(ctrl, track);
+                      },
+                    ),
+                  );
+                }
+                return Container();
+              }.call(),
+              Container(
+                child: FlatButton(
+                  child: Text("Annuler", style: TextStyle(color: Colors.white)),
+                  onPressed: () => Navigator.pop(dialogContext),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.grey[800],
+        );
+      }
+    );
+  }
+
+
+  choosePlaylistToAddTrack(PlatformsController ctrl, Track track) {
+    List<Widget> allCards;
+    showDialog(
+      context: this.state.context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("Choisissez une playlist", style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: () {
+                allCards = List.generate(
+                  ctrl.platform.playlists.length,
+                  (index) {
+                    if(ctrl.platform.playlists[index].ownerId == ctrl.getUserInformations()['ownerId']) {
+                      return Theme(
+                        data: ThemeData(
+                          brightness: Brightness.dark
+                        ),
+                        child: Container(
+                          child: Card(
+                            child: ListTile(
+                              title: Text(ctrl.platform.playlists[index].name),
+                              leading: FractionallySizedBox(
+                                heightFactor: 0.8,
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: new Container(
+                                    decoration: new BoxDecoration(
+                                      image: new DecorationImage(
+                                        fit: BoxFit.fitHeight,
+                                        alignment: FractionalOffset.center,
+                                        image: NetworkImage(ctrl.platform.playlists[index].imageUrl),
+                                      )
+                                    ),
+                                  ),
+                                )
+                              ),
+                              subtitle: Text(ctrl.platform.playlists[index].getTracks().length.toString() + " tracks"),
+                              onTap: () {
+                                Navigator.pop(dialogContext);
+                                ctrl.addTrackToPlaylist(index, track);
+                              },
+                            )
+                          )
+                        )
+                      );
+                    }
+                    return Container();
+                  }
+                );
+                allCards.add(
+                  Container(
+                    child: FlatButton(
+                      child: Text("Annuler", style: TextStyle(color: Colors.white)),
+                      onPressed: () => Navigator.pop(dialogContext),
+                    ),
+                  ),
+                );
+                return allCards;
+              }.call()
+            )
+          ),
+          backgroundColor: Colors.black,
+        );
+      }
+    );
+  }
+
+
+  removeFromPlaylist(PlatformsController ctrl, Track track, int playlistIndex) {
+    String name = track.name;
+    String playlistName = ctrl.platform.playlists[playlistIndex].name;
+    showDialog(
+      context: this.state.context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("Êtes-vous sûr de vouloir supprimer $name de $playlistName ?", style: TextStyle(color: Colors.white)),
+          actions: [
+            FlatButton(
+              child: Text("Annuler", style: TextStyle(color: Colors.white)),
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            FlatButton(
+              child: Text("Valider", style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                int trackIndex = ctrl.platform.playlists[playlistIndex].getTracks().indexOf(track);
+                this.state.setState(() {
+                  ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
+                });
+              },
+            )
+          ],
+          backgroundColor: Colors.grey[800],
+        );
+      }
+    );
+  }
+
+
+  trackInformations(PlatformsController ctrl, Track track) {
+    String name = track.name;
+    String artist = track.artist;
+    String album;
+    if(track.album != null) album = track.album;
+    else album = "Aucun";
+    String service = track.service.toString().split(".")[1];
+    showDialog(
+      context: this.state.context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Container(
+            width: 200,
+            height: 200,
+            child: Image(image: NetworkImage(track.imageUrl))
+          ),
+          content: Text(
+            "Nom: $name\nArtiste: $artist\nAlbum: $album\nService: $service", style: TextStyle(color: Colors.white)
+          ),
+          actions: [
+            FlatButton(
+              child: Text("Ok", style: TextStyle(color: Colors.white)),
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+          ],
+          backgroundColor: Colors.grey[800],
+        );
+      }
+    );
+  }
+
+
+
+
+
+  /*  CRUD PLAYLISTS  */
+
+  createPlaylist(PlatformsController ctrl) {
+    String value = "Playlist " + ctrl.platform.name + " n°" + ctrl.platform.playlists.length.toString();
+
+    showDialog(
+      context: this.state.context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("Créer une playlist", style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                child: TextField(
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelStyle: TextStyle(color: Colors.grey),
+                    border: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                    labelText: 'Nom de la playlist'
+                  ), 
+                  onChanged: (String val) {
+                    value = val;
+                  },
+                ),
+              )
+            ],
+          ),
+          contentTextStyle: TextStyle(color: Colors.white),
+          actions: [
+            FlatButton(
+              child: Text("Annuler", style: TextStyle(color: Colors.white)),
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            FlatButton(
+              child: Text("Valider", style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                this.state.setState(() {
+                  ctrl.addPlaylist(name: value, ownerId: ctrl.getPlatformInformations()['ownerId']);
+                });
+              },
+            )
+          ],
+          backgroundColor: Colors.grey[800],
+        );
+      }
+    );
+  }
+
+
+  void removePlaylist(BuildContext context, PlatformsController ctrl, Playlist playlist, int index) {
+    Navigator.pop(context);
+    String name = playlist.name;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("Supprimer $name ?", style: TextStyle(color: Colors.white)),
+          content: Text("Il ne sera plus possible de la récupérer après sa suppression !"),
+          contentTextStyle: TextStyle(color: Colors.white),
+          actions: [
+            FlatButton(
+              child: Text("Non", style: TextStyle(color: Colors.white)),
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            FlatButton(
+              child: Text("Oui", style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                this.state.setState(() {
+                  ctrl.removePlaylist(index);
+                });
+              },
+            )
+          ],
+          backgroundColor: Colors.grey[800],
+        );
+      }
+    );
+  }
+
+  void renamePlaylist(BuildContext context, Playlist playlist) {
+    String name = playlist.name;
+    String value = playlist.name;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("Renommer $name", style: TextStyle(color: Colors.white)),
+          content: TextField(
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelStyle: TextStyle(color: Colors.grey),
+              border: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+              labelText: name
+            ), 
+            onChanged: (String val) {
+              value = val;
+            },
+          ),
+          actions: [
+            FlatButton(
+              child: Text("Annuler", style: TextStyle(color: Colors.white)),
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            FlatButton(
+              child: Text("Valider", style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                this.state.setState(() {
+                  playlist.rename(value);
+                });
+              },
+            )
+          ],
+          backgroundColor: Colors.grey[800],
+        );
+      }
+    );
+  }
+
+  playlistOption(PlatformsController ctrl, Playlist playlist, int index) {
+    String name = playlist.name;
+    showDialog(
+      context: this.state.context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("$name", style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                child: FlatButton(
+                  child: Text("Renommer", style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    renamePlaylist(dialogContext, playlist);
+                  },
+                ),
+              ),
+              Container(
+                child: FlatButton(
+                  child: Text("Supprimer", style: TextStyle(color: Colors.white)),
+                  onPressed: () => removePlaylist(dialogContext, ctrl, playlist, index),
+                ),
+              ),
+              Container(
+                child: FlatButton(
+                  child: Text("Annuler", style: TextStyle(color: Colors.white)),
+                  onPressed: () => Navigator.pop(dialogContext),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.grey[800],
+        );
+      }
+    );
+  }
+
+
+}

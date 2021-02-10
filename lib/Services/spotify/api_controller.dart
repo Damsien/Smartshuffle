@@ -69,7 +69,10 @@ class API {
       String id = items[i]['id'];
       String name = items[i]['name'];
       String trackUri = items[i]['tracks']['href'];
-      list.add(Playlist(id: id, name: name, uri: trackUri, service: ServicesLister.SPOTIFY));
+      String ownerId = items[i]['owner']['external_urls']['spotify'].split('user/')[1];
+      String ownerName = items[i]['owner']['display_name'];
+      String imageUrl = items[i]['images'][0]['url'];
+      list.add(Playlist(id: id, name: name, uri: trackUri, ownerId: ownerId, ownerName: ownerName, imageUrl: imageUrl, service: ServicesLister.SPOTIFY));
     }
     return list;
   }
@@ -79,7 +82,7 @@ class API {
     List<dynamic> items = json['items'];
     for (int i = 0; i < items.length; i++) {
       String name = "None";
-      String artist = null;
+      String artist = "None";
       String id = null;
       //* Le format d'image est 640x640
       String imageUrl = null;
@@ -89,12 +92,14 @@ class API {
         artist = items[i]['track']['album']['artists'][0]['name'];
         imageUrl = items[i]['track']['album']['images'][0]['url'];
       } catch (e) {}
-      list.add(Track(
+      if(id != null) {
+        list.add(Track(
           id: id,
           name: name,
           service: ServicesLister.SPOTIFY,
-          image: Image(image: NetworkImage(imageUrl)),
+          imageUrl: imageUrl,
           artist: artist));
+      }
     }
     return list;
   }

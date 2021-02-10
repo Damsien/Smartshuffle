@@ -5,6 +5,14 @@ import 'package:smartshuffle/Controller/ServicesLister.dart';
 class PlatformsInformation {
 
 
+
+  static getView(ServicesLister service) {
+    if(service == ServicesLister.YOUTUBE) return PlatformsInformation.youtubeInformation();
+    else if(service == ServicesLister.SPOTIFY) return PlatformsInformation.spotifyInformation();
+    else return Container();
+  }
+
+
   static spotifyInformation() {
     var ctrl = PlatformsLister.platforms[ServicesLister.SPOTIFY];
     var name = ctrl.getUserInformations()['name'];
