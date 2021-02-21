@@ -1,7 +1,7 @@
 import 'package:device_apps/device_apps.dart';
-import 'package:pull_to_refresh_notification/pull_to_refresh_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformDefaultController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
@@ -59,14 +59,16 @@ class TabsView {
             key: PageStorageKey('TabBarView:'+ctrl.platform.name+':Playlists'),
             data: ThemeData(
               brightness: Brightness.dark,
-              canvasColor: Colors.transparent
             ),
             child: Container(
               color: Colors.black54,
-              child: PullToRefreshNotification(
+              child: RefreshIndicator(
+                key: UniqueKey(),
                 onRefresh: () async {
-                  playlists = await ctrl.getPlaylists();
-                  return true;
+                  List<Playlist> plays = await ctrl.getPlaylists(refreshing: true);
+                  this.state.setState(() {
+                    playlists = plays;
+                  });
                 },
                 child: ReorderableListView(
                   onReorder: (int oldIndex, int newIndex) {
@@ -214,7 +216,7 @@ class TabsView {
 
   /*  TRACKS VIEW   */
 
-  Widget tracksCreator(int tabIndex, PlatformsController ctrl, Playlist playlist, Function onReorder, Function returnToPlaylist) {
+  Widget tracksCreator(int tabIndex, PlatformsController ctrl, Playlist playlist, List<Widget> researchList, bool notResearch, Function setResearch, Function onReorder, Function returnToPlaylist, Function setPlaying) {
     
     return FutureBuilder<List<Track>>(
       future: ctrl.getTracks(playlist),
@@ -225,6 +227,60 @@ class TabsView {
 
 
           List<Track> tracks = snapshot.data;
+
+          List<Widget> realTracks = List.generate(
+                    tracks.length,
+                    (index) {
+                      return Container(
+                        key: ValueKey('ReorderableListView:Tracks:$index'),
+                        margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
+                        child: InkWell(
+                          child: Card(
+                            child: ListTile(
+                              title: Text(
+                                tracks.elementAt(index).name,
+                                style: (tracks[index].isPlaying ?
+                                  TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
+                                )
+                              ),
+                              leading: FractionallySizedBox(
+                                heightFactor: 0.8,
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: new Container(
+                                    decoration: new BoxDecoration(
+                                      image: new DecorationImage(
+                                        fit: BoxFit.fitHeight,
+                                        alignment: FractionalOffset.center,
+                                        image: NetworkImage(tracks.elementAt(index).imageUrl),
+                                      )
+                                    ),
+                                  ),
+                                )
+                              ),
+                              subtitle: Text(tracks.elementAt(index).artist),
+                              onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
+                              trailing: FractionallySizedBox(
+                                heightFactor: 1,
+                                child: InkWell(
+                                  child: Icon(Icons.more_vert),
+                                  onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
+                                )
+                              ),
+                              onTap: () {
+                                GlobalQueue.resetNoPermanentQueue();
+                                setPlaying(tracks[index]);
+                              },
+                            )
+                          )
+                        )
+                      );
+                    }
+                  );
+
+          List<Widget> listTracks = realTracks;
+          
+
           finalWidget = WillPopScope(
             child: Theme(
               data: ThemeData(
@@ -233,133 +289,167 @@ class TabsView {
               ),
               child: Container(
                 color: Colors.black54,
-                child: ReorderableListView(
-                  //key: reorderKey,
-                  onReorder: (int oldIndex, int newIndex) {
-                    onReorder(ctrl, playlist, tracks, oldIndex, newIndex);
-                  },
-                  header: Column(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(bottom: 100),
+                  child: Column(
                     children: [
-                      Container(
-                        width: WidgetsBinding.instance.window.physicalSize.width,
-                        height: 165,
-                        margin: EdgeInsets.only(left: 30, right: 30),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              margin: EdgeInsets.only(top: 30, bottom: 20),
-                              child: Row(
-                                children: [
-                                  InkWell(
-                                    onTap: () => returnToPlaylist(tabIndex),
-                                    child: Container(
-                                      child: Icon(Icons.arrow_back, size: 30),
-                                      margin: EdgeInsets.all(5),
-                                    ),
-                                  ),
-                                  Container(
-                                    width: MediaQuery.of(context).size.width/2,
-                                    child: InkWell(
-                                      onTap: () => renamePlaylist(context, playlist),
-                                      child: Text(
-                                        playlist.name, 
-                                        style: ((300/playlist.name.length+5) > 30 ?
-                                          TextStyle(fontSize: 30) :
-                                          TextStyle(fontSize: (300/playlist.name.length+5).toDouble())
+                      Column(
+                        children: [
+                          Container(
+                            width: WidgetsBinding.instance.window.physicalSize.width,
+                            height: 165,
+                            margin: EdgeInsets.only(left: 30, right: 30),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  margin: EdgeInsets.only(top: 30, bottom: 20),
+                                  child: Row(
+                                    children: [
+                                      InkWell(
+                                        onTap: () => returnToPlaylist(tabIndex),
+                                        child: Container(
+                                          child: Icon(Icons.arrow_back, size: 30),
+                                          margin: EdgeInsets.all(5),
                                         ),
+                                      ),
+                                      Container(
+                                        width: MediaQuery.of(context).size.width/2,
+                                        child: InkWell(
+                                          onTap: () => renamePlaylist(context, playlist),
+                                          child: Text(
+                                            playlist.name, 
+                                            style: ((300/playlist.name.length+5) > 30 ?
+                                              TextStyle(fontSize: 30) :
+                                              TextStyle(fontSize: (300/playlist.name.length+5).toDouble())
+                                            ),
+                                          )
+                                        )
                                       )
+                                    ],
+                                  )
+                                ),
+                                InkWell(
+                                  onTap: () => {  },
+                                  child: FractionallySizedBox(
+                                    heightFactor: 0.5,
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: new Container(
+                                        decoration: new BoxDecoration(
+                                          image: new DecorationImage(
+                                            fit: BoxFit.fitHeight,
+                                            alignment: FractionalOffset.center,
+                                            image: NetworkImage(playlist.imageUrl),
+                                          )
+                                        ),
+                                      ),
                                     )
                                   )
-                                ],
-                              )
+                                ),
+                              ]
                             ),
-                            InkWell(
-                              onTap: () => {  },
-                              child: FractionallySizedBox(
-                                heightFactor: 0.5,
-                                child: AspectRatio(
-                                  aspectRatio: 1,
-                                  child: new Container(
-                                    decoration: new BoxDecoration(
-                                      image: new DecorationImage(
-                                        fit: BoxFit.fitHeight,
-                                        alignment: FractionalOffset.center,
-                                        image: NetworkImage(playlist.imageUrl),
-                                      )
-                                    ),
+                          ),
+                          Container(
+                            width: WidgetsBinding.instance.window.physicalSize.width,
+                            margin: EdgeInsets.only(left: 10, right: 10),
+                            child: ListTile(
+                              subtitle: Container(
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: 'Rechercher..',
+                                    filled: true,
                                   ),
+                                  onChanged: (val) {
+                                    setResearch(ctrl, playlist, val, tracks, trackMainDialog);
+                                  },
+                                )
+                              ),
+                              trailing: InkWell(
+                                child: PopupMenuButton(
+                                  icon: Icon(Icons.sort),
+                                  tooltip: "Trier",
+                                  itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                                    const PopupMenuItem(
+                                      value: 'last_added',
+                                      child: Text('Ajouté récemment'),
+                                    ),
+                                     PopupMenuItem(
+                                      value: 'title',
+                                      child: Row(
+                                        children: [
+                                          Expanded(child:Text('Titre')),
+                                        ]
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'artist',
+                                      child: Row(
+                                        children: [
+                                          Expanded(child:Text('Artiste')),
+                                        ]
+                                      ),
+                                    ),
+                                  ],
+                                  onSelected: (value) {
+                                    this.state.setState(() {
+                                      tracks = playlist.sort(value);
+                                    });
+                                  },
                                 )
                               )
-                            ),
-                          ]
-                        ),
-                      ),
-                      Container(
-                        width: WidgetsBinding.instance.window.physicalSize.width,
-                        margin: EdgeInsets.only(left: 30, right: 30, bottom: 10),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Rechercher..',
-                            filled: true,
+                            )
                           ),
+                          Container(
+                            margin: EdgeInsets.only(top: 5, bottom: 10),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(50),
+                              child: Container(
+                                color: Colors.cyan[800],
+                                child: OutlineButton(
+                                  splashColor: Colors.cyan[500],
+                                  onPressed: () {
+                                    this.state.setState(() {
+                                      GlobalQueue.shuffleNoPermanentQueue(playlist, setPlaying);
+                                    });
+                                  },
+                                  highlightElevation: 0,
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(0, 15, 0, 15),
+                                    child: Text(
+                                      "Lecture aléatoire",
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            )
+                          )
+                        ]
+                      ),
+                      Visibility(
+                        visible: notResearch,
+                        child: Column(
+                          children: listTracks
+                        )
+                      ),
+                      Visibility(
+                        visible: !notResearch,
+                        child: Column(
+                          children: researchList,
                         )
                       )
                     ]
-                  ),
-                  children: List.generate(
-                    tracks.length,
-                    (index) {
-                      return Container(
-                        key: ValueKey('ReorderableListView:Tracks:$index'),
-                        margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
-                        child: InkWell(
-                          child: Card(
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  flex: 5,
-                                  child: ListTile(
-                                    title: Text(tracks.elementAt(index).name),
-                                    leading: FractionallySizedBox(
-                                      heightFactor: 0.8,
-                                      child: AspectRatio(
-                                        aspectRatio: 1,
-                                        child: new Container(
-                                          decoration: new BoxDecoration(
-                                            image: new DecorationImage(
-                                              fit: BoxFit.fitHeight,
-                                              alignment: FractionalOffset.center,
-                                              image: NetworkImage(tracks.elementAt(index).imageUrl),
-                                            )
-                                          ),
-                                        ),
-                                      )
-                                    ),
-                                    subtitle: Text(tracks.elementAt(index).artist),
-                                    onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), index),
-                                    onTap: () {},
-                                  )
-                                ),
-                                Flexible(
-                                  flex: 1,
-                                  child: Container(
-                                    margin: EdgeInsets.only(left:20, right: 20),
-                                    child: Icon(Icons.drag_handle)
-                                  )
-                                )
-                              ]
-                            )
-                          )
-                        )
-                      );
-                    }
                   )
                 )
               )
             ),
             onWillPop: () async {
+              setResearch(null, null, "", null, null);
               returnToPlaylist(tabIndex);
               return false;
             },
@@ -386,9 +476,12 @@ class TabsView {
   }
 
 
+
+
+
   /* CRUD TRACKS  */
 
-  trackMainDialog(PlatformsController ctrl, Track track, int index) {
+  trackMainDialog(PlatformsController ctrl, Track track, int index, {Function refresh}) {
     String name = track.name;
     showDialog(
       context: this.state.context,
@@ -413,14 +506,17 @@ class TabsView {
                     child: Text("Supprimer de la playlist", style: TextStyle(color: Colors.white)),
                     onPressed: () {
                       Navigator.pop(dialogContext);
-                      removeFromPlaylist(ctrl, track, index);
+                      removeFromPlaylist(ctrl, track, index, refresh: refresh);
                     },
                   ),
                 ),
                 Container(
                   child: FlatButton(
                     child: Text("Ajouter en file d'attente", style: TextStyle(color: Colors.white)),
-                    onPressed: () => {},
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      addToQueue(track);
+                    },
                   ),
                 ),
                 Container(
@@ -538,7 +634,33 @@ class TabsView {
                               subtitle: Text(ctrl.platform.playlists[index].getTracks().length.toString() + " tracks"),
                               onTap: () {
                                 Navigator.pop(dialogContext);
-                                ctrl.addTrackToPlaylist(index, track);
+                                String id = ctrl.addTrackToPlaylist(index, track, false);
+                                if(id == null) {
+                                  showDialog(
+                                    context: this.state.context,
+                                    builder: (dialogContext) {
+                                      return AlertDialog(
+                                        title: Text("La musique existe déjà, voulez-vous quand même l'ajouter ?", style: TextStyle(color: Colors.white)),
+                                        actions: [
+                                          FlatButton(
+                                            child: Text("Non", style: TextStyle(color: Colors.white)),
+                                            onPressed: () => Navigator.pop(dialogContext),
+                                          ),
+                                          FlatButton(
+                                            child: Text("Oui", style: TextStyle(color: Colors.white)),
+                                            onPressed: () {
+                                              Navigator.pop(dialogContext);
+                                              this.state.setState(() {
+                                                ctrl.addTrackToPlaylist(index, track, true);
+                                              });
+                                            },
+                                          )
+                                        ],
+                                        backgroundColor: Colors.grey[800],
+                                      );
+                                    }
+                                  );
+                                }
                               },
                             )
                           )
@@ -567,7 +689,14 @@ class TabsView {
   }
 
 
-  removeFromPlaylist(PlatformsController ctrl, Track track, int playlistIndex) {
+  addToQueue(Track track) {
+    this.state.setState(() {
+      GlobalQueue.addToPermanentQueue(track);
+    });
+  }
+
+
+  removeFromPlaylist(PlatformsController ctrl, Track track, int playlistIndex, {Function refresh}) {
     String name = track.name;
     String playlistName = ctrl.platform.playlists[playlistIndex].name;
     showDialog(
@@ -587,6 +716,7 @@ class TabsView {
                 int trackIndex = ctrl.platform.playlists[playlistIndex].getTracks().indexOf(track);
                 this.state.setState(() {
                   ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
+                  if(refresh != null) refresh(null, null, "", null, null);
                 });
               },
             )
@@ -725,13 +855,14 @@ class TabsView {
       builder: (dialogContext) {
         return AlertDialog(
           title: Text("Renommer $name", style: TextStyle(color: Colors.white)),
-          content: TextField(
+          content: TextFormField(
             style: TextStyle(color: Colors.white),
             decoration: InputDecoration(
               labelStyle: TextStyle(color: Colors.grey),
               border: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-              labelText: name
-            ), 
+              labelText: "Nom de la playlist",
+            ),
+            initialValue: name,
             onChanged: (String val) {
               value = val;
             },
@@ -757,6 +888,123 @@ class TabsView {
     );
   }
 
+  clonePlaylist(BuildContext context, PlatformsController ctrl, Playlist playlist) {
+    String name = playlist.name;
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("Cloner $name dans SmartShuffle ?", style: TextStyle(color: Colors.white)),
+          actions: [
+            FlatButton(
+              child: Text("Non", style: TextStyle(color: Colors.white)),
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            FlatButton(
+              child: Text("Oui", style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                Playlist play;
+                this.state.setState(() {
+                  play = PlatformsLister.platforms[ServicesLister.DEFAULT].addPlaylist(playlist: playlist);
+                });
+                if(play == null) {
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) {
+                      return AlertDialog(
+                        title: Text("$name existe déjà dans SmartShuffle", style: TextStyle(color: Colors.white)),
+                        actions: [
+                          FlatButton(
+                            child: Text("Ok", style: TextStyle(color: Colors.white)),
+                            onPressed: () => Navigator.pop(dialogContext),
+                          )
+                        ],
+                        backgroundColor: Colors.grey[800],
+                      );
+                    }
+                  );
+                }
+              },
+            )
+          ],
+          backgroundColor: Colors.grey[800],
+        );
+      }
+    );
+  }
+
+  mergePlaylist(BuildContext context, PlatformsController ctrl, Playlist playlist) {
+    String name = playlist.name;
+    List<Widget> allCards;
+    PlatformsController defaultCtrl = PlatformsLister.platforms[ServicesLister.DEFAULT];
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("Choisissez une playlist avec laquelle vous souhaitez fusionner $name", style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: () {
+                allCards = List.generate(
+                  defaultCtrl.platform.playlists.length,
+                  (index) {
+                    return Theme(
+                      data: ThemeData(
+                        brightness: Brightness.dark
+                      ),
+                      child: Container(
+                        child: Card(
+                          child: ListTile(
+                            title: Text(defaultCtrl.platform.playlists[index].name),
+                            leading: FractionallySizedBox(
+                              heightFactor: 0.8,
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: new Container(
+                                  decoration: new BoxDecoration(
+                                    image: new DecorationImage(
+                                      fit: BoxFit.fitHeight,
+                                      alignment: FractionalOffset.center,
+                                      image: NetworkImage(defaultCtrl.platform.playlists[index].imageUrl),
+                                    )
+                                  ),
+                                ),
+                              )
+                            ),
+                            subtitle: Text(defaultCtrl.platform.playlists[index].getTracks().length.toString() + " tracks"),
+                            onTap: () {
+                              Navigator.pop(dialogContext);
+                              //TODO Message de confirmation
+                              defaultCtrl.mergePlaylist(defaultCtrl.platform.playlists[index], playlist);
+                            },
+                          )
+                        )
+                      )
+                    );
+                  }
+                );
+                allCards.add(
+                  Container(
+                    child: FlatButton(
+                      child: Text("Annuler", style: TextStyle(color: Colors.white)),
+                      onPressed: () => Navigator.pop(dialogContext),
+                    ),
+                  ),
+                );
+                return allCards;
+              }.call()
+            )
+          ),
+          backgroundColor: Colors.black,
+        );
+      }
+    );
+  }
+
   playlistOption(PlatformsController ctrl, Playlist playlist, int index) {
     String name = playlist.name;
     showDialog(
@@ -775,6 +1023,28 @@ class TabsView {
                     renamePlaylist(dialogContext, playlist);
                   },
                 ),
+              ),
+              (ctrl.platform.name != "SmartShuffle" ? 
+              Container(
+                child: FlatButton(
+                  child: Text("Cloner la playlist", style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    clonePlaylist(dialogContext, ctrl, playlist);
+                  },
+                ),
+              ) : Container()
+              ),
+              (ctrl.platform.name != "SmartShuffle" ? 
+              Container(
+                child: FlatButton(
+                  child: Text("Fusionner la playlist", style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    mergePlaylist(dialogContext, ctrl, playlist);
+                  },
+                ),
+              ) : Container()
               ),
               Container(
                 child: FlatButton(

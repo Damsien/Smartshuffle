@@ -19,26 +19,26 @@ abstract class PlatformsController {
   /*  STATE MANAGER */
 
   setPlaylistsPageState(State state) {
-    this.states['PlaylistsPage'] = state;
+    states['PlaylistsPage'] = state;
   }
 
   setSearchPageState(State state) {
-    this.states['SearchPage'] = state;
+    states['SearchPage'] = state;
   }
 
   setProfilePageState(State state) {
-    this.states['ProfilePage'] = state;
+    states['ProfilePage'] = state;
   }
 
   void updateState(String stringState) {
-    State<dynamic> state = this.states[stringState];
+    State<dynamic> state = states[stringState];
     state.setState(() {
       state.widget.createState().key = UniqueKey();
     });
   }
 
   void updateStates() {
-    for(MapEntry state in this.states.entries) {
+    for(MapEntry state in states.entries) {
       state.value.setState(() {
         state.value.widget.createState().key = UniqueKey();
       });
@@ -60,7 +60,7 @@ abstract class PlatformsController {
 
   getUserInformations();
 
-  Future<List<Playlist>> getPlaylists();
+  Future<List<Playlist>> getPlaylists({bool refreshing});
 
   Future<List<Track>> getTracks(Playlist playlist);
 
@@ -75,17 +75,19 @@ abstract class PlatformsController {
   /*  USER'S SERVICES */
 
   //Add the track to the app's playlist
-  String addTrackToPlaylist(int playlistIndex, Track track) {
-    return this.platform.addTrackToPlaylistByIndex(playlistIndex, track);
+  String addTrackToPlaylist(int playlistIndex, Track track, bool force) {
+    return this.platform.addTrackToPlaylistByIndex(playlistIndex, track, force);
   }
   //Remove the track from the app's playlist
   Track removeTrackFromPlaylist(int playlistIndex, int trackIndex) {
     return this.platform.removeTrackFromPlaylistByIndex(playlistIndex, trackIndex);
   }
   //Add the track to the app's playlist
-  Playlist addPlaylist({@required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks});
+  Playlist addPlaylist({Playlist playlist, @required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks});
   //Remove the track from the app's playlist
   Playlist removePlaylist(int playlistIndex);
+
+  Playlist mergePlaylist(Playlist toMergeTo, Playlist toMerge);
 
 
 }

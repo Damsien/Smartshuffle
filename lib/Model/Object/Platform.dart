@@ -27,9 +27,14 @@ class Platform {
 
 
 
-  String addTrackToPlaylistByIndex(int playlistIndex, Track track) {
-    String id = playlists.elementAt(playlistIndex).addTrack(track);
-    return id;
+  String addTrackToPlaylistByIndex(int playlistIndex, Track track, bool force) {
+    bool exist = false;
+    for(Track tr in playlists[playlistIndex].getTracks()) {
+      if(track.id == tr.id) exist = true;
+    }
+    if(!exist || force)
+      return playlists.elementAt(playlistIndex).addTrack(track);
+    return null;
   }
   
   Track removeTrackFromPlaylistByIndex(int playlistIndex, int trackIndex) {

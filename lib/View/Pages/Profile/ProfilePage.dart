@@ -2,16 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/View/ViewGetter/ViewGetter.dart';
 
-class ProfilePageMain extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Profile',
-      debugShowCheckedModeBanner: false,
-      home: new ProfilePage(title: 'Profile'),
-    );
-  }
-}
 
 class ProfilePage extends StatefulWidget {
 

@@ -7,25 +7,32 @@ class Track {
   String name;
   String artist;
   String album;
-  Duration duration;
+  Duration currentDuration = Duration(seconds: 45);
+  Duration totalDuration = Duration(minutes: 3);
   ServicesLister service;
   String imageUrl;
+
+  bool isPlaying = false;
 
   Track({@required String name,
    @required String artist,
    @required ServicesLister service,
    @required id,
-   Duration duration, String album, String imageUrl}) {
+   Duration totalDuration, String album, String imageUrl}) {
     this.id = id;
     this.name = name;
     this.artist = artist;
-    this.duration = duration;
-    if(album != null) this.album = album;
-    if(imageUrl != null) this.imageUrl = imageUrl;
-    if(service != null) this.service = service;
+    if(totalDuration != null) this.totalDuration = totalDuration;
+    this.album = album;
+    this.imageUrl = imageUrl;
+    this.service = service;
   }
 
-  void setId(String id) {
+  bool setIsPlaying(bool isPlaying) {
+    return this.isPlaying = isPlaying;
+  }
+
+  String setId(String id) {
     this.id = id;
   }
 

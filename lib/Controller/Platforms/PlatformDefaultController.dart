@@ -31,7 +31,7 @@ class PlatformDefaultController extends PlatformsController {
   }
 
   @override
-  Future<List<Playlist>> getPlaylists() {
+  Future<List<Playlist>> getPlaylists({bool refreshing}) {
     Completer<List<Playlist>> completer = Completer<List<Playlist>>();
     completer.complete(platform.playlists);
     return completer.future;
@@ -65,7 +65,13 @@ class PlatformDefaultController extends PlatformsController {
   }
 
   @override
-  Playlist addPlaylist({@required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
+  Playlist addPlaylist({Playlist playlist, @required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
+    if(playlist != null) {
+      for(Playlist play in this.platform.playlists) {
+        if(play.id == playlist.id) return null;
+      }
+      return this.platform.addPlaylist(playlist)..setService(ServicesLister.DEFAULT);
+    }
     return this.platform.addPlaylist(Playlist(
      name: name, 
      ownerId: ownerId,
@@ -81,6 +87,11 @@ class PlatformDefaultController extends PlatformsController {
   @override
   Playlist removePlaylist(int playlistIndex) {
     return this.platform.removePlaylist(playlistIndex);
+  }
+
+  @override
+  Playlist mergePlaylist(Playlist toMergeTo, Playlist toMerge) {
+    return toMergeTo..addTracks(toMerge.getTracks());
   }
 
 }

@@ -10,22 +10,12 @@ import 'package:device_apps/device_apps.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
-class PlaylistsPageMain extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Playlists',
-      debugShowCheckedModeBanner: false,
-      home: new PlaylistsPage(title: 'Playlists'),
-    );
-  }
-}
 
 class PlaylistsPage extends StatefulWidget {
 
-  final String title;
+  final Function setPlaying;
   
-  PlaylistsPage({Key key, this.title}) : super(key: key);
+  PlaylistsPage({Key key, this.setPlaying}) : super(key: key);
 
   @override
   _PlaylistsPageState createState() => _PlaylistsPageState();
@@ -35,6 +25,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
   Key key = UniqueKey();
   Key tabKey = UniqueKey();
+
+  List<bool> notResearch;
+  List<Widget> researchList = List<Widget>();
 
   bool exitPage = true;
   TabController _tabController;
@@ -55,138 +48,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     super.initState();
   }
 
-
-  /*
-  bool returnToPlaylist(ServicesLister element) {
-    setState(() {
-      this.tracksViews[element][1] = false;
-    });
-    //this.tabListener(element: element);
-    setState(() { this.exitPage = true; });
-    return false;
-  }
-  
-
-
-  openPlaylist(int tabIndex, MapEntry elem, Playlist playlist) {
-    List<Track> tracks = playlist.getTracks();
-    PlatformsController ctrl = elem.value;
-    Key reorderKey = UniqueKey();
-
-    WillPopScope tracksWidget = WillPopScope(
-      key: PageStorageKey('TabBarView:'+ctrl.platform.name+':Playlist['+playlist.id.toString()+']:Tracks'),
-      onWillPop: () async {
-        return returnToPlaylist(elem.key);
-      },
-      child: Theme(
-        data: ThemeData(
-          brightness: Brightness.dark,
-          canvasColor: Colors.transparent
-        ),
-        child: ReorderableListView(
-          key: reorderKey,
-          onReorder: (int oldIndex, int newIndex) {
-            setState(() {
-              tracks = playlist.reorder(oldIndex, newIndex);
-              this.tabKey = UniqueKey();
-            });
-          },
-          header: Container(
-            width: WidgetsBinding.instance.window.physicalSize.width,
-            height: 165,
-            margin: EdgeInsets.only(left: 30, right: 30, bottom: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                InkWell(
-                  onTap: () => {},//renamePlaylist(context, playlist),
-                  child: Container(
-                    margin: EdgeInsets.only(top: 30, bottom: 20),
-                    child: Row(
-                      children: [
-                        InkWell(
-                          onTap: () => returnToPlaylist(elem.key),
-                          child: Container(
-                            child: Icon(Icons.arrow_back),
-                            margin: EdgeInsets.all(5),
-                          ),
-                        ),
-                        Text(playlist.name, style: TextStyle(fontSize: 30))
-                      ],
-                    )
-                  )
-                ),
-                InkWell(
-                  onTap: () => {  },
-                  child: FractionallySizedBox(
-                    heightFactor: 0.5,
-                    child: playlist.image
-                  )
-                )
-              ]
-            )
-          ),
-          children: List.generate(
-            tracks.length,
-            (index) {
-              return Container(
-                key: ValueKey('ReorderableListView:Tracks:$index'),
-                margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
-                child: InkWell(
-                  child: Card(
-                    child: Row(
-                      children: [
-                        Flexible(
-                          flex: 5,
-                          child: ListTile(
-                            title: Text(tracks.elementAt(index).name),
-                            leading: FractionallySizedBox(
-                              heightFactor: 0.8,
-                              child: tracks.elementAt(index).image
-                            ),
-                            subtitle: Text(tracks.elementAt(index).artist),
-                            onLongPress: () {},
-                            onTap: () {},
-                          )
-                        ),
-                        Flexible(
-                          flex: 1,
-                          child: Container(
-                            margin: EdgeInsets.only(left:20, right: 20),
-                            child: Icon(Icons.drag_handle)
-                          )
-                        )
-                      ]
-                    )
-                  )
-                )
-              );
-            }
-          )
-        )
-      )
-    );
-    setState(() {
-      this.tracksViews[elem.key] = [tracksWidget, true];
-      this.tabView[this._tabController.index] = tracksWidget;
-      this.initialTabIndex = tabIndex;
-      this.tabKey = UniqueKey();
-    });
-    this._tabController.notifyListeners();
-  }
-*/
-
-  void tabListener({ServicesLister element}) {
-    /*int index = this._tabController.index;
-    if(this.tabView[index].key.toString().contains('Tracks')) {
-      setState(() { this.exitPage = false; this.initialTabIndex = index; });
-    } else {
-      setState(() { this.exitPage = true; this.initialTabIndex = index; });
-    }
-    print(this.tabView[index].key.toString());
-    print(this._tabController.index);
-    print(this.exitPage);*/
-  }
 
 
 
@@ -239,6 +100,84 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     );
   }
 
+  setResearch(PlatformsController ctrl, Playlist playlist, String value, List<Track> tracks, Function trackMainDialog) {
+
+    setState(() {
+      this.initialTabIndex = _tabController.index;
+      if(value != "")
+        this.notResearch[_tabController.index] = false;
+      else
+        this.notResearch[_tabController.index] = true;
+    });
+
+    if(value != "") {
+      List<Widget> temp = new List<Widget>();
+      int i=0;
+      for(Track track in tracks) {
+        if(track.name.contains(value) || track.name.toLowerCase().contains(value)
+        || track.artist.contains(value) || track.artist.toLowerCase().contains(value)) {
+          temp.add(
+            Container(
+              key: ValueKey('ResearchListView:Tracks:$i'),
+              margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
+              child: InkWell(
+                child: Card(
+                  child: ListTile(
+                    title: Text(
+                      track.name,
+                      style: (track.isPlaying ?
+                        TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
+                      )
+                    ),
+                    leading: FractionallySizedBox(
+                      heightFactor: 0.8,
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: new Container(
+                          decoration: new BoxDecoration(
+                            image: new DecorationImage(
+                              fit: BoxFit.fitHeight,
+                              alignment: FractionalOffset.center,
+                              image: NetworkImage(track.imageUrl),
+                            )
+                          ),
+                        ),
+                      )
+                    ),
+                    subtitle: Text(track.artist),
+                    onLongPress: () => trackMainDialog(ctrl, track, ctrl.platform.playlists.indexOf(playlist), refresh: this.setResearch),
+                    trailing: FractionallySizedBox(
+                      heightFactor: 1,
+                      child: InkWell(
+                        child: Icon(Icons.more_vert),
+                        onTap: () => trackMainDialog(ctrl, track, ctrl.platform.playlists.indexOf(playlist), refresh: this.setResearch),
+                      )
+                    ),
+                    onTap: () => setPlaying(track),
+                  )
+                )
+              )
+            )
+          );
+          i++;
+        }
+      }
+      setState(() {
+        this.researchList.clear();
+        for(Widget wid in temp)
+          this.researchList.add(wid);
+      });
+    }
+  }
+
+  setPlaying(Track track) {
+    setState(() {
+      this.initialTabIndex = _tabController.index;
+      widget.setPlaying(track);
+    });
+  }
+
+
 
 
   Widget tabBar() {
@@ -274,6 +213,12 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     }
     if(this.tracksList == null || this.tracksList.length != this.userPlatforms.length)
       this.tracksList = List<MapEntry<PlatformsController, Playlist>>(this.userPlatforms.length);
+    if(this.notResearch == null || this.notResearch.length != this.userPlatforms.length) {
+      this.notResearch = List<bool>(this.userPlatforms.length);
+      for(int i=0; i<this.userPlatforms.length; i++) {
+        this.notResearch[i] = true;
+      }
+    }
   }
 
   tabInitialization() {
@@ -302,7 +247,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       initialIndex: this.initialTabIndex,
       vsync: this
     );
-    this._tabController.addListener( () => tabListener());
 
     return MaterialApp(
       theme: ThemeData(
@@ -343,7 +287,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
               for(int i=0; i<this.distribution.length; i++) {
                 if(this.distribution[i] == TabsView.TracksView) {
                   setState(() {
-                    this.tabsView[i] = TabsView.getInstance(this).tracksCreator(i, this.tracksList[i].key, this.tracksList[i].value, onReorderTracks, returnToPlaylist);
+                    this.tabsView[i] = TabsView.getInstance(this).tracksCreator(i, this.tracksList[i].key, this.tracksList[i].value, researchList, this.notResearch[i], setResearch, onReorderTracks, returnToPlaylist, setPlaying);
                   });
                 }
               }

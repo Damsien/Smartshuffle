@@ -25,7 +25,7 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
-  Future<List<Playlist>> getPlaylists() async {
+  Future<List<Playlist>> getPlaylists({bool refreshing}) async {
     return platform.setPlaylist(await yt.getPlaylistsList());
   }
 
@@ -56,7 +56,7 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
-  Playlist addPlaylist({@required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
+  Playlist addPlaylist({Playlist playlist, @required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
     // TODO: implement addPlaylist
     throw UnimplementedError();
   }
@@ -64,6 +64,12 @@ class PlatformYoutubeController extends PlatformsController {
   @override
   Playlist removePlaylist(int playlistIndex) {
     // TODO: implement removePlaylist
+    throw UnimplementedError();
+  }
+
+  @override
+  Playlist mergePlaylist(Playlist toMergeTo, Playlist toMerge) {
+    // TODO: implement mergePlaylist
     throw UnimplementedError();
   }
 }

@@ -25,7 +25,7 @@ class PlatformSpotifyController extends PlatformsController {
   }
 
   @override
-  Future<List<Playlist>> getPlaylists() async {
+  Future<List<Playlist>> getPlaylists({bool refreshing}) async {
     List<Playlist> finalPlaylists = List<Playlist>();
     List<Playlist> playlists = await spController.getPlaylistsList();
     for(Playlist play in platform.playlists) {
@@ -41,7 +41,7 @@ class PlatformSpotifyController extends PlatformsController {
       finalPlaylists.add(play);
     }
     for(int i=0; i<platform.playlists.length; i++) {
-      if(platform.playlists[i].getTracks().length == 0)
+      if(platform.playlists[i].getTracks().length == 0 || refreshing == true)
         finalPlaylists[i].setTracks(await spController.getPlaylistSongs(finalPlaylists[i]));
       else
         finalPlaylists[i].setTracks(platform.playlists[i].getTracks());
@@ -93,7 +93,7 @@ class PlatformSpotifyController extends PlatformsController {
   }
 
   @override
-  Playlist addPlaylist({@required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
+  Playlist addPlaylist({Playlist playlist, @required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
     // TODO: implement removePlaylist
     throw UnimplementedError();
   }
@@ -101,6 +101,12 @@ class PlatformSpotifyController extends PlatformsController {
   @override
   Playlist removePlaylist(int playlistIndex) {
     // TODO: implement removePlaylist
+    throw UnimplementedError();
+  }
+
+  @override
+  Playlist mergePlaylist(Playlist toMergeTo, Playlist toMerge) {
+    // TODO: implement mergePlaylist
     throw UnimplementedError();
   }
 }

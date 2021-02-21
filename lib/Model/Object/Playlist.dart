@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -17,12 +18,12 @@ class Playlist {
   Playlist({@required String name, @required String id, @required ServicesLister service, @required String ownerId, String imageUrl, String uri, String ownerName, List<MapEntry<Track, DateTime>> tracks}) {
     this.name = name;
     this.ownerId = ownerId;
-    if(id != null) this.id = id;
-    if(imageUrl != null) this.imageUrl = imageUrl;
+    this.id = id;
+    this.imageUrl = imageUrl;
+    this.uri = uri;
+    this.ownerName = ownerName;
+    this.service = service;
     if(tracks != null) this.tracks = tracks;
-    if(uri != null) this.uri = uri;
-    if(ownerName != null) this.ownerName = ownerName;
-    if(service != null) this.service = service;
   }
 
   ///Les paramètres à comparer pour savoir si ils sont égales
@@ -52,7 +53,7 @@ class Playlist {
 
   List<Track> getTracks() {
     List<Track> finalTracks = new List<Track>();
-    for(MapEntry track in tracks) {
+    for(MapEntry<Track, DateTime> track in tracks) {
       finalTracks.add(track.key);
     }
     return finalTracks;
@@ -63,9 +64,25 @@ class Playlist {
     List<Track> allTracks = tracks;
     this.tracks.clear();
     for(Track track in allTracks) {
-      this.tracks.add(MapEntry(track, DateTime.now())); 
+      this.tracks.add(MapEntry(track, DateTime.now()));
     }
     return allTracks;
+  }
+
+  List<Track> addTracks(List<Track> tracks) {
+    List<Track> allTracks = tracks;
+    for(Track track in allTracks) {
+      bool exist = false;
+      for(Track rTrack in getTracks()) {
+        if(rTrack.id == track.id) exist = true;
+      }
+      if(!exist) this.addTrack(track); 
+    }
+    return allTracks;
+  }
+
+  ServicesLister setService(ServicesLister service) {
+    this.service = service;
   }
 
 
@@ -74,6 +91,40 @@ class Playlist {
     tracks.insert(newIndex, elem);
     //Save in system
     return getTracks();
+  }
+
+
+  List<Track> sort(String value) {
+
+    if(value == 'last_added') {
+      tracks.sort((a, b) {
+        int _a = int.parse(a.value.year.toString() + a.value.month.toString() + a.value.day.toString());
+        int _b = int.parse(b.value.year.toString() + b.value.month.toString() + b.value.day.toString());
+        return _a.compareTo(_b);
+      });
+    }
+
+    if(value == 'title') {
+      tracks.sort((a, b) {
+        String _a = a.key.name;
+        String _b = b.key.name;
+        
+        return _a.compareTo(_b);
+      });
+    }
+
+    if(value == 'artist') {
+      tracks.sort((a, b) {
+        String _a = a.key.artist;
+        String _b = b.key.artist;
+
+        return _a.compareTo(_b);
+      });
+    }
+
+    return getTracks();
+
+
   }
 
 }
