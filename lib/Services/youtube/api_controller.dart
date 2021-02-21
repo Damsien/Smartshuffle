@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
-import 'package:smartshuffle/models/Song.dart';
 
 import 'api_path.dart';
 
@@ -31,14 +30,48 @@ class API {
     Response response =
         await get(APIPath.getPlaylistsList(), headers: _prepareHeader());
     Map json = jsonDecode(response.body);
-    return _playlistList(json);
+
+    String nextPageToken = json['nextPageToken'];
+
+    List<Playlist> list = new List();
+
+    do {
+      nextPageToken = json['nextPageToken'];
+      _playlistList(list, json);
+
+      if (nextPageToken != null) {
+        response = await get(
+            APIPath.getPlaylistsList() + "&pageToken=" + nextPageToken,
+            headers: _prepareHeader());
+        json = jsonDecode(response.body);
+      }
+    } while (nextPageToken != null);
+
+    return list;
   }
 
   Future<List<Track>> getPlaylistSongs(Playlist playlist) async {
     Response response = await get(APIPath.getPlaylistSongs(playlist),
         headers: _prepareHeader());
     Map json = jsonDecode(response.body);
-    return _songsList(json);
+
+    String nextPageToken = json['nextPageToken'];
+
+    List<Track> tracks = new List();
+
+    do {
+      nextPageToken = json['nextPageToken'];
+      _songsList(tracks, json);
+
+      if (nextPageToken != null) {
+        response = await get(
+            APIPath.getPlaylistSongs(playlist) + "&pageToken=" + nextPageToken,
+            headers: _prepareHeader());
+        json = jsonDecode(response.body);
+      }
+    } while (nextPageToken != null);
+
+    return tracks;
   }
 
   Map<String, String> _prepareHeader() {
@@ -62,28 +95,38 @@ class API {
     _isLoggedIn = await APIAuth.logout();
   }
 
-  List<Playlist> _playlistList(Map json) {
-    List<Playlist> list = new List();
+  void _playlistList(List<Playlist> list, Map json) {
     List<dynamic> items = json['items'];
     for (int i = 0; i < items.length; i++) {
       String id = items[i]['id'];
       String name = items[i]['snippet']['title'];
-      list.add(Playlist(id: id, name: name, service: ServicesLister.YOUTUBE));
+      String ownerId = items[i]['snippet']['channelId'];
+      String ownerName = items[i]['channelTitle'];
+      //*Correspond à au format minimal 120x90
+      String imageUrl = items[i]['snippet']['thumbnails']['default']['url'];
+
+      list.add(Playlist(
+          id: id,
+          name: name,
+          service: ServicesLister.YOUTUBE,
+          ownerId: ownerId,
+          ownerName: ownerName,
+          imageUrl: imageUrl));
     }
-    return list;
   }
 
-  List<Track> _songsList(Map json) {
-    List<Track> list = new List();
+  void _songsList(List<Track> list, Map json) {
     List<dynamic> items = json['items'];
     for (int i = 0; i < items.length; i++) {
       String name = items[i]['snippet']['title'];
       String id = items[i]['id'];
-      //* Le format standard d'image est 640x480
-      String imageUrl = items[i]['snippet']['thumbnails']['standard']['url'];
-      list.add(
-          Track(id: id, name: name, service: ServicesLister.YOUTUBE, imageUrl: imageUrl, artist: 'unknow'));
+      String imageUrl = items[i]['snippet']['thumbnails']['default']['url'];
+      list.add(Track(
+          id: id,
+          name: name,
+          service: ServicesLister.YOUTUBE,
+          imageUrl: imageUrl,
+          artist: 'unknow'));
     }
-    return list;
   }
 }

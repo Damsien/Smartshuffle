@@ -1,5 +1,3 @@
-
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -10,7 +8,6 @@ import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
 class PlatformDefaultController extends PlatformsController {
-  
   PlatformDefaultController(Platform platform) : super(platform) {
     platform.userInformations['isConnected'] = true;
   }
@@ -18,7 +15,8 @@ class PlatformDefaultController extends PlatformsController {
   @override
   getPlatformInformations() {
     platform.platformInformations['logo'] = 'assets/logo/smartshuffle.png';
-    platform.platformInformations['icon'] = 'assets/logo/icons/smartshuffle.png';
+    platform.platformInformations['icon'] =
+        'assets/logo/icons/smartshuffle.png';
     platform.platformInformations['color'] = Colors.yellow;
     return platform.platformInformations;
   }
@@ -44,9 +42,6 @@ class PlatformDefaultController extends PlatformsController {
     return completer.future;
   }
 
-
-
-
   @override
   connect() {
     // TODO: implement connect
@@ -65,23 +60,30 @@ class PlatformDefaultController extends PlatformsController {
   }
 
   @override
-  Playlist addPlaylist({Playlist playlist, @required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
-    if(playlist != null) {
-      for(Playlist play in this.platform.playlists) {
-        if(play.id == playlist.id) return null;
+  Playlist addPlaylist(
+      {Playlist playlist,
+      @required String name,
+      @required String ownerId,
+      String ownerName,
+      String imageUrl,
+      String playlistUri,
+      List<MapEntry<Track, DateTime>> tracks}) {
+    if (playlist != null) {
+      for (Playlist play in this.platform.playlists) {
+        if (play.id == playlist.id) return null;
       }
-      return this.platform.addPlaylist(playlist)..setService(ServicesLister.DEFAULT);
+      return this.platform.addPlaylist(playlist)
+        ..setService(ServicesLister.DEFAULT);
     }
     return this.platform.addPlaylist(Playlist(
-     name: name, 
-     ownerId: ownerId,
-     ownerName: ownerName,
-     id: this.platform.playlists.length.toString(),
-     service: ServicesLister.DEFAULT,
-     imageUrl: imageUrl, 
-     uri: playlistUri,
-     tracks: tracks
-    ));
+        name: name,
+        ownerId: ownerId,
+        ownerName: ownerName,
+        id: this.platform.playlists.length.toString(),
+        service: ServicesLister.DEFAULT,
+        imageUrl: imageUrl,
+        uri: playlistUri,
+        tracks: tracks));
   }
 
   @override
@@ -94,4 +96,5 @@ class PlatformDefaultController extends PlatformsController {
     return toMergeTo..addTracks(toMerge.getTracks());
   }
 
+  void renamePlaylist(Playlist playlist, String name) {}
 }

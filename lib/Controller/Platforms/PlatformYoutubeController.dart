@@ -56,7 +56,14 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
-  Playlist addPlaylist({Playlist playlist, @required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks}) {
+  Playlist addPlaylist(
+      {Playlist playlist,
+      @required String name,
+      @required String ownerId,
+      String ownerName,
+      String imageUrl,
+      String playlistUri,
+      List<MapEntry<Track, DateTime>> tracks}) {
     // TODO: implement addPlaylist
     throw UnimplementedError();
   }
@@ -71,5 +78,10 @@ class PlatformYoutubeController extends PlatformsController {
   Playlist mergePlaylist(Playlist toMergeTo, Playlist toMerge) {
     // TODO: implement mergePlaylist
     throw UnimplementedError();
+  }
+
+  @override
+  void renamePlaylist(Playlist playlist, String name) {
+    // TODO: implement renamePlaylist
   }
 }

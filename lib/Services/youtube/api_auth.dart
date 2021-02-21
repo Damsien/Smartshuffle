@@ -31,7 +31,12 @@ class APIAuth {
         idToken: _auth.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      try {
+        UserCredential cred =
+            await FirebaseAuth.instance.signInWithCredential(credential);
+      } catch (e) {
+        print(e);
+      }
       _isSigningIn = false;
       return _auth.accessToken;
     }
