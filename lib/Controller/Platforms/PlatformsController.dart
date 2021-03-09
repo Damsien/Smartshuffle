@@ -6,7 +6,6 @@ import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/ViewGetter.dart';
 
 abstract class PlatformsController {
-
   Map<String, State> states = new Map<String, State>();
   Platform platform;
 
@@ -14,7 +13,6 @@ abstract class PlatformsController {
     this.platform = platform;
     this.updateInformations();
   }
-
 
   /*  STATE MANAGER */
 
@@ -38,7 +36,7 @@ abstract class PlatformsController {
   }
 
   void updateStates() {
-    for(MapEntry state in states.entries) {
+    for (MapEntry state in states.entries) {
       state.value.setState(() {
         state.value.widget.createState().key = UniqueKey();
       });
@@ -53,7 +51,6 @@ abstract class PlatformsController {
     return ViewGetter.getView(service: service, view: view);
   }
 
-
   /*  INFORMATIONS  */
 
   getPlatformInformations();
@@ -64,13 +61,11 @@ abstract class PlatformsController {
 
   Future<List<Track>> getTracks(Playlist playlist);
 
-
   /*  CONNECTION    */
 
   connect();
 
   disconnect();
-
 
   /*  USER'S SERVICES */
 
@@ -78,16 +73,27 @@ abstract class PlatformsController {
   String addTrackToPlaylist(int playlistIndex, Track track, bool force) {
     return this.platform.addTrackToPlaylistByIndex(playlistIndex, track, force);
   }
+
   //Remove the track from the app's playlist
   Track removeTrackFromPlaylist(int playlistIndex, int trackIndex) {
-    return this.platform.removeTrackFromPlaylistByIndex(playlistIndex, trackIndex);
+    return this
+        .platform
+        .removeTrackFromPlaylistByIndex(playlistIndex, trackIndex);
   }
+
   //Add the track to the app's playlist
-  Playlist addPlaylist({Playlist playlist, @required String name, @required String ownerId, String ownerName, String imageUrl, String playlistUri, List<MapEntry<Track, DateTime>> tracks});
+  Playlist addPlaylist(
+      {Playlist playlist,
+      @required String name,
+      @required String ownerId,
+      String ownerName,
+      String imageUrl,
+      String playlistUri,
+      List<MapEntry<Track, DateTime>> tracks});
   //Remove the track from the app's playlist
   Playlist removePlaylist(int playlistIndex);
 
   Playlist mergePlaylist(Playlist toMergeTo, Playlist toMerge);
 
-
+  void renamePlaylist(Playlist playlist, String name);
 }

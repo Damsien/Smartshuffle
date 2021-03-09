@@ -4,7 +4,6 @@ import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
 class Playlist {
-
   String id;
   String name;
   String uri;
@@ -13,9 +12,18 @@ class Playlist {
   String imageUrl;
   ServicesLister service;
 
-  List<MapEntry<Track, DateTime>> tracks = new List<MapEntry<Track, DateTime>>();
+  List<MapEntry<Track, DateTime>> tracks =
+      new List<MapEntry<Track, DateTime>>();
 
-  Playlist({@required String name, @required String id, @required ServicesLister service, @required String ownerId, String imageUrl, String uri, String ownerName, List<MapEntry<Track, DateTime>> tracks}) {
+  Playlist(
+      {@required String name,
+      @required String id,
+      @required ServicesLister service,
+      @required String ownerId,
+      String imageUrl,
+      String uri,
+      String ownerName,
+      List<MapEntry<Track, DateTime>> tracks}) {
     this.name = name;
     this.ownerId = ownerId;
     this.id = id;
@@ -23,7 +31,7 @@ class Playlist {
     this.uri = uri;
     this.ownerName = ownerName;
     this.service = service;
-    if(tracks != null) this.tracks = tracks;
+    if (tracks != null) this.tracks = tracks;
   }
 
   ///Les paramètres à comparer pour savoir si ils sont égales
@@ -32,7 +40,7 @@ class Playlist {
 
   String addTrack(Track track) {
     tracks.add(MapEntry(track, DateTime.now()));
-    MapEntry newTrack = tracks.removeAt(tracks.length-1);
+    MapEntry newTrack = tracks.removeAt(tracks.length - 1);
     tracks.insert(0, newTrack);
     return track.id;
   }
@@ -50,20 +58,18 @@ class Playlist {
     this.name = name;
   }
 
-
   List<Track> getTracks() {
     List<Track> finalTracks = new List<Track>();
-    for(MapEntry<Track, DateTime> track in tracks) {
+    for (MapEntry<Track, DateTime> track in tracks) {
       finalTracks.add(track.key);
     }
     return finalTracks;
   }
 
-
   List<Track> setTracks(List<Track> tracks) {
     List<Track> allTracks = tracks;
     this.tracks.clear();
-    for(Track track in allTracks) {
+    for (Track track in allTracks) {
       this.tracks.add(MapEntry(track, DateTime.now()));
     }
     return allTracks;
@@ -71,12 +77,12 @@ class Playlist {
 
   List<Track> addTracks(List<Track> tracks) {
     List<Track> allTracks = tracks;
-    for(Track track in allTracks) {
+    for (Track track in allTracks) {
       bool exist = false;
-      for(Track rTrack in getTracks()) {
-        if(rTrack.id == track.id) exist = true;
+      for (Track rTrack in getTracks()) {
+        if (rTrack.id == track.id) exist = true;
       }
-      if(!exist) this.addTrack(track); 
+      if (!exist) this.addTrack(track);
     }
     return allTracks;
   }
@@ -85,7 +91,6 @@ class Playlist {
     this.service = service;
   }
 
-
   List<Track> reorder(int oldIndex, int newIndex) {
     MapEntry elem = tracks.removeAt(oldIndex);
     tracks.insert(newIndex, elem);
@@ -93,27 +98,29 @@ class Playlist {
     return getTracks();
   }
 
-
   List<Track> sort(String value) {
-
-    if(value == 'last_added') {
+    if (value == 'last_added') {
       tracks.sort((a, b) {
-        int _a = int.parse(a.value.year.toString() + a.value.month.toString() + a.value.day.toString());
-        int _b = int.parse(b.value.year.toString() + b.value.month.toString() + b.value.day.toString());
+        int _a = int.parse(a.value.year.toString() +
+            a.value.month.toString() +
+            a.value.day.toString());
+        int _b = int.parse(b.value.year.toString() +
+            b.value.month.toString() +
+            b.value.day.toString());
         return _a.compareTo(_b);
       });
     }
 
-    if(value == 'title') {
+    if (value == 'title') {
       tracks.sort((a, b) {
         String _a = a.key.name;
         String _b = b.key.name;
-        
+
         return _a.compareTo(_b);
       });
     }
 
-    if(value == 'artist') {
+    if (value == 'artist') {
       tracks.sort((a, b) {
         String _a = a.key.artist;
         String _b = b.key.artist;
@@ -123,8 +130,5 @@ class Playlist {
     }
 
     return getTracks();
-
-
   }
-
 }
