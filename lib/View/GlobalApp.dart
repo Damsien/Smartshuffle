@@ -10,6 +10,9 @@ import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/Pages/Librairie/PlaylistsPage.dart';
 
+import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
+
 import 'Pages/Profile/ProfilePage.dart';
 import 'Pages/Search/SearchPage.dart';
 
@@ -141,8 +144,11 @@ class GlobalApp extends State<_GlobalApp> {
   double trackTextSize;
   double skipElements;
 
+  //Large
+  PanelState panelState = PanelState.CLOSED;
 
-  setPlaying(Track track) {
+
+  setPlaying(Track track, String playMode, {Playlist playlist}) {
     for(MapEntry<ServicesLister, PlatformsController> elem in PlatformsLister.platforms.entries) {
       if(elem.value.getUserInformations()['isConnected'] == true)
         this.userPlatforms[elem.key] = elem.value;
@@ -158,7 +164,12 @@ class GlobalApp extends State<_GlobalApp> {
       if(track != null) {
         track.setIsPlaying(true);
         this.selectedTrack = track;
-        GlobalQueue.replaceInPermanentQueue(GlobalQueue.currentQueueIndex, this.selectedTrack);
+
+        if(playMode == 'selected_shuffle') {
+          GlobalQueue.currentQueueIndex = 0;
+          GlobalQueue.replaceInPermanentQueue(0, this.selectedTrack);
+          GlobalQueue.generateNonPermanentQueue(playlist);
+        }
 
         //Player
         if(this.mainPlayer.key != ValueKey('LargePlayer')) {
@@ -169,8 +180,24 @@ class GlobalApp extends State<_GlobalApp> {
         }
 
       } else {
-        GlobalQueue.currentQueueIndex = 0;
-        GlobalQueue.resetQueue();
+        if(playMode == 'simple_shuffle') {
+          GlobalQueue.currentQueueIndex = 0;
+          GlobalQueue.resetQueue();
+          GlobalQueue.generateNonPermanentQueue(playlist);
+          this.selectedTrack = GlobalQueue.queue[0];
+          this.selectedTrack.setIsPlaying(true);
+
+          //Player
+          if(this.mainPlayer.key != ValueKey('LargePlayer')) {
+            this.visbible = true;
+            this.heightMarg = 65;
+            this.bottomMarg = 5;
+            this.opacity = 1;
+          }
+        } else {
+          GlobalQueue.currentQueueIndex = 0;
+          GlobalQueue.resetQueue();
+        }
       }
 
 
@@ -178,6 +205,25 @@ class GlobalApp extends State<_GlobalApp> {
     for(PlatformsController ctrl in PlatformsLister.platforms.values) {
       ctrl.updateStates();
     }
+  }
+
+
+  void moveToNextTrack() {
+    Track nextTrack = this.selectedTrack;
+    if(GlobalQueue.queue.indexOf(this.selectedTrack)+1 < GlobalQueue.queue.length) {
+      nextTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack)+1];
+      GlobalQueue.currentQueueIndex = GlobalQueue.queue.indexOf(this.selectedTrack)+1;
+    }
+    setPlaying(nextTrack, null);
+  }
+
+  void moveToPreviousTrack() {
+    Track previousTrack = this.selectedTrack;
+    if(GlobalQueue.queue.indexOf(this.selectedTrack)-1 >= 0) {
+      previousTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack)-1];
+      GlobalQueue.currentQueueIndex--;
+    }
+    setPlaying(previousTrack, null);
   }
 
 
@@ -350,6 +396,110 @@ class GlobalApp extends State<_GlobalApp> {
             )
           )
         ),
+        SlidingUpPanel(
+          //borderRadius: BorderRadius.only(topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
+          minHeight: 45,
+          defaultPanelState: this.panelState,
+          maxHeight: MediaQuery.of(context).size.height,
+          panel: Container(
+            color: Colors.black87,
+            child: Column(
+              children: [
+                Container(
+                  margin: EdgeInsets.all(10),
+                  width: 30,
+                  height: 5,
+                  decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                    borderRadius: BorderRadius.all(Radius.circular(12.0))
+                  ),
+                ),
+                Container(
+                  height: MediaQuery.of(context).size.height-30,
+                  child: DefaultTabController(
+                    length: 2,
+                    child: Scaffold(
+                      appBar: AppBar(
+                        bottom: TabBar(
+                          tabs: [
+                            Tab(text: "Queue"),
+                            Tab(text: "Lyrics"),
+                          ],
+                        ),
+                      ),
+                      body: TabBarView(
+                        children: [
+                          ReorderableListView(
+                            scrollDirection: Axis.vertical,
+                            //shrinkWrap: true,
+                            onReorder: (int oldIndex, int newIndex) {
+                              setState(() {
+                                GlobalQueue.reorder(oldIndex, newIndex);
+                              });
+                            },
+                            children: List.generate(
+                              GlobalQueue.queue.length-GlobalQueue.currentQueueIndex,
+                              (index) {
+                                
+                                List<Track> queue = GlobalQueue.queue;
+
+                                return Container(
+                                  key: ValueKey('ReorderableListView:Queue:$index'),
+                                  margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
+                                  child: InkWell(
+                                    child: Card(
+                                      child: Row(
+                                        children: [
+                                          Flexible(
+                                            flex: 5,
+                                            child: ListTile(
+                                              title: Text(queue.elementAt(index+GlobalQueue.currentQueueIndex).name),
+                                              leading: FractionallySizedBox(
+                                                heightFactor: 0.8,
+                                                child: AspectRatio(
+                                                  aspectRatio: 1,
+                                                  child: new Container(
+                                                    decoration: new BoxDecoration(
+                                                      image: new DecorationImage(
+                                                        fit: BoxFit.fitHeight,
+                                                        alignment: FractionalOffset.center,
+                                                        image: NetworkImage(queue.elementAt(index).imageUrl),
+                                                      )
+                                                    ),
+                                                  ),
+                                                )
+                                              ),
+                                              subtitle: Text(queue.elementAt(index).artist),
+                                            )
+                                          ),
+                                          Flexible(
+                                            flex: 1,
+                                            child: Container(
+                                              margin: EdgeInsets.only(left:20, right: 20),
+                                              child: Icon(Icons.drag_handle)
+                                            )
+                                          )
+                                        ]
+                                      )
+                                    )
+                                  )
+                                );
+                              }
+                            )
+                          ),
+
+
+
+                          Text("Work in progress"),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )
       ],
     );
   }
@@ -614,7 +764,7 @@ class GlobalApp extends State<_GlobalApp> {
     _animationDuration = 200;
     if(details.primaryVelocity>=0 && this.heightMarg <= 65) {
       moveToLittlePlayer(0, 0);
-      setPlaying(null);
+      setPlaying(null, null);
     } else if(details.primaryVelocity>=0 && this.heightMarg > 65) {
       if(details.primaryVelocity==0 && this.heightMarg > (MediaQuery.of(context).size.height)/2) moveToLargePlayer();
       else moveToLittlePlayer(65, 5);
@@ -668,31 +818,6 @@ class GlobalApp extends State<_GlobalApp> {
     } else if(details.primaryVelocity > 0) {
       moveToPreviousTrack();
     }
-  }
-
-
-  void moveToNextTrack() {
-    for(Track t in GlobalQueue.queue) {
-      print(t.name);
-    }
-    Track nextTrack = this.selectedTrack;
-    if(GlobalQueue.queue.indexOf(this.selectedTrack)+1 < GlobalQueue.queue.length) {
-      print("id");
-      nextTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack)+1];
-      GlobalQueue.currentQueueIndex = GlobalQueue.queue.indexOf(this.selectedTrack)+1;
-    }
-    print("---------");
-    print(nextTrack.name);
-    setPlaying(nextTrack);
-  }
-
-  void moveToPreviousTrack() {
-    Track previousTrack = this.selectedTrack;
-    if(GlobalQueue.queue.indexOf(this.selectedTrack)-1 >= 0) {
-      previousTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack)-1];
-      GlobalQueue.currentQueueIndex--;
-    }
-    setPlaying(previousTrack);
   }
 
 

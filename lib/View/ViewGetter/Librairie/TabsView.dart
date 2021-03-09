@@ -269,7 +269,7 @@ class TabsView {
                               ),
                               onTap: () {
                                 GlobalQueue.resetNoPermanentQueue();
-                                setPlaying(tracks[index]);
+                                setPlaying(tracks[index], 'selected_shuffle', playlist: playlist);
                               },
                             )
                           )
@@ -411,7 +411,7 @@ class TabsView {
                                   splashColor: Colors.cyan[500],
                                   onPressed: () {
                                     this.state.setState(() {
-                                      GlobalQueue.shuffleNoPermanentQueue(playlist, setPlaying);
+                                      setPlaying(null, 'simple_shuffle', playlist: playlist);
                                     });
                                   },
                                   highlightElevation: 0,

@@ -43,8 +43,7 @@ class GlobalQueue {
     }
   }
 
-  static shuffleNoPermanentQueue(Playlist playlist, Function setPlaying) {
-    resetQueue();
+  static shuffleNoPermanentQueue(Playlist playlist) {
     List<Track> tracks = playlist.getTracks();
     for(Track tr in tracks) {
       int randInt = Random().nextInt(tracks.length-1);
@@ -57,7 +56,12 @@ class GlobalQueue {
     }
     currentQueueIndex = 0;
     queue.removeAt(0);
-    setPlaying(queue[0]);
+  }
+
+  static generateNonPermanentQueue(Playlist playlist) {
+    resetNoPermanentQueue();
+    shuffleNoPermanentQueue(playlist);
+    reBuildQueue();
   }
 
   static addToPermanentQueue(Track track) {
@@ -90,6 +94,11 @@ class GlobalQueue {
     permanentQueue.clear();
     noPermanentQueue.clear();
     queue.clear();
+  }
+
+  static reorder(int oldIndex, int newIndex) {
+    Track track = queue.removeAt(oldIndex);
+    queue.insert(newIndex, track);
   }
 
   

@@ -153,7 +153,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
                         onTap: () => trackMainDialog(ctrl, track, ctrl.platform.playlists.indexOf(playlist), refresh: this.setResearch),
                       )
                     ),
-                    onTap: () => setPlaying(track),
+                    onTap: () => setPlaying(track, 'selected_shuffle', playlist: playlist),
                   )
                 )
               )
@@ -170,10 +170,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     }
   }
 
-  setPlaying(Track track) {
+  setPlaying(Track track, String playMode, {Playlist playlist}) {
     setState(() {
       this.initialTabIndex = _tabController.index;
-      widget.setPlaying(track);
+      widget.setPlaying(track, playMode, playlist: playlist);
     });
   }
 
