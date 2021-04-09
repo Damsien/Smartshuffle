@@ -146,6 +146,7 @@ class GlobalApp extends State<_GlobalApp> {
 
   //Large
   PanelState panelState = PanelState.CLOSED;
+  PanelController panelCtrl = PanelController();
 
 
   setPlaying(Track track, String playMode, {Playlist playlist}) {
@@ -397,108 +398,124 @@ class GlobalApp extends State<_GlobalApp> {
           )
         ),
         SlidingUpPanel(
+          onPanelSlide: (value) {
+            
+          },
+          controller: this.panelCtrl,
           //borderRadius: BorderRadius.only(topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
           minHeight: 45,
           defaultPanelState: this.panelState,
           maxHeight: MediaQuery.of(context).size.height,
-          panel: Container(
-            color: Colors.black87,
-            child: Column(
-              children: [
-                Container(
-                  margin: EdgeInsets.all(10),
-                  width: 30,
-                  height: 5,
-                  decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                    borderRadius: BorderRadius.all(Radius.circular(12.0))
+          panelBuilder: (scrollController) {
+            return Container(
+              color: Colors.black87,
+              child: Column(
+                children: [
+                  Container(
+                    margin: EdgeInsets.all(10),
+                    width: 30,
+                    height: 5,
+                    decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                      borderRadius: BorderRadius.all(Radius.circular(12.0))
+                    ),
                   ),
-                ),
-                Container(
-                  height: MediaQuery.of(context).size.height-30,
-                  child: DefaultTabController(
-                    length: 2,
-                    child: Scaffold(
-                      appBar: AppBar(
-                        bottom: TabBar(
-                          tabs: [
-                            Tab(text: "Queue"),
-                            Tab(text: "Lyrics"),
+                  Container(
+                    height: MediaQuery.of(context).size.height-25,
+                    child: DefaultTabController(
+                      length: 2,
+                      child: Scaffold(
+                        appBar: AppBar(
+                          toolbarHeight: 50,
+                          bottom: TabBar(
+                            tabs: [
+                              Tab(text: "Queue"),
+                              Tab(text: "Lyrics"),
+                            ],
+                          ),
+                        ),
+                        body: TabBarView(
+                          children: [
+                            ReorderableListView(
+                              scrollDirection: Axis.vertical,
+                              //shrinkWrap: true,
+                              onReorder: (int oldIndex, int newIndex) {
+                                setState(() {
+                                  GlobalQueue.reorder(oldIndex, newIndex);
+                                });
+                              },
+                              children: List.generate(
+                                GlobalQueue.queue.length-GlobalQueue.currentQueueIndex,
+                                (index) {
+                                  
+                                  List<Track> queue = GlobalQueue.queue;
+
+                                  return Container(
+                                    key: ValueKey('ReorderableListView:Queue:$index'),
+                                    margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
+                                    child: InkWell(
+                                      child: Card(
+                                        child: Row(
+                                          children: [
+                                            Flexible(
+                                              flex: 5,
+                                              child: ListTile(
+                                                title: Text(queue.elementAt(index+GlobalQueue.currentQueueIndex).name),
+                                                leading: FractionallySizedBox(
+                                                  heightFactor: 0.8,
+                                                  child: AspectRatio(
+                                                    aspectRatio: 1,
+                                                    child: new Container(
+                                                      decoration: new BoxDecoration(
+                                                        image: new DecorationImage(
+                                                          fit: BoxFit.fitHeight,
+                                                          alignment: FractionalOffset.center,
+                                                          image: NetworkImage(queue.elementAt(index).imageUrl),
+                                                        )
+                                                      ),
+                                                    ),
+                                                  )
+                                                ),
+                                                subtitle: Text(queue.elementAt(index).artist),
+                                              )
+                                            ),
+                                            Flexible(
+                                              flex: 1,
+                                              child: Container(
+                                                margin: EdgeInsets.only(left:20, right: 20),
+                                                child: Icon(Icons.drag_handle)
+                                              )
+                                            )
+                                          ]
+                                        )
+                                      )
+                                    )
+                                  );
+                                }
+                              )
+                            ),
+
+
+
+                            TextButton(
+                              onPressed: () {
+                                print("pressed");
+                                setState(() {
+                                  this.panelCtrl.close();
+                                  print(this.panelCtrl.panelPosition);
+                                });
+                              }, 
+                              child: Text("oui bonjour alors")
+                            ),
                           ],
                         ),
                       ),
-                      body: TabBarView(
-                        children: [
-                          ReorderableListView(
-                            scrollDirection: Axis.vertical,
-                            //shrinkWrap: true,
-                            onReorder: (int oldIndex, int newIndex) {
-                              setState(() {
-                                GlobalQueue.reorder(oldIndex, newIndex);
-                              });
-                            },
-                            children: List.generate(
-                              GlobalQueue.queue.length-GlobalQueue.currentQueueIndex,
-                              (index) {
-                                
-                                List<Track> queue = GlobalQueue.queue;
-
-                                return Container(
-                                  key: ValueKey('ReorderableListView:Queue:$index'),
-                                  margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
-                                  child: InkWell(
-                                    child: Card(
-                                      child: Row(
-                                        children: [
-                                          Flexible(
-                                            flex: 5,
-                                            child: ListTile(
-                                              title: Text(queue.elementAt(index+GlobalQueue.currentQueueIndex).name),
-                                              leading: FractionallySizedBox(
-                                                heightFactor: 0.8,
-                                                child: AspectRatio(
-                                                  aspectRatio: 1,
-                                                  child: new Container(
-                                                    decoration: new BoxDecoration(
-                                                      image: new DecorationImage(
-                                                        fit: BoxFit.fitHeight,
-                                                        alignment: FractionalOffset.center,
-                                                        image: NetworkImage(queue.elementAt(index).imageUrl),
-                                                      )
-                                                    ),
-                                                  ),
-                                                )
-                                              ),
-                                              subtitle: Text(queue.elementAt(index).artist),
-                                            )
-                                          ),
-                                          Flexible(
-                                            flex: 1,
-                                            child: Container(
-                                              margin: EdgeInsets.only(left:20, right: 20),
-                                              child: Icon(Icons.drag_handle)
-                                            )
-                                          )
-                                        ]
-                                      )
-                                    )
-                                  )
-                                );
-                              }
-                            )
-                          ),
-
-
-
-                          Text("Work in progress"),
-                        ],
-                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+                  )
+                ],
+              ),
+            );
+          }
         )
       ],
     );
