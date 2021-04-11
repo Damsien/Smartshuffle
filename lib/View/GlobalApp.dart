@@ -17,70 +17,76 @@ import 'Pages/Profile/ProfilePage.dart';
 import 'Pages/Search/SearchPage.dart';
 
 class GlobalAppMain extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Global',
       debugShowCheckedModeBanner: false,
-      home: new _GlobalApp(title: 'Playlist'),  //Ouverture de la page agenda lors de l'ouverture de l'app
+      home: new _GlobalApp(
+          title:
+              'Playlist'), //Ouverture de la page agenda lors de l'ouverture de l'app
     );
   }
 }
 
 class _GlobalApp extends StatefulWidget {
-
   final String title;
-  
+
   _GlobalApp({Key key, this.title}) : super(key: key);
 
   @override
   GlobalApp createState() => GlobalApp();
 }
 
-class GlobalApp extends State<_GlobalApp> {
-  
+class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   PageController pageController;
   List<Widget> pages;
 
-  Map<ServicesLister, PlatformsController> userPlatforms = new Map<ServicesLister, PlatformsController>();
-  Track selectedTrack = Track(service: ServicesLister.DEFAULT, artist: '', name: '', id: '', imageUrl: '');
+  Map<ServicesLister, PlatformsController> userPlatforms =
+      new Map<ServicesLister, PlatformsController>();
+  Track selectedTrack = Track(
+      service: ServicesLister.DEFAULT,
+      artist: '',
+      name: '',
+      id: '',
+      imageUrl: '');
 
   int selectedIndex;
   Widget currentPage;
 
-
   void fakers() {
-      PlatformsController ctrl = PlatformsLister.platforms[ServicesLister.DEFAULT];
-      for(int i=0; i<10; i++) {
-        ctrl.addPlaylist(
-          name: ctrl.platform.name+" n°$i",
+    PlatformsController ctrl =
+        PlatformsLister.platforms[ServicesLister.DEFAULT];
+    for (int i = 0; i < 10; i++) {
+      ctrl.addPlaylist(
+          name: ctrl.platform.name + " n°$i",
           imageUrl: 'https://source.unsplash.com/random',
-          ownerId: ""
-        );
-      }
-      for(int i=0; i<10; i++) {
-        for(int j=0; j<Random().nextInt(70); j++) {
-          ctrl.addTrackToPlaylist(i, 
+          ownerId: "");
+    }
+    for (int i = 0; i < 10; i++) {
+      for (int j = 0; j < Random().nextInt(70); j++) {
+        ctrl.addTrackToPlaylist(
+            i,
             Track(
-              name: "Track n°$j", 
-              artist: "Artist n°$i", 
-              totalDuration: Duration(
-                minutes: Random().nextInt(4),
-                seconds: Random().nextInt(59)
-              ),
-              service: ServicesLister.DEFAULT,
-              imageUrl: 'https://source.unsplash.com/random',
-              id: j.toString()
-            ),
-            true
-          );
-        }
+                name: "Track n°$j",
+                artist: "Artist n°$i",
+                totalDuration: Duration(
+                    minutes: Random().nextInt(4),
+                    seconds: Random().nextInt(59)),
+                service: ServicesLister.DEFAULT,
+                imageUrl: 'https://source.unsplash.com/random',
+                id: j.toString()),
+            true);
       }
+    }
 
     //Queue
-    GlobalQueue.addToPermanentQueue(PlatformsLister.platforms[ServicesLister.DEFAULT].platform.playlists[0].getTracks()[0]);
-    GlobalQueue.addToPermanentQueue(PlatformsLister.platforms[ServicesLister.DEFAULT].platform.playlists[0].getTracks()[0]);
+    GlobalQueue.addToPermanentQueue(PlatformsLister
+        .platforms[ServicesLister.DEFAULT].platform.playlists[0]
+        .getTracks()[0]);
+    GlobalQueue.addToPermanentQueue(PlatformsLister
+        .platforms[ServicesLister.DEFAULT].platform.playlists[0]
+        .getTracks()[0]);
   }
 
   @override
@@ -91,7 +97,7 @@ class GlobalApp extends State<_GlobalApp> {
   }
 
   void initPage() {
-    Widget playlistsPage = new PlaylistsPage(setPlaying: setPlaying,);
+    Widget playlistsPage = new PlaylistsPage(setPlaying: setPlaying);
     Widget searchPage = new SearchPageMain();
     Widget profilePage = new ProfilePage();
     setState(() {
@@ -100,14 +106,13 @@ class GlobalApp extends State<_GlobalApp> {
       this.selectedIndex = 0;
       this.pageController = PageController(initialPage: selectedIndex);
     });
-    for(MapEntry<ServicesLister, PlatformsController> elem in PlatformsLister.platforms.entries) {
+    for (MapEntry<ServicesLister, PlatformsController> elem
+        in PlatformsLister.platforms.entries) {
       elem.value.setPlaylistsPageState(this);
-      if(elem.value.getUserInformations()['isConnected'] == true)
+      if (elem.value.getUserInformations()['isConnected'] == true)
         this.userPlatforms[elem.key] = elem.value;
     }
   }
-
-  
 
   void onItemTapped(int index) {
     setState(() {
@@ -116,824 +121,441 @@ class GlobalApp extends State<_GlobalApp> {
     });
   }
 
-
-  
-
-  
-  //PLAYER
-
-  Widget mainPlayer;
-
-  double opacity = 1;
-  bool visbible = false;
-  
-  //Margin
-  double bottomMarg = 5;
-  double heightMarg = 65;
-  double sideMarg = 20;
-
-  double botBarHeight = 56;
-
-  double verticalUpdateValue;
-
-  //Little
-  int _animationDuration = 200;
-
-  double imageSize;
-  double playButtonSize;
-  double trackTextSize;
-  double skipElements;
-
-  //Large
-  PanelState panelState = PanelState.CLOSED;
-  PanelController panelCtrl = PanelController();
-
+  /*    BACK PLAYER    */
 
   setPlaying(Track track, String playMode, {Playlist playlist}) {
-    for(MapEntry<ServicesLister, PlatformsController> elem in PlatformsLister.platforms.entries) {
-      if(elem.value.getUserInformations()['isConnected'] == true)
+    for (MapEntry<ServicesLister, PlatformsController> elem
+        in PlatformsLister.platforms.entries) {
+      if (elem.value.getUserInformations()['isConnected'] == true)
         this.userPlatforms[elem.key] = elem.value;
     }
     setState(() {
-      for(PlatformsController ctrl in this.userPlatforms.values) {
-        for(Playlist play in ctrl.platform.playlists) {
-          for(MapEntry<Track, DateTime> tr in play.tracks) {
+      for (PlatformsController ctrl in this.userPlatforms.values) {
+        for (Playlist play in ctrl.platform.playlists) {
+          for (MapEntry<Track, DateTime> tr in play.tracks) {
             tr.key.setIsPlaying(false);
           }
         }
       }
-      if(track != null) {
+      if (track != null) {
         track.setIsPlaying(true);
         this.selectedTrack = track;
 
-        if(playMode == 'selected_shuffle') {
+        if (playMode == 'selected_shuffle') {
           GlobalQueue.currentQueueIndex = 0;
           GlobalQueue.replaceInPermanentQueue(0, this.selectedTrack);
           GlobalQueue.generateNonPermanentQueue(playlist);
         }
-
-        //Player
-        if(this.mainPlayer.key != ValueKey('LargePlayer')) {
-          this.visbible = true;
-          this.heightMarg = 65;
-          this.bottomMarg = 5;
-          this.opacity = 1;
-        }
-
       } else {
-        if(playMode == 'simple_shuffle') {
+        if (playMode == 'simple_shuffle') {
           GlobalQueue.currentQueueIndex = 0;
           GlobalQueue.resetQueue();
           GlobalQueue.generateNonPermanentQueue(playlist);
           this.selectedTrack = GlobalQueue.queue[0];
           this.selectedTrack.setIsPlaying(true);
-
-          //Player
-          if(this.mainPlayer.key != ValueKey('LargePlayer')) {
-            this.visbible = true;
-            this.heightMarg = 65;
-            this.bottomMarg = 5;
-            this.opacity = 1;
-          }
         } else {
           GlobalQueue.currentQueueIndex = 0;
           GlobalQueue.resetQueue();
         }
       }
-
-
     });
-    for(PlatformsController ctrl in PlatformsLister.platforms.values) {
+    for (PlatformsController ctrl in PlatformsLister.platforms.values) {
       ctrl.updateStates();
     }
   }
 
-
   void moveToNextTrack() {
     Track nextTrack = this.selectedTrack;
-    if(GlobalQueue.queue.indexOf(this.selectedTrack)+1 < GlobalQueue.queue.length) {
-      nextTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack)+1];
-      GlobalQueue.currentQueueIndex = GlobalQueue.queue.indexOf(this.selectedTrack)+1;
+    if (GlobalQueue.queue.indexOf(this.selectedTrack) + 1 < GlobalQueue.queue.length) {
+      nextTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack) + 1];
+      GlobalQueue.currentQueueIndex = GlobalQueue.queue.indexOf(nextTrack);
+      this.selectedTrack = nextTrack;
     }
     setPlaying(nextTrack, null);
   }
 
-  void moveToPreviousTrack() {
+  void moveToPreviousTrack({bool isRewinder = false}) {
     Track previousTrack = this.selectedTrack;
-    if(GlobalQueue.queue.indexOf(this.selectedTrack)-1 >= 0) {
-      previousTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack)-1];
-      GlobalQueue.currentQueueIndex--;
+    if(!isRewinder || this.selectedTrack.currentDuration.inSeconds <= 1) {
+      if (GlobalQueue.queue.indexOf(this.selectedTrack) - 1 >= 0) {
+        previousTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack) - 1];
+        GlobalQueue.currentQueueIndex--;
+        this.selectedTrack = previousTrack;
+      }
+    } else {
+      previousTrack = this.selectedTrack;
+      this.selectedTrack.seekTo(Duration(seconds: 0));
     }
     setPlaying(previousTrack, null);
   }
 
+  /*  FRONT PLAYER  */
+
+  double _screenWidth;
+  double _screenHeight;
+  double _ratio = 1;
+
+  PanelController _panelCtrl = PanelController();
+  TabController _songsTabCtrl;
+  int _tabIndex = 0;
+  bool _isPanelDraggable = true;
+
+  // Front constant
+  double image_size_large;
+  double image_size_little;
+  double side_marge;
+  double botbar_height;
+  double playbutton_size_large;
+  double playbutton_size_little;
+  double text_size_large;
+  double text_size_little;
+
+  double _botBarHeight;
+  double _imageSize;
+  double _sideMarge;
+  double _playButtonSize;
+  double _textSize;
+  double _elementsOpacity;
+  String _playButtonIcon = "play";
+
+  constantBuilder() {
+    _screenWidth = MediaQuery.of(context).size.width;
+    _screenHeight = MediaQuery.of(context).size.height;
+
+    image_size_large = _screenWidth * 0.7;
+    image_size_little = _screenWidth * 0.16;
+    side_marge = (_screenWidth-image_size_little)*0.5;
+    //botbar_height = _screenHeight/15;
+    botbar_height = 56;
+    playbutton_size_large = _screenWidth * 0.15;
+    playbutton_size_little = _screenWidth * 0.1;
+    text_size_large = _screenHeight *0.02;
+    text_size_little = _screenHeight *0.015;
+
+  }
+
+  sizeBuilder() {
+    if(_imageSize == null) _imageSize = image_size_little;
+    if(_sideMarge == null) _sideMarge = side_marge;
+    if(_playButtonSize == null) _playButtonSize = playbutton_size_little;
+    if(_textSize == null) _textSize = text_size_little;
+    if(_elementsOpacity == null) _elementsOpacity = 0;
+  }
+
+  preventFromNullValue(double height) {
+    setState(() {
+
+      if (_imageSize < image_size_little) _imageSize = image_size_little;
+      if (_playButtonSize < playbutton_size_little) _playButtonSize = playbutton_size_little;
+      if (_textSize < text_size_little) _textSize = text_size_little;
+
+    });
+  }
+
+  switchPanelSize(double height) {
+    setState(() {
+
+      _ratio = height;
+
+      _botBarHeight = botbar_height - (_ratio * botbar_height);
+      if (_imageSize >= image_size_little) _imageSize = image_size_large * _ratio;
+      _sideMarge = (1 - _ratio) * side_marge;
+      if(_playButtonSize >= playbutton_size_little) _playButtonSize = playbutton_size_large * _ratio;
+      if(_textSize >= text_size_little) _textSize = text_size_large * _ratio;
+      _elementsOpacity = _ratio;
+
+    });
+    preventFromNullValue(_ratio);
+  }
 
 
-  Widget widgetLargePlayer() {
-    return Stack(
-      key: ValueKey('LargePlayer'),
-      children: [
-        Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(this.selectedTrack.imageUrl),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Positioned(
-              width: MediaQuery.of(context).size.width-this.sideMarg,
-              height:  MediaQuery.of(context).size.height,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  color: Colors.black.withOpacity(0.55),
-                ),
-              ),
-            )
-          ],
-        ),
-        Positioned(
-          top: (MediaQuery.of(context).size.height/1.14),
-          right: ((MediaQuery.of(context).size.width/2)-this.playButtonSize/2),
-          child: InkWell(
-            child: Icon(
-              Icons.play_arrow,
-              size: this.playButtonSize,
-            )
-          )
-        ),
-        Positioned(
-          top: (MediaQuery.of(context).size.height/1.193),
-          right: (MediaQuery.of(context).size.width/2)-190,
-          child: Opacity(
-            opacity: this.skipElements,
-            child: InkWell(
-              child: Text(this.selectedTrack.totalDuration.toString().split(':')[1]
-                +":"+this.selectedTrack.totalDuration.toString().split(':')[2].split(".")[0])
-            )
-          )
-        ),
-        Positioned(
-          top: (MediaQuery.of(context).size.height/1.19),
-          left: (MediaQuery.of(context).size.width/2)-190,
-          child: Opacity(
-            opacity: this.skipElements,
-            child: InkWell(
-              child: Text(this.selectedTrack.currentDuration.toString().split(':')[1]
-                +":"+this.selectedTrack.currentDuration.toString().split(':')[2].split(".")[0])
-            )
-          )
-        ),
-        Positioned(
-          top: (MediaQuery.of(context).size.height/2+MediaQuery.of(context).size.height/3.1),
-          left: MediaQuery.of(context).size.width/2-((MediaQuery.of(context).size.width-(MediaQuery.of(context).size.width/4))/2),
-          child: Opacity(
-            opacity: this.skipElements,
-            child: Container(
-              width: MediaQuery.of(context).size.width-(MediaQuery.of(context).size.width/4),
-              child: Slider.adaptive(
-                value: (this.selectedTrack.currentDuration.inSeconds / this.selectedTrack.totalDuration.inSeconds < 0
-                  || this.selectedTrack.currentDuration.inSeconds / this.selectedTrack.totalDuration.inSeconds > 1 ?
-                  0.0 :
-                  this.selectedTrack.currentDuration.inSeconds / this.selectedTrack.totalDuration.inSeconds),
-                onChanged: (double value) {  },
-                min: 0,
-                max: 1,
-                activeColor: Colors.cyanAccent,
-              )
-            )
-          )
-        ),
-        Positioned(
-          top: (MediaQuery.of(context).size.height/1.14),
-          right: (MediaQuery.of(context).size.width/2)-90,
-          child: Opacity(
-            opacity: this.skipElements,
-            child: InkWell(
-              child: Icon(
-                Icons.skip_next,
-                size: this.playButtonSize,
-              )
-            )
-          )
-        ),
-        Positioned(
-          top: (MediaQuery.of(context).size.height/1.14),
-          left: (MediaQuery.of(context).size.width/2)-90,
-          child: Opacity(
-            opacity: this.skipElements,
-            child: InkWell(
-              child: Icon(
-                Icons.skip_previous,
-                size: this.playButtonSize,
-              )
-            )
-          )
-        ),
-        Positioned(
-          top: (MediaQuery.of(context).size.height/1.123),
-          right: (MediaQuery.of(context).size.width/2)-150,
-          child: Opacity(
-            opacity: this.skipElements,
-            child: InkWell(
-              child: Icon(
-                Icons.repeat,
-                size: this.playButtonSize-20,
-              )
-            )
-          )
-        ),
-        Positioned(
-          top: (MediaQuery.of(context).size.height/1.12),
-          left: (MediaQuery.of(context).size.width/2)-150,
-          child: Opacity(
-            opacity: this.skipElements,
-            child: InkWell(
-              child: Icon(
-                Icons.shuffle,
-                size: this.playButtonSize-20,
-              )
-            )
-          )
-        ),
-        Positioned(
-          width: this.imageSize,
-          height: this.imageSize,
-          left: (MediaQuery.of(context).size.width/2-(this.imageSize/2)-this.sideMarg),
-          top: (MediaQuery.of(context).size.height/4)*this.verticalUpdateValue,
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                fit: BoxFit.cover,
-                image: NetworkImage(this.selectedTrack.imageUrl),
-              )
-            ),
-          ),
-        ),
-        Positioned(
-          left: (MediaQuery.of(context).size.width/2-175),
-          top: (MediaQuery.of(context).size.height/1.5),
-          child: Container(
-            width: 350,
-            child: Text(
-              this.selectedTrack.name,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: this.trackTextSize),
-            )
-          )
-        ),
-        Positioned(
-          left: (MediaQuery.of(context).size.width/2-175),
-          top: (MediaQuery.of(context).size.height/(this.selectedTrack.name.length > 20 ? 1.3 : 1.4)),
-          child: Container(
-            width: 350,
-            child: Text(
-              this.selectedTrack.artist,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: this.trackTextSize, fontWeight: FontWeight.w200),
-            )
-          )
-        ),
-        SlidingUpPanel(
-          onPanelSlide: (value) {
-            
-          },
-          controller: this.panelCtrl,
-          //borderRadius: BorderRadius.only(topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
-          minHeight: 45,
-          defaultPanelState: this.panelState,
-          maxHeight: MediaQuery.of(context).size.height,
-          panelBuilder: (scrollController) {
-            return Container(
-              color: Colors.black87,
-              child: Column(
-                children: [
-                  Container(
-                    margin: EdgeInsets.all(10),
-                    width: 30,
-                    height: 5,
-                    decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                      borderRadius: BorderRadius.all(Radius.circular(12.0))
-                    ),
-                  ),
-                  Container(
-                    height: MediaQuery.of(context).size.height-25,
-                    child: DefaultTabController(
-                      length: 2,
-                      child: Scaffold(
-                        appBar: AppBar(
-                          toolbarHeight: 50,
-                          bottom: TabBar(
-                            tabs: [
-                              Tab(text: "Queue"),
-                              Tab(text: "Lyrics"),
+
+  buildPanel() {
+    return SlidingUpPanel(
+      isDraggable: _isPanelDraggable,
+      onPanelSlide: (height) => switchPanelSize(height),
+      controller: _panelCtrl,
+      minHeight: botbar_height+10,
+      maxHeight: _screenHeight,
+      panelBuilder: (scrollCtrl) {
+        return WillPopScope(
+          onWillPop: () => _panelCtrl.close(),
+          child: GestureDetector(
+            onTap: () => _panelCtrl.panelPosition < 0.3 ? _panelCtrl.open() : null,
+            child: Stack(
+              key: ValueKey('FrontPLayer'),
+              children: [
+                TabBarView(
+                controller: _songsTabCtrl,
+                  children: List.generate(
+                    GlobalQueue.queue.length,
+                    (index) {
+                      Track track = GlobalQueue.queue[index];
+                      return Stack(
+                        children: [
+                          Stack(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(track.imageUrl),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: index == _songsTabCtrl.length ? 10 : 0,
+                                  sigmaY: index == _songsTabCtrl.length ? 10 : 0),
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      color: Colors.black.withOpacity(0.55),
+                                    )
+                                  ]
+                                )
+                              ),
                             ],
                           ),
-                        ),
-                        body: TabBarView(
-                          children: [
-                            ReorderableListView(
-                              scrollDirection: Axis.vertical,
-                              //shrinkWrap: true,
-                              onReorder: (int oldIndex, int newIndex) {
-                                setState(() {
-                                  GlobalQueue.reorder(oldIndex, newIndex);
-                                });
-                              },
-                              children: List.generate(
-                                GlobalQueue.queue.length-GlobalQueue.currentQueueIndex,
-                                (index) {
-                                  
-                                  List<Track> queue = GlobalQueue.queue;
-
-                                  return Container(
-                                    key: ValueKey('ReorderableListView:Queue:$index'),
-                                    margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
-                                    child: InkWell(
-                                      child: Card(
-                                        child: Row(
-                                          children: [
-                                            Flexible(
-                                              flex: 5,
-                                              child: ListTile(
-                                                title: Text(queue.elementAt(index+GlobalQueue.currentQueueIndex).name),
-                                                leading: FractionallySizedBox(
-                                                  heightFactor: 0.8,
-                                                  child: AspectRatio(
-                                                    aspectRatio: 1,
-                                                    child: new Container(
-                                                      decoration: new BoxDecoration(
-                                                        image: new DecorationImage(
-                                                          fit: BoxFit.fitHeight,
-                                                          alignment: FractionalOffset.center,
-                                                          image: NetworkImage(queue.elementAt(index).imageUrl),
-                                                        )
-                                                      ),
-                                                    ),
-                                                  )
-                                                ),
-                                                subtitle: Text(queue.elementAt(index).artist),
-                                              )
-                                            ),
-                                            Flexible(
-                                              flex: 1,
-                                              child: Container(
-                                                margin: EdgeInsets.only(left:20, right: 20),
-                                                child: Icon(Icons.drag_handle)
-                                              )
-                                            )
-                                          ]
-                                        )
+                          Positioned(
+                            top: (_screenHeight * 0.77),
+                            right: (_screenWidth / 2) - _screenWidth * 0.45,
+                            child: Opacity(
+                              opacity: _elementsOpacity,
+                              child: InkWell(
+                                child: Text(track.totalDuration.toString().split(':')[1] +
+                                    ":" + track.totalDuration.toString().split(':')[2].split(".")[0]
+                                )
+                              )
+                            )
+                          ),
+                          Positioned(
+                            top: (_screenHeight * 0.77),
+                            left: (_screenWidth / 2) - _screenWidth * 0.45,
+                            child: Opacity(
+                              opacity: _elementsOpacity,
+                              child: InkWell(
+                                child: Text(track.currentDuration.toString().split(':')[1] +
+                                  ":" + track.currentDuration.toString().split(':')[2].split(".")[0]
+                                )
+                              )
+                            )
+                          ),
+                          Positioned(
+                            top: (_screenHeight * 0.75),
+                            left: _screenWidth / 2 - ((_screenWidth - (_screenWidth / 4)) / 2),
+                            child: Opacity(
+                              opacity: _elementsOpacity,
+                              child: Container(
+                                width: _screenWidth - (_screenWidth / 4),
+                                child: Slider.adaptive(
+                                  value: (track.currentDuration.inSeconds /
+                                          track.totalDuration.inSeconds < 0 ||
+                                          track.currentDuration.inSeconds /
+                                          track.totalDuration.inSeconds > 1
+                                      ? 0.0
+                                      : track.currentDuration.inSeconds /
+                                          track.totalDuration.inSeconds),
+                                  onChanged: (double value) {},
+                                  min: 0,
+                                  max: 1,
+                                  activeColor: Colors.cyanAccent,
+                                )
+                              )
+                            )
+                          ),
+                          Positioned(
+                            width: _imageSize,
+                            height: _imageSize,
+                            left: (_screenWidth / 2 - (_imageSize / 2) - _sideMarge),
+                            top: (_screenHeight / 4) * _ratio,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                  fit: BoxFit.cover,
+                                  image: NetworkImage(track.imageUrl),
+                                )
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: _screenWidth * 0.2 * (1 - _ratio),
+                            top: (_screenHeight * 0.60) * _ratio + (_sideMarge*0.06),
+                            child: Row(
+                              children: [
+                                Column(
+                                  children: [
+                                    Container(
+                                      margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                      width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                      child: Text(
+                                        track.name,
+                                        textAlign: TextAlign.left,
+                                        style: TextStyle(fontSize: _textSize + (5 * _ratio)),
+                                      )
+                                    ),
+                                    Container(
+                                      margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                      width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                      child: Text(
+                                        track.artist,
+                                        textAlign: TextAlign.left,
+                                        style: TextStyle(
+                                          fontSize: _textSize,
+                                          fontWeight: FontWeight.w200),
                                       )
                                     )
-                                  );
-                                }
-                              )
-                            ),
-
-
-
-                            TextButton(
-                              onPressed: () {
-                                print("pressed");
-                                setState(() {
-                                  this.panelCtrl.close();
-                                  print(this.panelCtrl.panelPosition);
-                                });
-                              }, 
-                              child: Text("oui bonjour alors")
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                                  ],
+                                ),
+                                IgnorePointer(
+                                  ignoring: (_elementsOpacity == 1 ? false : true),
+                                  child: Opacity(
+                                    opacity: _elementsOpacity,
+                                    child: InkWell(
+                                        child: Icon(
+                                        Icons.add,
+                                        size: _playButtonSize - 10,
+                                      )
+                                    )
+                                  )
+                                )
+                              ]
+                            )
+                          ),
+                        ],
+                      );
+                    }
                   )
-                ],
-              ),
-            );
-          }
-        )
-      ],
+                ),
+                Positioned(
+                  top: (_screenHeight * 0.80) * _ratio + (_sideMarge*0.07),
+                  right: ((_screenWidth / 2) - (_playButtonSize / 2) - _sideMarge),
+                  child: InkWell(
+                    onTap: () => _playButtonIcon == "play" ? _playButtonIcon = "pause" : _playButtonIcon = "play",
+                    child: Icon(
+                      _playButtonIcon == "play" ? Icons.play_arrow : Icons.pause,
+                      size: _playButtonSize,
+                    )
+                  )
+                ),
+                Positioned(
+                  top: (_screenHeight * 0.8),
+                  right: (_screenWidth / 2) - (_screenWidth / 4),
+                  child: Opacity(
+                    opacity: _elementsOpacity,
+                    child: InkWell(
+                        onTap: () => this.moveToNextTrack(),
+                        child: Icon(
+                        Icons.skip_next,
+                        size: _playButtonSize,
+                      )
+                    )
+                  )
+                ),
+                Positioned(
+                  top: (_screenHeight * 0.8),
+                  left: (_screenWidth / 2) - (_screenWidth / 4),
+                  child: Opacity(
+                    opacity: _elementsOpacity,
+                    child: InkWell(
+                        onTap: () => this.moveToPreviousTrack(isRewinder: true),
+                        child: Icon(
+                        Icons.skip_previous,
+                        size: _playButtonSize,
+                      )
+                    )
+                  )
+                ),
+                Positioned(
+                  top: (_screenHeight * 0.82),
+                  right: (_screenWidth / 2) - (_screenWidth / 2.5),
+                  child: Opacity(
+                    opacity: _elementsOpacity,
+                    child: InkWell(
+                        child: Icon(
+                        Icons.repeat,
+                        size: _playButtonSize - 30,
+                      )
+                    )
+                  )
+                ),
+                Positioned(
+                  top: (_screenHeight * 0.82),
+                  left: (_screenWidth / 2) - (_screenWidth / 2.5),
+                  child: Opacity(
+                    opacity: _elementsOpacity,
+                    child: InkWell(
+                        child: Icon(
+                        Icons.shuffle,
+                        size: _playButtonSize - 30,
+                      )
+                    )
+                  )
+                ),
+              ],
+            )
+          )
+        );
+      },
     );
   }
-
-  Widget widgetLittlePlayer() {
-    return Stack(
-      key: ValueKey('LittlePlayer'),
-      children: [
-        Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(this.selectedTrack.imageUrl),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Positioned(
-              width: MediaQuery.of(context).size.width-this.sideMarg,
-              height:  MediaQuery.of(context).size.height,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  color: Colors.black.withOpacity(0.55),
-                ),
-              ),
-            )
-          ],
-        ),
-        AnimatedPositioned(
-          duration: Duration(milliseconds: _animationDuration),
-          top: (MediaQuery.of(context).size.height/2+MediaQuery.of(context).size.height/2.1)*
-           (this.verticalUpdateValue == 0 ? this.verticalUpdateValue : this.verticalUpdateValue-0.1)
-           +20*(1-this.verticalUpdateValue),
-          right: ((MediaQuery.of(context).size.width/2)-this.playButtonSize/2)*this.verticalUpdateValue+15*(1-this.verticalUpdateValue),
-          child: InkWell(
-            child: Icon(
-              Icons.play_arrow,
-              size: this.playButtonSize,
-            )
-          )
-        ),
-        Visibility(
-          visible: (this.skipElements == 0 ? false : true),
-          child: AnimatedPositioned(
-            duration: Duration(milliseconds: _animationDuration),
-            top: (MediaQuery.of(context).size.height/2+MediaQuery.of(context).size.height/2.3)*
-             (this.verticalUpdateValue == 0 ? this.verticalUpdateValue : this.verticalUpdateValue-0.1)
-             +20*(1-this.verticalUpdateValue),
-            right: (MediaQuery.of(context).size.width/2)-190,
-            child: Opacity(
-              opacity: this.skipElements,
-              child: InkWell(
-                child: Text(this.selectedTrack.totalDuration.toString().split(':')[1]
-                 +":"+this.selectedTrack.totalDuration.toString().split(':')[2].split(".")[0])
-              )
-            )
-          )
-        ),
-        Visibility(
-          visible: (this.skipElements == 0 ? false : true),
-          child: AnimatedPositioned(
-            duration: Duration(milliseconds: _animationDuration),
-            top: (MediaQuery.of(context).size.height/2+MediaQuery.of(context).size.height/2.3)*
-             (this.verticalUpdateValue == 0 ? this.verticalUpdateValue : this.verticalUpdateValue-0.1)
-             +20*(1-this.verticalUpdateValue),
-            left: (MediaQuery.of(context).size.width/2)-190,
-            child: Opacity(
-              opacity: this.skipElements,
-              child: InkWell(
-                child: Text(this.selectedTrack.currentDuration.toString().split(':')[1]
-                 +":"+this.selectedTrack.currentDuration.toString().split(':')[2].split(".")[0])
-              )
-            )
-          )
-        ),
-        Visibility(
-          visible: (this.skipElements == 0 ? false : true),
-          child: AnimatedPositioned(
-            duration: Duration(milliseconds: _animationDuration),
-            top: (MediaQuery.of(context).size.height/2+MediaQuery.of(context).size.height/2.4)*
-             (this.verticalUpdateValue == 0 ? this.verticalUpdateValue : this.verticalUpdateValue-0.1)
-             +20*(1-this.verticalUpdateValue),
-            left: MediaQuery.of(context).size.width/2-((MediaQuery.of(context).size.width-(MediaQuery.of(context).size.width/4))/2),
-            child: Opacity(
-              opacity: this.skipElements,
-              child: Container(
-                width: MediaQuery.of(context).size.width-(MediaQuery.of(context).size.width/4),
-                child: Slider.adaptive(
-                  value: (this.selectedTrack.currentDuration.inSeconds / this.selectedTrack.totalDuration.inSeconds < 0
-                   || this.selectedTrack.currentDuration.inSeconds / this.selectedTrack.totalDuration.inSeconds > 1 ?
-                   0.0 :
-                   this.selectedTrack.currentDuration.inSeconds / this.selectedTrack.totalDuration.inSeconds),
-                  onChanged: (double value) {  },
-                  min: 0,
-                  max: 1,
-                  activeColor: Colors.cyanAccent,
-                )
-              )
-            )
-          )
-        ),
-        Visibility(
-          visible: (this.skipElements == 0 ? false : true),
-          child: AnimatedPositioned(
-            duration: Duration(milliseconds: _animationDuration),
-            top: (MediaQuery.of(context).size.height/2+MediaQuery.of(context).size.height/2.1)*
-             (this.verticalUpdateValue == 0 ? this.verticalUpdateValue : this.verticalUpdateValue-0.1)
-             +20*(1-this.verticalUpdateValue),
-            right: (MediaQuery.of(context).size.width/2)-90,
-            child: Opacity(
-              opacity: this.skipElements,
-              child: InkWell(
-                child: Icon(
-                  Icons.skip_next,
-                  size: this.playButtonSize,
-                )
-              )
-            )
-          )
-        ),
-        Visibility(
-          visible: (this.skipElements == 0 ? false : true),
-          child: AnimatedPositioned(
-            duration: Duration(milliseconds: _animationDuration),
-            top: (MediaQuery.of(context).size.height/2+MediaQuery.of(context).size.height/2.1)*
-             (this.verticalUpdateValue == 0 ? this.verticalUpdateValue : this.verticalUpdateValue-0.1)
-             +20*(1-this.verticalUpdateValue),
-            left: (MediaQuery.of(context).size.width/2)-90,
-            child: Opacity(
-              opacity: this.skipElements,
-              child: InkWell(
-                child: Icon(
-                  Icons.skip_previous,
-                  size: this.playButtonSize,
-                )
-              )
-            )
-          )
-        ),
-        Visibility(
-          visible: (this.skipElements == 0 ? false : true),
-          child: AnimatedPositioned(
-            duration: Duration(milliseconds: _animationDuration),
-            top: (MediaQuery.of(context).size.height/2+MediaQuery.of(context).size.height/2.05)*
-             (this.verticalUpdateValue == 0 ? this.verticalUpdateValue : this.verticalUpdateValue-0.1)
-             +20*(1-this.verticalUpdateValue),
-            right: (MediaQuery.of(context).size.width/2)-150,
-            child: Opacity(
-              opacity: this.skipElements,
-              child: InkWell(
-                child: Icon(
-                  Icons.repeat,
-                  size: this.playButtonSize-20,
-                )
-              )
-            )
-          )
-        ),
-        Visibility(
-          visible: (this.skipElements == 0 ? false : true),
-          child: AnimatedPositioned(
-            duration: Duration(milliseconds: _animationDuration),
-            top: (MediaQuery.of(context).size.height/2+MediaQuery.of(context).size.height/2.05)*
-             (this.verticalUpdateValue == 0 ? this.verticalUpdateValue : this.verticalUpdateValue-0.1)
-             +20*(1-this.verticalUpdateValue),
-            left: (MediaQuery.of(context).size.width/2)-150,
-            child: Opacity(
-              opacity: this.skipElements,
-              child: InkWell(
-                child: Icon(
-                  Icons.shuffle,
-                  size: this.playButtonSize-20,
-                )
-              )
-            )
-          )
-        ),
-        AnimatedPositioned(
-          duration: Duration(milliseconds: _animationDuration),
-          width: this.imageSize,
-          height: this.imageSize,
-          left: (MediaQuery.of(context).size.width/2-(this.imageSize/2)-this.sideMarg)*this.verticalUpdateValue,
-          top: (MediaQuery.of(context).size.height/4)*this.verticalUpdateValue,
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                fit: BoxFit.cover,
-                image: NetworkImage(this.selectedTrack.imageUrl),
-              )
-            ),
-          ),
-        ),
-        AnimatedPositioned(
-          duration: Duration(milliseconds: _animationDuration),
-          left: (MediaQuery.of(context).size.width/2-175)*this.verticalUpdateValue+80*(1-this.verticalUpdateValue),
-          top: (MediaQuery.of(context).size.height/1.5)*this.verticalUpdateValue+7*(1-this.verticalUpdateValue),
-          child: Container(
-            width: (this.verticalUpdateValue == 0 ? 250 : 350),
-            child: Text(
-              this.selectedTrack.name,
-              textAlign: (this.verticalUpdateValue == 0 ? TextAlign.start : TextAlign.center),
-              style: TextStyle(fontSize: this.trackTextSize),
-            )
-          )
-        ),
-        AnimatedPositioned(
-          duration: Duration(milliseconds: _animationDuration),
-          left: (MediaQuery.of(context).size.width/2-175)*this.verticalUpdateValue+80*(1-this.verticalUpdateValue),
-          top: (MediaQuery.of(context).size.height/
-           (this.selectedTrack.name.length > 20 ? 1.3 : 1.4))*
-           this.verticalUpdateValue+43*(1-this.verticalUpdateValue),
-          child: Container(
-            width: 350,
-            child: Text(
-              this.selectedTrack.artist,
-              textAlign: (this.verticalUpdateValue == 0 ? TextAlign.start : TextAlign.center),
-              style: TextStyle(fontSize: this.trackTextSize, fontWeight: FontWeight.w200),
-            )
-          )
-        ),
-      ],
-    );
-  }
-
-
-
-
-  void verticalDragUpdate(DragUpdateDetails details) {
-    _animationDuration = 0;
-    FocusScope.of(context).unfocus();
-    double perc = 1-((details.localPosition.dy*100/MediaQuery.of(context).size.height)/100);
-    double height = MediaQuery.of(context).size.height*perc;
-    if(details.delta.direction > 0) this.mainPlayer = widgetLittlePlayer();
-    if((details.delta.dy > 0 && this.mainPlayer.key != ValueKey('LargePlayer'))
-     || (details.delta.dy > 0 && this.mainPlayer.key == ValueKey('LargePlayer'))
-     || (details.delta.dy < 0 && this.mainPlayer.key != ValueKey('LargePlayer'))) {
-      setState(() {
-        this.verticalUpdateValue = perc;
-        this.sideMarg = 20*(1-perc);
-        if(this.heightMarg > 65) {
-          this.botBarHeight = 56*(1-perc);
-          this.imageSize = this.verticalUpdateValue*300+65;
-          if(this.verticalUpdateValue>=0.5) this.playButtonSize = 50*this.verticalUpdateValue;
-          if(this.verticalUpdateValue>=0.5) this.trackTextSize = 30*this.verticalUpdateValue;
-          this.skipElements = 1*this.verticalUpdateValue;
-        } else {
-          this.botBarHeight = 56;
-          this.imageSize = 65;
-          this.playButtonSize = 25;
-          this.trackTextSize = 14;
-          this.skipElements = 0;
-        }
-        if(height >= 0) this.heightMarg = height;
-        else this.heightMarg = 0;
-      });
-    }
-  }
-
-  void verticalDragEnd(DragEndDetails details) {
-    _animationDuration = 200;
-    if(details.primaryVelocity>=0 && this.heightMarg <= 65) {
-      moveToLittlePlayer(0, 0);
-      setPlaying(null, null);
-    } else if(details.primaryVelocity>=0 && this.heightMarg > 65) {
-      if(details.primaryVelocity==0 && this.heightMarg > (MediaQuery.of(context).size.height)/2) moveToLargePlayer();
-      else moveToLittlePlayer(65, 5);
-    } else moveToLargePlayer();
-  }
-
-  void moveToLargePlayer() {
-    setState(() {
-      this.verticalUpdateValue = 1;
-      this.bottomMarg = 0;
-      this.heightMarg = MediaQuery.of(context).size.height;
-      this.sideMarg = 0;
-      this.botBarHeight = 0;
-      this.imageSize = 300;
-      this.playButtonSize = 50;
-      this.skipElements = 1;
-      this.trackTextSize = 30;
-    });
-    Future.delayed(Duration(milliseconds: _animationDuration), () {
-      setState(() {
-        this.mainPlayer = widgetLargePlayer();
-      });
-    });
-  }
-
-  void moveToLittlePlayer(double height, double marg) {
-    setState(() {
-      this.verticalUpdateValue = 0;
-      this.bottomMarg = marg;
-      this.heightMarg = height;
-      this.sideMarg = 20;
-      this.botBarHeight = 56;
-      this.imageSize = 65;
-      this.playButtonSize = 25;
-      this.skipElements = 0;
-      this.trackTextSize = 14;
-      this.mainPlayer = widgetLittlePlayer();
-    });
-  }
-
-  void horizontalDragUpdate(DragUpdateDetails details) {
-    //print(details.delta.dx);
-  }
-
-  void horizontalDragEnd(DragEndDetails details) {
-    for(PlatformsController ctrl in PlatformsLister.platforms.values) {
-      ctrl.updateStates();
-    }
-    if(details.primaryVelocity < 0) {
-      moveToNextTrack();
-    } else if(details.primaryVelocity > 0) {
-      moveToPreviousTrack();
-    }
-  }
-
-
-
-  
-
 
   @override
   Widget build(BuildContext context) {
 
+    setState(() {
+      _songsTabCtrl = TabController(length: GlobalQueue.queue.length, initialIndex: 0, vsync: this);
+      _songsTabCtrl.addListener(() {
+        /*print("-------------");
+        print(_songsTabCtrl.index);
+        print(_tabIndex);*/
+        if(_songsTabCtrl.index > _tabIndex) {
+          _tabIndex = _songsTabCtrl.index;
+          moveToNextTrack();
+        }
+      });
+    });
 
-    if(this.mainPlayer == null || this.mainPlayer.key == ValueKey('LittlePlayer')) {
-      if(this.verticalUpdateValue == null) this.verticalUpdateValue = 0;
-      if(this.imageSize == null) this.imageSize = 65;
-      if(this.playButtonSize == null) this.playButtonSize = 25;
-      if(this.skipElements == null) this.skipElements = 0;
-      if(this.trackTextSize == null) this.trackTextSize = 14;
-      this.mainPlayer = widgetLittlePlayer();
-    }
-    else this.mainPlayer = widgetLargePlayer();
+
+    constantBuilder();
+    sizeBuilder();
 
 
     return MaterialApp(
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.yellow,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Stack(
-          children: [
-            PageView(
-              controller: this.pageController,
-              physics: NeverScrollableScrollPhysics(),
-              children: this.pages,
-            ),
-            GestureDetector(
-              onTap: () {
-                _animationDuration = 250;
-                moveToLargePlayer();
-              },
-              onHorizontalDragUpdate: (details) => horizontalDragUpdate(details),
-              onHorizontalDragEnd: (details) => horizontalDragEnd(details),
-              onVerticalDragUpdate: (details) => verticalDragUpdate(details),
-              onVerticalDragEnd: (details) => verticalDragEnd(details),
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Visibility(
-                  visible: this.visbible,
-                  child: AnimatedOpacity(
-                    duration: Duration(milliseconds: 250),
-                    onEnd: () {
-                      setState(() {
-                        this.visbible = false;
-                      });
-                    },
-                    opacity: this.opacity,
-                    child: AnimatedContainer(
-                      margin: EdgeInsets.only(bottom: this.bottomMarg),
-                      width: MediaQuery.of(context).size.width-this.sideMarg,
-                      height: this.heightMarg,
-                      duration: Duration(milliseconds: _animationDuration),
-                      child: this.mainPlayer
-                    )
-                  )
-                )
-              )
-            )
-          ]
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          primarySwatch: Colors.yellow,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        bottomNavigationBar: Container(
-          height: this.botBarHeight,
-          child:(this.heightMarg <= 65 ?
-          BottomNavigationBar(
-            items: <BottomNavigationBarItem> [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.library_music),
-                label: 'Bibliotèque',
-                backgroundColor: Colors.black
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+            body: Stack(children: [
+              PageView(
+                controller: this.pageController,
+                physics: NeverScrollableScrollPhysics(),
+                children: this.pages,
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.search),
-                label: 'Search',
-                backgroundColor: Colors.black
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.account_circle),
-                label: 'Profile',
-                backgroundColor: Colors.black
-              ),
-            ],
-            currentIndex: this.selectedIndex,
-            onTap: this.onItemTapped,
-          )
-          : Container()
-          )
-        )
-      )
-    );
+              buildPanel()
+            ]),
+            bottomNavigationBar: Container(
+                height: _botBarHeight,
+                child: BottomNavigationBar(
+                  items: <BottomNavigationBarItem>[
+                    BottomNavigationBarItem(
+                        icon: Icon(Icons.library_music),
+                        label: 'Bibliotèque',
+                        backgroundColor: Colors.black),
+                    BottomNavigationBarItem(
+                        icon: Icon(Icons.search),
+                        label: 'Search',
+                        backgroundColor: Colors.black),
+                    BottomNavigationBarItem(
+                        icon: Icon(Icons.account_circle),
+                        label: 'Profile',
+                        backgroundColor: Colors.black),
+                  ],
+                  currentIndex: this.selectedIndex,
+                  onTap: this.onItemTapped,
+                ))));
   }
 }

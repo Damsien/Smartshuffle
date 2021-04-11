@@ -40,4 +40,9 @@ class Track {
   void setId(String id) {
     this.id = id;
   }
+
+  void seekTo(Duration duration) {
+    // TODO seekTo
+  }
+
 }

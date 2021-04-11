@@ -85,6 +85,11 @@ class GlobalQueue {
     reBuildQueue();
   }
 
+  /*static Track moveToNextTrack(Track selectedTrack) {
+    GlobalQueue.currentQueueIndex = GlobalQueue.queue.indexOf(selectedTrack) + 1;
+    return GlobalQueue.queue[GlobalQueue.currentQueueIndex];
+  }*/
+
   static resetNoPermanentQueue() {
     noPermanentQueue.clear();
     reBuildQueue();
