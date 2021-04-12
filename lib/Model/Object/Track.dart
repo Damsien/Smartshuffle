@@ -41,7 +41,22 @@ class Track {
     this.id = id;
   }
 
+  @override
+  String toString() {
+    return "{$name - $artist}";
+  }
+
+
+  /*  CONTROLS  */
+
+  bool playPause() {
+    isPlaying ? isPlaying= false : isPlaying = true;
+    // TODO playPause
+    return isPlaying;
+  }
+
   void seekTo(Duration duration) {
+    currentDuration = duration;
     // TODO seekTo
   }
 

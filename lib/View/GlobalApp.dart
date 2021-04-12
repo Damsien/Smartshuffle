@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformDefaultController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/Pages/Librairie/PlaylistsPage.dart';
@@ -48,8 +49,19 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       service: ServicesLister.DEFAULT,
       artist: '',
       name: '',
-      id: '',
+      id: null,
       imageUrl: '');
+  Playlist selectedPlaylist = Playlist(
+    ownerId: '',
+    service: ServicesLister.DEFAULT,
+    id: null,
+    name: ''
+  );
+  PlatformsController selectedPlatform = PlatformsLister.platforms[ServicesLister.DEFAULT];
+
+  bool _isShuffle = true;
+  bool _isRepeatOnce = false;
+  bool _isRepeatAlways = false;
 
   int selectedIndex;
   Widget currentPage;
@@ -81,9 +93,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
 
     //Queue
-    GlobalQueue.addToPermanentQueue(PlatformsLister
-        .platforms[ServicesLister.DEFAULT].platform.playlists[0]
-        .getTracks()[0]);
     GlobalQueue.addToPermanentQueue(PlatformsLister
         .platforms[ServicesLister.DEFAULT].platform.playlists[0]
         .getTracks()[0]);
@@ -123,9 +132,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   /*    BACK PLAYER    */
 
-  setPlaying(Track track, String playMode, {Playlist playlist}) {
-    for (MapEntry<ServicesLister, PlatformsController> elem
-        in PlatformsLister.platforms.entries) {
+  setPlaying(Track track, String playMode, {Playlist playlist, PlatformsController platformCtrl}) {
+    if(playlist != null) this.selectedPlaylist = playlist;
+    if(platformCtrl != null) this.selectedPlatform = platformCtrl;
+    for (MapEntry<ServicesLister, PlatformsController> elem in PlatformsLister.platforms.entries) {
       if (elem.value.getUserInformations()['isConnected'] == true)
         this.userPlatforms[elem.key] = elem.value;
     }
@@ -144,18 +154,46 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         if (playMode == 'selected_shuffle') {
           GlobalQueue.currentQueueIndex = 0;
           GlobalQueue.replaceInPermanentQueue(0, this.selectedTrack);
-          GlobalQueue.generateNonPermanentQueue(playlist);
+          GlobalQueue.generateNonPermanentQueue(playlist, true);
+          _songsTabCtrl.animateTo(0);
+        } else if(playMode == 'selected_order') {
+          GlobalQueue.currentQueueIndex = 0;
+          GlobalQueue.resetQueue();
+          GlobalQueue.generateNonPermanentQueue(playlist, false, selectedTrack: track);
+          this.selectedTrack = GlobalQueue.queue[0];
+          this.selectedTrack.setIsPlaying(true);
+          _songsTabCtrl.animateTo(0);
+        } else if(playMode == 'unknow') {
+          if(_isShuffle) setPlaying(track, 'selected_shuffle', playlist: playlist, platformCtrl: platformCtrl);
+          else setPlaying(track, 'selected_order', playlist: playlist, platformCtrl: platformCtrl);
+        } else {
+          // Next or Previous
         }
+
+
       } else {
+
         if (playMode == 'simple_shuffle') {
           GlobalQueue.currentQueueIndex = 0;
           GlobalQueue.resetQueue();
-          GlobalQueue.generateNonPermanentQueue(playlist);
+          GlobalQueue.generateNonPermanentQueue(playlist, true);
           this.selectedTrack = GlobalQueue.queue[0];
           this.selectedTrack.setIsPlaying(true);
+          _songsTabCtrl.animateTo(0);
+        } else if(playMode == 'simple_order') {
+          GlobalQueue.currentQueueIndex = 0;
+          GlobalQueue.resetQueue();
+          GlobalQueue.generateNonPermanentQueue(playlist, false);
+          this.selectedTrack = GlobalQueue.queue[0];
+          this.selectedTrack.setIsPlaying(true);
+          _songsTabCtrl.animateTo(0);
+        } else if(playMode == 'unknow') {
+          if(_isShuffle) setPlaying(track, 'simple_shuffle', playlist: playlist, platformCtrl: platformCtrl);
+          else setPlaying(track, 'simple_order', playlist: playlist, platformCtrl: platformCtrl);
         } else {
           GlobalQueue.currentQueueIndex = 0;
           GlobalQueue.resetQueue();
+          _songsTabCtrl.animateTo(0);
         }
       }
     });
@@ -165,26 +203,21 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
   void moveToNextTrack() {
+    this.selectedTrack.currentDuration = Duration(seconds: 0);
     Track nextTrack = this.selectedTrack;
-    if (GlobalQueue.queue.indexOf(this.selectedTrack) + 1 < GlobalQueue.queue.length) {
-      nextTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack) + 1];
-      GlobalQueue.currentQueueIndex = GlobalQueue.queue.indexOf(nextTrack);
-      this.selectedTrack = nextTrack;
+    if (GlobalQueue.currentQueueIndex + 1 < GlobalQueue.queue.length) {
+      nextTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex + 1];
+      GlobalQueue.currentQueueIndex ++;
     }
     setPlaying(nextTrack, null);
   }
 
-  void moveToPreviousTrack({bool isRewinder = false}) {
+  void moveToPreviousTrack() {
+    this.selectedTrack.currentDuration = Duration(seconds: 0);
     Track previousTrack = this.selectedTrack;
-    if(!isRewinder || this.selectedTrack.currentDuration.inSeconds <= 1) {
-      if (GlobalQueue.queue.indexOf(this.selectedTrack) - 1 >= 0) {
-        previousTrack = GlobalQueue.queue[GlobalQueue.queue.indexOf(this.selectedTrack) - 1];
-        GlobalQueue.currentQueueIndex--;
-        this.selectedTrack = previousTrack;
-      }
-    } else {
-      previousTrack = this.selectedTrack;
-      this.selectedTrack.seekTo(Duration(seconds: 0));
+    if (GlobalQueue.currentQueueIndex - 1 >= 0) {
+      previousTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex - 1];
+      GlobalQueue.currentQueueIndex--;
     }
     setPlaying(previousTrack, null);
   }
@@ -217,6 +250,38 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   double _textSize;
   double _elementsOpacity;
   String _playButtonIcon = "play";
+  double _currentSliderValue;
+
+  tabControllerBuilder() {
+    if(_songsTabCtrl == null || GlobalQueue.queue.length != _songsTabCtrl.length) {
+      _songsTabCtrl = TabController(length: GlobalQueue.queue.length, initialIndex: 0, vsync: this);
+      _songsTabCtrl.addListener(() {
+        if(_songsTabCtrl.index > _tabIndex) {
+          _tabIndex = _songsTabCtrl.index;
+          moveToNextTrack();
+        } else if(_songsTabCtrl.index < _tabIndex) {
+          _tabIndex = _songsTabCtrl.index;
+          moveToPreviousTrack();
+        }
+      });
+    }
+    if(this.selectedPlaylist.id != null) {
+      if(_songsTabCtrl.index == _songsTabCtrl.length-1) {
+        setState(() {
+          if(_isRepeatOnce) {
+            this.selectedTrack.seekTo(Duration(seconds: 0));
+            _isRepeatOnce = false;
+          } else if(_isRepeatAlways) {
+            this.selectedTrack.seekTo(Duration(seconds: 0));
+          } else if(!_isShuffle) {
+            setPlaying(this.selectedTrack, 'simple_order', playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
+          } else {
+            setPlaying(this.selectedTrack, 'selected_shuffle', playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
+          }
+        });
+      }
+    }
+  }
 
   constantBuilder() {
     _screenWidth = MediaQuery.of(context).size.width;
@@ -278,8 +343,15 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       minHeight: botbar_height+10,
       maxHeight: _screenHeight,
       panelBuilder: (scrollCtrl) {
+        if(this.selectedTrack.id == null) _panelCtrl.hide();
         return WillPopScope(
-          onWillPop: () => _panelCtrl.close(),
+          onWillPop: () async {
+            if(_panelCtrl.isPanelOpen) {
+              _panelCtrl.close();
+              return false;
+            } else
+              return true;
+          },
           child: GestureDetector(
             onTap: () => _panelCtrl.panelPosition < 0.3 ? _panelCtrl.open() : null,
             child: Stack(
@@ -349,14 +421,18 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                               child: Container(
                                 width: _screenWidth - (_screenWidth / 4),
                                 child: Slider.adaptive(
-                                  value: (track.currentDuration.inSeconds /
-                                          track.totalDuration.inSeconds < 0 ||
-                                          track.currentDuration.inSeconds /
-                                          track.totalDuration.inSeconds > 1
-                                      ? 0.0
-                                      : track.currentDuration.inSeconds /
-                                          track.totalDuration.inSeconds),
-                                  onChanged: (double value) {},
+                                  value: () {
+                                    track.currentDuration.inSeconds / track.totalDuration.inSeconds < 0
+                                     || track.currentDuration.inSeconds / track.totalDuration.inSeconds > 1
+                                      ? _currentSliderValue = 0.0
+                                      : _currentSliderValue = track.currentDuration.inSeconds / track.totalDuration.inSeconds;
+                                      return _currentSliderValue;
+                                  }.call(),
+                                  onChanged: (double value) {
+                                    setState(() {
+                                      track.seekTo(Duration(seconds: (value * track.totalDuration.inSeconds).toInt()));
+                                    });
+                                  },
                                   min: 0,
                                   max: 1,
                                   activeColor: Colors.cyanAccent,
@@ -422,6 +498,14 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                               ]
                             )
                           ),
+                          Opacity(
+                            opacity: 1 - _ratio,
+                            child: Container(
+                              color: Colors.white,
+                              width: track.currentDuration.inSeconds * _screenWidth / track.totalDuration.inSeconds,
+                              height: 2,
+                            ),
+                          )
                         ],
                       );
                     }
@@ -431,7 +515,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   top: (_screenHeight * 0.80) * _ratio + (_sideMarge*0.07),
                   right: ((_screenWidth / 2) - (_playButtonSize / 2) - _sideMarge),
                   child: InkWell(
-                    onTap: () => _playButtonIcon == "play" ? _playButtonIcon = "pause" : _playButtonIcon = "play",
+                    onTap: () {
+                      //_playButtonIcon == "play" ? _playButtonIcon = "pause" : _playButtonIcon = "play";
+                      this.selectedTrack.playPause() == true ? _playButtonIcon = "play" : _playButtonIcon = "pause";
+                    },
                     child: Icon(
                       _playButtonIcon == "play" ? Icons.play_arrow : Icons.pause,
                       size: _playButtonSize,
@@ -444,7 +531,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   child: Opacity(
                     opacity: _elementsOpacity,
                     child: InkWell(
-                        onTap: () => this.moveToNextTrack(),
+                        onTap: () => _songsTabCtrl.animateTo(_songsTabCtrl.index+1),
                         child: Icon(
                         Icons.skip_next,
                         size: _playButtonSize,
@@ -454,11 +541,20 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                 ),
                 Positioned(
                   top: (_screenHeight * 0.8),
-                  left: (_screenWidth / 2) - (_screenWidth / 4),
+                  right: _screenWidth - (_screenWidth / 2.5),
                   child: Opacity(
                     opacity: _elementsOpacity,
                     child: InkWell(
-                        onTap: () => this.moveToPreviousTrack(isRewinder: true),
+                        onTap: () {
+                          if(this.selectedTrack.currentDuration.inSeconds >= 1) {
+                            setState(() {
+                              this.selectedTrack.seekTo(Duration(seconds: 0));
+                            });
+                            this.selectedTrack.seekTo(Duration(seconds: 0));
+                          } else if(_songsTabCtrl.index > 0) {
+                            _songsTabCtrl.animateTo(_songsTabCtrl.index-1);
+                          }
+                        },
                         child: Icon(
                         Icons.skip_previous,
                         size: _playButtonSize,
@@ -472,8 +568,27 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   child: Opacity(
                     opacity: _elementsOpacity,
                     child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            if(_isRepeatOnce && !_isRepeatAlways) {
+                              _isRepeatOnce = false;
+                              _isRepeatAlways = true;
+                            } else if(_isRepeatAlways && !_isRepeatOnce) {
+                              _isRepeatAlways = false;
+                              _isRepeatOnce = false;
+                            } else if(!_isRepeatOnce && !_isRepeatAlways) {
+                              _isRepeatOnce = true;
+                              _isRepeatAlways = false;
+                            }
+                          });
+                        },
                         child: Icon(
                         Icons.repeat,
+                        color: () {
+                          if(!_isRepeatOnce && !_isRepeatAlways) return Icons.repeat;
+                          else if(_isRepeatOnce && !_isRepeatAlways) return Icons.repeat_one_on;
+                          else if(_isRepeatAlways && !_isRepeatOnce) return Icons.repeat_on;
+                        }
                         size: _playButtonSize - 30,
                       )
                     )
@@ -503,20 +618,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
 
-    setState(() {
-      _songsTabCtrl = TabController(length: GlobalQueue.queue.length, initialIndex: 0, vsync: this);
-      _songsTabCtrl.addListener(() {
-        /*print("-------------");
-        print(_songsTabCtrl.index);
-        print(_tabIndex);*/
-        if(_songsTabCtrl.index > _tabIndex) {
-          _tabIndex = _songsTabCtrl.index;
-          moveToNextTrack();
-        }
-      });
-    });
+    if(_panelCtrl.isAttached && this.selectedTrack.id != null && !_panelCtrl.isPanelShown) {
+      _panelCtrl.show();
+    }
 
-
+    tabControllerBuilder();
     constantBuilder();
     sizeBuilder();
 
@@ -556,6 +662,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   ],
                   currentIndex: this.selectedIndex,
                   onTap: this.onItemTapped,
-                ))));
+                )
+            )
+        )
+    );
   }
 }

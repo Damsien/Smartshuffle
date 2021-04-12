@@ -45,22 +45,30 @@ class GlobalQueue {
 
   static shuffleNoPermanentQueue(Playlist playlist) {
     List<Track> tracks = playlist.getTracks();
+    tracks.shuffle();
     for(Track tr in tracks) {
-      int randInt = Random().nextInt(tracks.length-1);
-      Track track = tracks[randInt];
-      bool alreadyExist = false;
-      for(Track t in queue) {
-        if(t.id == track.id) alreadyExist = true;
-      }
-      if(!alreadyExist) addToNoPermanentQueue(track);
+      if(!queue.contains(tr)) addToNoPermanentQueue(tr);
     }
     currentQueueIndex = 0;
     queue.removeAt(0);
   }
 
-  static generateNonPermanentQueue(Playlist playlist) {
+  static orderedNoPermanentQueue(Playlist playlist, Track selectedTrack) {
+    List<Track> tracks = playlist.getTracks();
+    if(selectedTrack != null) {
+      tracks = tracks.sublist(tracks.indexOf(selectedTrack));
+    }
+    for(Track tr in tracks) {
+      if(!queue.contains(tr)) addToNoPermanentQueue(tr);
+    }
+    currentQueueIndex = 0;
+    queue.removeAt(0);
+  }
+
+  static generateNonPermanentQueue(Playlist playlist, bool isShuflle, {Track selectedTrack}) {
     resetNoPermanentQueue();
-    shuffleNoPermanentQueue(playlist);
+    if(isShuflle) shuffleNoPermanentQueue(playlist);
+    else orderedNoPermanentQueue(playlist, selectedTrack);
     reBuildQueue();
   }
 

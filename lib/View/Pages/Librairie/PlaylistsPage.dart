@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
@@ -153,7 +154,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
                         onTap: () => trackMainDialog(ctrl, track, ctrl.platform.playlists.indexOf(playlist), refresh: this.setResearch),
                       )
                     ),
-                    onTap: () => setPlaying(track, 'selected_shuffle', playlist: playlist),
+                    onTap: () => setPlaying(track, 'unknow', playlist: playlist, platformCtrl: ctrl),
                   )
                 )
               )
@@ -170,10 +171,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     }
   }
 
-  setPlaying(Track track, String playMode, {Playlist playlist}) {
+  setPlaying(Track track, String playMode, {Playlist playlist, PlatformsController platformCtrl}) {
     setState(() {
       this.initialTabIndex = _tabController.index;
-      widget.setPlaying(track, playMode, playlist: playlist);
+      widget.setPlaying(track, playMode, playlist: playlist, platformCtrl: platformCtrl);
     });
   }
 

@@ -161,6 +161,11 @@ class TabsView {
                         )
                       );
                     }
+                  )..add(
+                    Container(
+                      key: UniqueKey(),
+                      height: 80,
+                    )
                   )
                 )
               )
@@ -269,7 +274,7 @@ class TabsView {
                               ),
                               onTap: () {
                                 GlobalQueue.resetNoPermanentQueue();
-                                setPlaying(tracks[index], 'selected_shuffle', playlist: playlist);
+                                setPlaying(tracks[index], 'unknow', playlist: playlist, platformCtrl: ctrl);
                               },
                             )
                           )
@@ -411,7 +416,7 @@ class TabsView {
                                   splashColor: Colors.cyan[500],
                                   onPressed: () {
                                     this.state.setState(() {
-                                      setPlaying(null, 'simple_shuffle', playlist: playlist);
+                                      setPlaying(null, 'unknow', playlist: playlist, platformCtrl: ctrl);
                                     });
                                   },
                                   highlightElevation: 0,
