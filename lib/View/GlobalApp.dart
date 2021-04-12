@@ -133,6 +133,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   /*    BACK PLAYER    */
 
   setPlaying(Track track, String playMode, {Playlist playlist, PlatformsController platformCtrl}) {
+    print(track.name);
     if(playlist != null) this.selectedPlaylist = playlist;
     if(platformCtrl != null) this.selectedPlatform = platformCtrl;
     for (MapEntry<ServicesLister, PlatformsController> elem in PlatformsLister.platforms.entries) {
@@ -155,17 +156,16 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           GlobalQueue.currentQueueIndex = 0;
           GlobalQueue.replaceInPermanentQueue(0, this.selectedTrack);
           GlobalQueue.generateNonPermanentQueue(playlist, true);
-          _songsTabCtrl.animateTo(0);
-        } else if(playMode == 'selected_order') {
-          GlobalQueue.currentQueueIndex = 0;
-          GlobalQueue.resetQueue();
-          GlobalQueue.generateNonPermanentQueue(playlist, false, selectedTrack: track);
-          this.selectedTrack = GlobalQueue.queue[0];
           this.selectedTrack.setIsPlaying(true);
           _songsTabCtrl.animateTo(0);
+        } else if(playMode == 'order') {
+          GlobalQueue.resetQueue();
+          GlobalQueue.generateNonPermanentQueue(playlist, false, selectedTrack: track);
+          this.selectedTrack.setIsPlaying(true);
+          _songsTabCtrl.index = GlobalQueue.currentQueueIndex+1;
         } else if(playMode == 'unknow') {
           if(_isShuffle) setPlaying(track, 'selected_shuffle', playlist: playlist, platformCtrl: platformCtrl);
-          else setPlaying(track, 'selected_order', playlist: playlist, platformCtrl: platformCtrl);
+          else setPlaying(track, 'order', playlist: playlist, platformCtrl: platformCtrl);
         } else {
           // Next or Previous
         }
@@ -180,7 +180,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           this.selectedTrack = GlobalQueue.queue[0];
           this.selectedTrack.setIsPlaying(true);
           _songsTabCtrl.animateTo(0);
-        } else if(playMode == 'simple_order') {
+        } else if(playMode == 'order') {
           GlobalQueue.currentQueueIndex = 0;
           GlobalQueue.resetQueue();
           GlobalQueue.generateNonPermanentQueue(playlist, false);
@@ -189,7 +189,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           _songsTabCtrl.animateTo(0);
         } else if(playMode == 'unknow') {
           if(_isShuffle) setPlaying(track, 'simple_shuffle', playlist: playlist, platformCtrl: platformCtrl);
-          else setPlaying(track, 'simple_order', playlist: playlist, platformCtrl: platformCtrl);
+          else setPlaying(track, 'order', playlist: playlist, platformCtrl: platformCtrl);
         } else {
           GlobalQueue.currentQueueIndex = 0;
           GlobalQueue.resetQueue();
@@ -203,7 +203,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
   void moveToNextTrack() {
-    this.selectedTrack.currentDuration = Duration(seconds: 0);
+    this.selectedTrack.seekTo(Duration(seconds: 0));
     Track nextTrack = this.selectedTrack;
     if (GlobalQueue.currentQueueIndex + 1 < GlobalQueue.queue.length) {
       nextTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex + 1];
@@ -213,13 +213,56 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
   void moveToPreviousTrack() {
-    this.selectedTrack.currentDuration = Duration(seconds: 0);
+    this.selectedTrack.seekTo(Duration(seconds: 0));
     Track previousTrack = this.selectedTrack;
     if (GlobalQueue.currentQueueIndex - 1 >= 0) {
       previousTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex - 1];
       GlobalQueue.currentQueueIndex--;
     }
     setPlaying(previousTrack, null);
+  }
+
+  tabControllerBuilder() {
+    if(_songsTabCtrl == null || GlobalQueue.queue.length != _songsTabCtrl.length) {
+      _songsTabCtrl = TabController(length: GlobalQueue.queue.length, initialIndex: 0, vsync: this);
+      _songsTabCtrl.addListener(() {
+        print("listener");
+        print(_tabIndex.toString() + "       " + _songsTabCtrl.index.toString());
+        if(_isRepeatOnce) {
+            this.selectedTrack.seekTo(Duration(seconds: 0));
+          _isRepeatOnce = false;
+        } else if(_isRepeatAlways) {
+          this.selectedTrack.seekTo(Duration(seconds: 0));
+        } else if(_songsTabCtrl.index > _tabIndex) {
+          _tabIndex = _songsTabCtrl.index;
+          moveToNextTrack();
+        } else if(_songsTabCtrl.index < _tabIndex) {
+          _tabIndex = _songsTabCtrl.index;
+          moveToPreviousTrack();
+        }
+      });
+    }
+
+    if(this.selectedPlaylist.id != null) {
+      if(_songsTabCtrl.index == _songsTabCtrl.length-1) {
+        setState(() {
+          if(_isRepeatOnce) {
+            this.selectedTrack.seekTo(Duration(seconds: 0));
+            _isRepeatOnce = false;
+          } else if(_isRepeatAlways) {
+            this.selectedTrack.seekTo(Duration(seconds: 0));
+          } else if(!_isShuffle) {
+            if(GlobalQueue.noPermanentQueue[0].id != GlobalQueue.noPermanentQueue[GlobalQueue.noPermanentQueue.length-1].id) {
+              _songsTabCtrl = TabController(length: GlobalQueue.queue.length+1, initialIndex: 0, vsync: this);
+            }
+            setPlaying(this.selectedTrack, 'order', playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
+            _tabIndex = _songsTabCtrl.length;
+          } else {
+            setPlaying(this.selectedTrack, 'selected_shuffle', playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
+          }
+        });
+      }
+    }
   }
 
   /*  FRONT PLAYER  */
@@ -251,37 +294,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   double _elementsOpacity;
   String _playButtonIcon = "play";
   double _currentSliderValue;
-
-  tabControllerBuilder() {
-    if(_songsTabCtrl == null || GlobalQueue.queue.length != _songsTabCtrl.length) {
-      _songsTabCtrl = TabController(length: GlobalQueue.queue.length, initialIndex: 0, vsync: this);
-      _songsTabCtrl.addListener(() {
-        if(_songsTabCtrl.index > _tabIndex) {
-          _tabIndex = _songsTabCtrl.index;
-          moveToNextTrack();
-        } else if(_songsTabCtrl.index < _tabIndex) {
-          _tabIndex = _songsTabCtrl.index;
-          moveToPreviousTrack();
-        }
-      });
-    }
-    if(this.selectedPlaylist.id != null) {
-      if(_songsTabCtrl.index == _songsTabCtrl.length-1) {
-        setState(() {
-          if(_isRepeatOnce) {
-            this.selectedTrack.seekTo(Duration(seconds: 0));
-            _isRepeatOnce = false;
-          } else if(_isRepeatAlways) {
-            this.selectedTrack.seekTo(Duration(seconds: 0));
-          } else if(!_isShuffle) {
-            setPlaying(this.selectedTrack, 'simple_order', playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
-          } else {
-            setPlaying(this.selectedTrack, 'selected_shuffle', playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
-          }
-        });
-      }
-    }
-  }
 
   constantBuilder() {
     _screenWidth = MediaQuery.of(context).size.width;
@@ -583,12 +595,16 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                           });
                         },
                         child: Icon(
-                        Icons.repeat,
-                        color: () {
+                        () {
                           if(!_isRepeatOnce && !_isRepeatAlways) return Icons.repeat;
-                          else if(_isRepeatOnce && !_isRepeatAlways) return Icons.repeat_one_on;
-                          else if(_isRepeatAlways && !_isRepeatOnce) return Icons.repeat_on;
-                        }
+                          else if(_isRepeatOnce && !_isRepeatAlways) return Icons.repeat_one;
+                          else if(_isRepeatAlways && !_isRepeatOnce) return Icons.repeat;
+                        }.call(),
+                        color: () {
+                          if(!_isRepeatOnce && !_isRepeatAlways) return Colors.white;
+                          else if(_isRepeatOnce && !_isRepeatAlways) return Colors.cyanAccent;
+                          else if(_isRepeatAlways && !_isRepeatOnce) return Colors.cyanAccent;
+                        }.call(),
                         size: _playButtonSize - 30,
                       )
                     )
@@ -600,8 +616,24 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   child: Opacity(
                     opacity: _elementsOpacity,
                     child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          if(_isShuffle) {
+                            _isShuffle = false;
+                            this.setPlaying(this.selectedTrack, 'order', playlist: this.selectedPlaylist);
+                          }
+                          else {
+                            //this.setPlaying(this.selectedTrack, 'selected_shuffle', playlist: this.selectedPlaylist);
+                            _isShuffle = true;
+                          }
+                        });
+                      },
                         child: Icon(
                         Icons.shuffle,
+                        color: () {
+                          if(_isShuffle) return Colors.cyanAccent;
+                          else return Colors.white;
+                        }.call(),
                         size: _playButtonSize - 30,
                       )
                     )
