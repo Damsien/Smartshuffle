@@ -6,7 +6,7 @@ class Track {
   String name;
   String artist;
   String album;
-  Duration currentDuration = Duration(seconds: 45);
+  Duration currentDuration = Duration(seconds: 0);
   Duration totalDuration = Duration(minutes: 3);
   ServicesLister service;
   String imageUrl;

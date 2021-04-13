@@ -1,4 +1,5 @@
 import 'package:device_apps/device_apps.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformDefaultController.dart';
@@ -240,42 +241,63 @@ class TabsView {
                         key: ValueKey('ReorderableListView:Tracks:$index'),
                         margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
                         child: InkWell(
-                          child: Card(
-                            child: ListTile(
-                              title: Text(
-                                tracks.elementAt(index).name,
-                                style: (tracks[index].isPlaying ?
-                                  TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
-                                )
-                              ),
-                              leading: FractionallySizedBox(
-                                heightFactor: 0.8,
-                                child: AspectRatio(
-                                  aspectRatio: 1,
-                                  child: new Container(
-                                    decoration: new BoxDecoration(
-                                      image: new DecorationImage(
-                                        fit: BoxFit.fitHeight,
-                                        alignment: FractionalOffset.center,
-                                        image: NetworkImage(tracks.elementAt(index).imageUrl),
-                                      )
+                          child: Dismissible(
+                            key: ValueKey('ReorderableListView:Tracks:Dismissible:$index'),
+                            /*dismissThresholds: {DismissDirection.startToEnd: double.infinity,
+                                                DismissDirection.endToStart: double.infinity},*/
+                            direction: DismissDirection.endToStart,
+                            confirmDismiss: (confirm) async {
+                              addToQueue(tracks[index]);
+                              return false;
+                            },
+                            background: Card(
+                              child: Wrap(
+                                alignment: WrapAlignment.end,
+                                runAlignment: WrapAlignment.center,
+                                children:[
+                                  Container(
+                                    margin: EdgeInsets.only(right: 10),
+                                    child: Icon(Icons.playlist_add, size: 35)
+                                  )
+                                ]
+                              )
+                            ),
+                            child: Card(
+                              child: ListTile(
+                                title: Text(
+                                  tracks.elementAt(index).name,
+                                  style: (tracks[index].isPlaying ?
+                                    TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
+                                  )
+                                ),
+                                leading: FractionallySizedBox(
+                                  heightFactor: 0.8,
+                                  child: AspectRatio(
+                                    aspectRatio: 1,
+                                    child: new Container(
+                                      decoration: new BoxDecoration(
+                                        image: new DecorationImage(
+                                          fit: BoxFit.fitHeight,
+                                          alignment: FractionalOffset.center,
+                                          image: NetworkImage(tracks.elementAt(index).imageUrl),
+                                        )
+                                      ),
                                     ),
-                                  ),
-                                )
-                              ),
-                              subtitle: Text(tracks.elementAt(index).artist),
-                              onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
-                              trailing: FractionallySizedBox(
-                                heightFactor: 1,
-                                child: InkWell(
-                                  child: Icon(Icons.more_vert),
-                                  onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
-                                )
-                              ),
-                              onTap: () {
-                                GlobalQueue.resetNoPermanentQueue();
-                                setPlaying(tracks[index], 'unknow', playlist: playlist, platformCtrl: ctrl);
-                              },
+                                  )
+                                ),
+                                subtitle: Text(tracks.elementAt(index).artist),
+                                onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
+                                trailing: FractionallySizedBox(
+                                  heightFactor: 1,
+                                  child: InkWell(
+                                    child: Icon(Icons.more_vert),
+                                    onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
+                                  )
+                                ),
+                                onTap: () {
+                                  setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
+                                },
+                              )
                             )
                           )
                         )
@@ -318,18 +340,33 @@ class TabsView {
                                           margin: EdgeInsets.all(5),
                                         ),
                                       ),
-                                      Container(
-                                        width: MediaQuery.of(context).size.width/2,
-                                        child: InkWell(
-                                          onTap: () => renamePlaylist(context, playlist),
-                                          child: Text(
-                                            playlist.name, 
-                                            style: ((300/playlist.name.length+5) > 30 ?
-                                              TextStyle(fontSize: 30) :
-                                              TextStyle(fontSize: (300/playlist.name.length+5).toDouble())
-                                            ),
-                                          )
-                                        )
+                                      Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            width: MediaQuery.of(context).size.width/2,
+                                            child: InkWell(
+                                              onTap: () => renamePlaylist(context, playlist),
+                                              child: Text(
+                                                playlist.name, 
+                                                style: ((300/playlist.name.length+5) > 30 ?
+                                                  TextStyle(fontSize: 30) :
+                                                  TextStyle(fontSize: (300/playlist.name.length+5).toDouble())
+                                                ),
+                                              )
+                                            )
+                                          ),
+                                          Container(
+                                            width: MediaQuery.of(context).size.width/2,
+                                            child: Text(
+                                              playlist.ownerName, 
+                                              style: ((300/playlist.ownerName.length+5) > 30 ?
+                                                TextStyle(fontSize: 20) :
+                                                TextStyle(fontSize: (200/playlist.ownerName.length+5).toDouble())
+                                              ),
+                                            )
+                                          ),
+                                        ],
                                       )
                                     ],
                                   )
@@ -406,34 +443,57 @@ class TabsView {
                               )
                             )
                           ),
-                          Container(
-                            margin: EdgeInsets.only(top: 5, bottom: 10),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child: Container(
-                                color: Colors.cyan[800],
-                                child: OutlineButton(
-                                  splashColor: Colors.cyan[500],
-                                  onPressed: () {
-                                    this.state.setState(() {
-                                      setPlaying(null, 'unknow', playlist: playlist, platformCtrl: ctrl);
-                                    });
-                                  },
-                                  highlightElevation: 0,
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(0, 15, 0, 15),
-                                    child: Text(
-                                      "Lecture aléatoire",
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        color: Colors.white,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Container(
+                                width: MediaQuery.of(context).size.width/2.5,
+                                margin: EdgeInsets.only(top: 5, bottom: 10),
+                                child: FlatButton(
+                                  onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: false),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Icon(Icons.play_arrow),
+                                      Text("Simple",
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ),
-                              )
-                            )
-                          )
+                                  shape: ContinuousRectangleBorder(
+                                    borderRadius: BorderRadius.circular(0),
+                                    side: BorderSide(color: Colors.cyanAccent)
+                                  ),
+                                )
+                              ),
+                              Container(
+                                width: MediaQuery.of(context).size.width/2.5,
+                                margin: EdgeInsets.only(top: 5, bottom: 10),
+                                child: FlatButton(
+                                  onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: true),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Icon(Icons.shuffle),
+                                      Text("Aléatoire",
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  shape: ContinuousRectangleBorder(
+                                    borderRadius: BorderRadius.circular(0),
+                                    side: BorderSide(color: Colors.cyanAccent)
+                                  ),
+                                )
+                              ),
+                            ],
+                          ),
                         ]
                       ),
                       Visibility(

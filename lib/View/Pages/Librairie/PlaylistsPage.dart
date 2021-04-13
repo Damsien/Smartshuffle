@@ -154,7 +154,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
                         onTap: () => trackMainDialog(ctrl, track, ctrl.platform.playlists.indexOf(playlist), refresh: this.setResearch),
                       )
                     ),
-                    onTap: () => setPlaying(track, 'unknow', playlist: playlist, platformCtrl: ctrl),
+                    onTap: () => setPlaying(track, true, playlist: playlist, platformCtrl: ctrl),
                   )
                 )
               )
@@ -171,10 +171,15 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     }
   }
 
-  setPlaying(Track track, String playMode, {Playlist playlist, PlatformsController platformCtrl}) {
+  setPlaying(Track track, bool queueCreate, {Playlist playlist, PlatformsController platformCtrl, bool isShuffle, bool isRepeatOnce, bool isRepeatAlways}) {
     setState(() {
       this.initialTabIndex = _tabController.index;
-      widget.setPlaying(track, playMode, playlist: playlist, platformCtrl: platformCtrl);
+      widget.setPlaying(track, queueCreate,
+       playlist: playlist,
+       platformCtrl: platformCtrl,
+       isShuffle: isShuffle,
+       isRepeatOnce: isRepeatOnce,
+       isRepeatAlways: isRepeatAlways);
     });
   }
 

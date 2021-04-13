@@ -63,6 +63,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   bool _isRepeatOnce = false;
   bool _isRepeatAlways = false;
 
+  bool _blockAnimation = false;
+
   int selectedIndex;
   Widget currentPage;
 
@@ -73,7 +75,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       ctrl.addPlaylist(
           name: ctrl.platform.name + " n°$i",
           imageUrl: 'https://source.unsplash.com/random',
-          ownerId: "");
+          ownerId: "",
+          ownerName: 'Damien');
     }
     for (int i = 0; i < 10; i++) {
       for (int j = 0; j < Random().nextInt(70); j++) {
@@ -93,9 +96,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
 
     //Queue
-    GlobalQueue.addToPermanentQueue(PlatformsLister
+    /*GlobalQueue.addToPermanentQueue(PlatformsLister
         .platforms[ServicesLister.DEFAULT].platform.playlists[0]
-        .getTracks()[0]);
+        .getTracks()[0]);*/
   }
 
   @override
@@ -132,15 +135,21 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   /*    BACK PLAYER    */
 
-  setPlaying(Track track, String playMode, {Playlist playlist, PlatformsController platformCtrl}) {
-    print(track.name);
+  setPlaying(Track track, bool queueCreate, {Playlist playlist, PlatformsController platformCtrl, bool isShuffle, bool isRepeatOnce, bool isRepeatAlways}) {
+
+    if(isShuffle != null) _isShuffle = isShuffle;
+    if(isRepeatOnce != null) _isRepeatOnce = isRepeatOnce;
+    if(isRepeatAlways != null) _isRepeatAlways = isRepeatAlways;
     if(playlist != null) this.selectedPlaylist = playlist;
     if(platformCtrl != null) this.selectedPlatform = platformCtrl;
+
     for (MapEntry<ServicesLister, PlatformsController> elem in PlatformsLister.platforms.entries) {
       if (elem.value.getUserInformations()['isConnected'] == true)
         this.userPlatforms[elem.key] = elem.value;
     }
+
     setState(() {
+
       for (PlatformsController ctrl in this.userPlatforms.values) {
         for (Playlist play in ctrl.platform.playlists) {
           for (MapEntry<Track, DateTime> tr in play.tracks) {
@@ -148,121 +157,147 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           }
         }
       }
+
       if (track != null) {
         track.setIsPlaying(true);
         this.selectedTrack = track;
 
-        if (playMode == 'selected_shuffle') {
-          GlobalQueue.currentQueueIndex = 0;
-          GlobalQueue.replaceInPermanentQueue(0, this.selectedTrack);
-          GlobalQueue.generateNonPermanentQueue(playlist, true);
-          this.selectedTrack.setIsPlaying(true);
-          _songsTabCtrl.animateTo(0);
-        } else if(playMode == 'order') {
-          GlobalQueue.resetQueue();
-          GlobalQueue.generateNonPermanentQueue(playlist, false, selectedTrack: track);
-          this.selectedTrack.setIsPlaying(true);
-          _songsTabCtrl.index = GlobalQueue.currentQueueIndex+1;
-        } else if(playMode == 'unknow') {
-          if(_isShuffle) setPlaying(track, 'selected_shuffle', playlist: playlist, platformCtrl: platformCtrl);
-          else setPlaying(track, 'order', playlist: playlist, platformCtrl: platformCtrl);
-        } else {
-          // Next or Previous
-        }
+        if(queueCreate) {
 
+          if(_isShuffle) {
+            GlobalQueue.generateNonPermanentQueue(playlist, true, selectedTrack: track);
+            _blockAnimation = true;
+            _songsTabCtrl.index = 0;
+          } else {
+            GlobalQueue.generateNonPermanentQueue(playlist, false, selectedTrack: track);
+            _blockAnimation = true;
+            _songsTabCtrl.index = GlobalQueue.currentQueueIndex;
+            _blockAnimation = false;
+          }
+
+        } else {
+          
+          // Next or Previous
+
+        }
 
       } else {
 
-        if (playMode == 'simple_shuffle') {
-          GlobalQueue.currentQueueIndex = 0;
-          GlobalQueue.resetQueue();
-          GlobalQueue.generateNonPermanentQueue(playlist, true);
-          this.selectedTrack = GlobalQueue.queue[0];
-          this.selectedTrack.setIsPlaying(true);
-          _songsTabCtrl.animateTo(0);
-        } else if(playMode == 'order') {
-          GlobalQueue.currentQueueIndex = 0;
-          GlobalQueue.resetQueue();
-          GlobalQueue.generateNonPermanentQueue(playlist, false);
-          this.selectedTrack = GlobalQueue.queue[0];
-          this.selectedTrack.setIsPlaying(true);
-          _songsTabCtrl.animateTo(0);
-        } else if(playMode == 'unknow') {
-          if(_isShuffle) setPlaying(track, 'simple_shuffle', playlist: playlist, platformCtrl: platformCtrl);
-          else setPlaying(track, 'order', playlist: playlist, platformCtrl: platformCtrl);
+        if(queueCreate) {
+
+          if(_isShuffle) {
+            GlobalQueue.generateNonPermanentQueue(playlist, true);
+            _blockAnimation = true;
+            _songsTabCtrl.index = 0;
+            this.selectedTrack = GlobalQueue.queue[0];
+            this.selectedTrack.setIsPlaying(true);
+          } else {
+            GlobalQueue.generateNonPermanentQueue(playlist, false);
+            _blockAnimation = true;
+            _songsTabCtrl.index = 0;
+            this.selectedTrack = GlobalQueue.queue[0];
+            this.selectedTrack.setIsPlaying(true);
+          }
+
         } else {
-          GlobalQueue.currentQueueIndex = 0;
-          GlobalQueue.resetQueue();
-          _songsTabCtrl.animateTo(0);
+          
+          // Next or Previous
+
         }
+
       }
+
     });
+
     for (PlatformsController ctrl in PlatformsLister.platforms.values) {
       ctrl.updateStates();
+    }
+
+  }
+
+  void seekAllTrackToZero() {
+    for(Track tr in GlobalQueue.queue) {
+      tr.seekTo(Duration(seconds: 0));
     }
   }
 
   void moveToNextTrack() {
-    this.selectedTrack.seekTo(Duration(seconds: 0));
-    Track nextTrack = this.selectedTrack;
+    Track nextTrack;
     if (GlobalQueue.currentQueueIndex + 1 < GlobalQueue.queue.length) {
       nextTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex + 1];
-      GlobalQueue.currentQueueIndex ++;
+      GlobalQueue.currentQueueIndex++;
+    } else {
+      nextTrack = GlobalQueue.queue[0];
+      GlobalQueue.currentQueueIndex = 0;
     }
-    setPlaying(nextTrack, null);
+    _isRepeatOnce = false;
+    _isRepeatAlways = false;
+    setPlaying(nextTrack, false);
   }
 
   void moveToPreviousTrack() {
-    this.selectedTrack.seekTo(Duration(seconds: 0));
-    Track previousTrack = this.selectedTrack;
+    Track previousTrack;
     if (GlobalQueue.currentQueueIndex - 1 >= 0) {
       previousTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex - 1];
       GlobalQueue.currentQueueIndex--;
+    } else {
+      previousTrack = this.selectedTrack;
+      GlobalQueue.currentQueueIndex = 0;
     }
-    setPlaying(previousTrack, null);
+    _isRepeatOnce = false;
+    _isRepeatAlways = false;
+    setPlaying(previousTrack, false);
   }
 
   tabControllerBuilder() {
     if(_songsTabCtrl == null || GlobalQueue.queue.length != _songsTabCtrl.length) {
-      _songsTabCtrl = TabController(length: GlobalQueue.queue.length, initialIndex: 0, vsync: this);
+
+      _songsTabCtrl = TabController(length: GlobalQueue.queue.length, initialIndex: GlobalQueue.currentQueueIndex, vsync: this);
+      
       _songsTabCtrl.addListener(() {
-        print("listener");
-        print(_tabIndex.toString() + "       " + _songsTabCtrl.index.toString());
+
+        setState(() {
+
+          seekAllTrackToZero();
+          if(_songsTabCtrl.index == 1 && (_tabIndex == _songsTabCtrl.length-1 || _tabIndex == 0)) {
+            _tabIndex = 0;
+            _blockAnimation = false;
+          }
+          if(!_blockAnimation) {
+            if(_songsTabCtrl.index > _tabIndex) {
+              _tabIndex = _songsTabCtrl.index;
+              moveToNextTrack();
+            } else if(_songsTabCtrl.index < _tabIndex) {
+              _tabIndex = _songsTabCtrl.index;
+              moveToPreviousTrack();
+            }
+          }
+          _blockAnimation = false;
+        });
+
+      });
+
+    }
+
+
+    if(this.selectedTrack.currentDuration >= this.selectedTrack.totalDuration) {
+      setState(() {
+        seekAllTrackToZero();
         if(_isRepeatOnce) {
-            this.selectedTrack.seekTo(Duration(seconds: 0));
+          this.selectedTrack.seekTo(Duration(seconds: 0));
           _isRepeatOnce = false;
         } else if(_isRepeatAlways) {
           this.selectedTrack.seekTo(Duration(seconds: 0));
-        } else if(_songsTabCtrl.index > _tabIndex) {
-          _tabIndex = _songsTabCtrl.index;
+        } else if(_songsTabCtrl.index < _songsTabCtrl.length-1) {
+          _songsTabCtrl.animateTo(_songsTabCtrl.index+1);
+        } else {
+          _blockAnimation = true;
+          _songsTabCtrl.animateTo(0);
           moveToNextTrack();
-        } else if(_songsTabCtrl.index < _tabIndex) {
-          _tabIndex = _songsTabCtrl.index;
-          moveToPreviousTrack();
         }
       });
     }
 
-    if(this.selectedPlaylist.id != null) {
-      if(_songsTabCtrl.index == _songsTabCtrl.length-1) {
-        setState(() {
-          if(_isRepeatOnce) {
-            this.selectedTrack.seekTo(Duration(seconds: 0));
-            _isRepeatOnce = false;
-          } else if(_isRepeatAlways) {
-            this.selectedTrack.seekTo(Duration(seconds: 0));
-          } else if(!_isShuffle) {
-            if(GlobalQueue.noPermanentQueue[0].id != GlobalQueue.noPermanentQueue[GlobalQueue.noPermanentQueue.length-1].id) {
-              _songsTabCtrl = TabController(length: GlobalQueue.queue.length+1, initialIndex: 0, vsync: this);
-            }
-            setPlaying(this.selectedTrack, 'order', playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
-            _tabIndex = _songsTabCtrl.length;
-          } else {
-            setPlaying(this.selectedTrack, 'selected_shuffle', playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
-          }
-        });
-      }
-    }
   }
 
   /*  FRONT PLAYER  */
@@ -331,6 +366,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   switchPanelSize(double height) {
     setState(() {
+      FocusScope.of(context).unfocus();
 
       _ratio = height;
 
@@ -387,18 +423,14 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                   ),
                                 ),
                               ),
-                              BackdropFilter(
-                                filter: ImageFilter.blur(
-                                  sigmaX: index == _songsTabCtrl.length ? 10 : 0,
-                                  sigmaY: index == _songsTabCtrl.length ? 10 : 0),
-                                child: Stack(
-                                  children: [
-                                    Container(
+                              ClipRect(
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                    child: Container(
                                       color: Colors.black.withOpacity(0.55),
                                     )
-                                  ]
-                                )
-                              ),
+                                ),
+                              )
                             ],
                           ),
                           Positioned(
@@ -434,10 +466,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                 width: _screenWidth - (_screenWidth / 4),
                                 child: Slider.adaptive(
                                   value: () {
-                                    track.currentDuration.inSeconds / track.totalDuration.inSeconds < 0
-                                     || track.currentDuration.inSeconds / track.totalDuration.inSeconds > 1
-                                      ? _currentSliderValue = 0.0
-                                      : _currentSliderValue = track.currentDuration.inSeconds / track.totalDuration.inSeconds;
+                                    track.currentDuration.inSeconds / track.totalDuration.inSeconds >= 0
+                                     && track.currentDuration.inSeconds / track.totalDuration.inSeconds <= 1
+                                      ? _currentSliderValue = track.currentDuration.inSeconds / track.totalDuration.inSeconds
+                                      : _currentSliderValue = 0.0;
                                       return _currentSliderValue;
                                   }.call(),
                                   onChanged: (double value) {
@@ -500,6 +532,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                   child: Opacity(
                                     opacity: _elementsOpacity,
                                     child: InkWell(
+                                        onTap: () {
+                                          TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, track);
+                                        },
                                         child: Icon(
                                         Icons.add,
                                         size: _playButtonSize - 10,
@@ -528,7 +563,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   right: ((_screenWidth / 2) - (_playButtonSize / 2) - _sideMarge),
                   child: InkWell(
                     onTap: () {
-                      //_playButtonIcon == "play" ? _playButtonIcon = "pause" : _playButtonIcon = "play";
                       this.selectedTrack.playPause() == true ? _playButtonIcon = "play" : _playButtonIcon = "pause";
                     },
                     child: Icon(
@@ -543,7 +577,16 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   child: Opacity(
                     opacity: _elementsOpacity,
                     child: InkWell(
-                        onTap: () => _songsTabCtrl.animateTo(_songsTabCtrl.index+1),
+                        onTap: () {
+                          if(_songsTabCtrl.index < _songsTabCtrl.length-1) {
+                            _songsTabCtrl.animateTo(_songsTabCtrl.index+1);
+                          } else {
+                            _blockAnimation = true;
+                            _songsTabCtrl.index = 0;
+                            _blockAnimation = false;
+                            moveToNextTrack();
+                          }
+                        },
                         child: Icon(
                         Icons.skip_next,
                         size: _playButtonSize,
@@ -620,11 +663,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                         setState(() {
                           if(_isShuffle) {
                             _isShuffle = false;
-                            this.setPlaying(this.selectedTrack, 'order', playlist: this.selectedPlaylist);
-                          }
-                          else {
-                            //this.setPlaying(this.selectedTrack, 'selected_shuffle', playlist: this.selectedPlaylist);
+                            this.setPlaying(this.selectedTrack, true, playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
+                          } else {
                             _isShuffle = true;
+                            this.setPlaying(this.selectedTrack, true, playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
                           }
                         });
                       },

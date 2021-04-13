@@ -35,49 +35,53 @@ class GlobalQueue {
 
   static reBuildQueue() {
     queue.clear();
-    for(Track t in permanentQueue) {
-      queue.add(t);
-    }
     for(Track t in noPermanentQueue) {
       queue.add(t);
     }
-
-    print("=================");
-    for(Track tr in queue) {
-      print(tr.toString());
+    for(Track t in permanentQueue) {
+      print(t.name);
+      queue.insert(currentQueueIndex+1, t);
     }
+
+    print("==========");
+    print(queue.length);
+    for(Track tr in queue) {
+      print(tr);
+    }
+
   }
 
-  static shuffleNoPermanentQueue(Playlist playlist) {
+  static shuffleNoPermanentQueue(Playlist playlist, Track selectedTrack) {
     List<Track> tracks = playlist.getTracks();
     tracks.shuffle();
+    if(selectedTrack != null) noPermanentQueue.insert(0, selectedTrack);
     for(Track tr in tracks) {
-      if(!queue.contains(tr)) addToNoPermanentQueue(tr);
+      if(!noPermanentQueue.contains(tr))  addToNoPermanentQueue(tr);
     }
     currentQueueIndex = 0;
-    noPermanentQueue.removeAt(0);
   }
 
   static orderedNoPermanentQueue(Playlist playlist, Track selectedTrack) {
     List<Track> tracks = playlist.getTracks();
     if(selectedTrack != null) {
       currentQueueIndex = tracks.indexOf(selectedTrack);
-      tracks.insert(0, tracks.last);
     } else {
       currentQueueIndex = 0;
     }
-    noPermanentQueue = tracks;  
+    for(Track tr in tracks) {
+      addToNoPermanentQueue(tr);
+    }
   }
 
   static generateNonPermanentQueue(Playlist playlist, bool isShuflle, {Track selectedTrack}) {
     resetNoPermanentQueue();
-    if(isShuflle) shuffleNoPermanentQueue(playlist);
+    if(isShuflle) shuffleNoPermanentQueue(playlist, selectedTrack);
     else orderedNoPermanentQueue(playlist, selectedTrack);
     reBuildQueue();
   }
 
   static addToPermanentQueue(Track track) {
-    permanentQueue.add(track);
+    permanentQueue.insert(0, track);
     reBuildQueue();
   }
 
@@ -99,7 +103,8 @@ class GlobalQueue {
 
   static resetNoPermanentQueue() {
     noPermanentQueue.clear();
-    reBuildQueue();
+    currentQueueIndex = 0;
+    //reBuildQueue();
   }
 
   static resetQueue() {
