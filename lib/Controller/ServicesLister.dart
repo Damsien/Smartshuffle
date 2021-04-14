@@ -30,24 +30,27 @@ class GlobalQueue {
   
   static List<Track> permanentQueue = List<Track>();
   static List<Track> noPermanentQueue = List<Track>();
-  static List<Track> queue = List<Track>();
+  static List<MapEntry<Track, bool>> queue = List<MapEntry<Track, bool>>(); //bool : isPermanent ?
   static int currentQueueIndex = 0;
 
   static reBuildQueue() {
     queue.clear();
     for(Track t in noPermanentQueue) {
-      queue.add(t);
+      queue.add(MapEntry(t, false));
     }
-    for(Track t in permanentQueue) {
-      print(t.name);
-      queue.insert(currentQueueIndex+1, t);
+    for(Track t in permanentQueue.reversed) {
+      queue.insert(currentQueueIndex+1, MapEntry(t, true));
     }
 
-    print("==========");
-    print(queue.length);
-    for(Track tr in queue) {
-      print(tr);
-    }
+    /*print("=======");
+    int i=0;
+    for(MapEntry me in queue) {
+      if(i == currentQueueIndex+1)
+        print(me.key.toString() + "  *");
+      else
+        print(me.key);
+      i++;
+    }*/
 
   }
 
@@ -81,7 +84,7 @@ class GlobalQueue {
   }
 
   static addToPermanentQueue(Track track) {
-    permanentQueue.insert(0, track);
+    permanentQueue.add(track);
     reBuildQueue();
   }
 
@@ -101,6 +104,12 @@ class GlobalQueue {
     reBuildQueue();
   }
 
+  static moveFromPermanentToNoPermanent(int index) {
+    print(permanentQueue[0]);
+    noPermanentQueue.insert(index, permanentQueue[0]);
+    permanentQueue.removeAt(0);
+  }
+
   static resetNoPermanentQueue() {
     noPermanentQueue.clear();
     currentQueueIndex = 0;
@@ -114,7 +123,7 @@ class GlobalQueue {
   }
 
   static reorder(int oldIndex, int newIndex) {
-    Track track = queue.removeAt(oldIndex);
+    MapEntry<Track, bool> track = queue.removeAt(oldIndex);
     queue.insert(newIndex, track);
   }
 

@@ -168,10 +168,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             GlobalQueue.generateNonPermanentQueue(playlist, true, selectedTrack: track);
             _blockAnimation = true;
             _songsTabCtrl.index = 0;
+            _tabIndex = _songsTabCtrl.index;
           } else {
+            print("here");
             GlobalQueue.generateNonPermanentQueue(playlist, false, selectedTrack: track);
             _blockAnimation = true;
             _songsTabCtrl.index = GlobalQueue.currentQueueIndex;
+            _tabIndex = _songsTabCtrl.index;
             _blockAnimation = false;
           }
 
@@ -189,13 +192,15 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             GlobalQueue.generateNonPermanentQueue(playlist, true);
             _blockAnimation = true;
             _songsTabCtrl.index = 0;
-            this.selectedTrack = GlobalQueue.queue[0];
+            _tabIndex = _songsTabCtrl.index;
+            this.selectedTrack = GlobalQueue.queue[0].key;
             this.selectedTrack.setIsPlaying(true);
           } else {
             GlobalQueue.generateNonPermanentQueue(playlist, false);
             _blockAnimation = true;
             _songsTabCtrl.index = 0;
-            this.selectedTrack = GlobalQueue.queue[0];
+            _tabIndex = _songsTabCtrl.index;
+            this.selectedTrack = GlobalQueue.queue[0].key;
             this.selectedTrack.setIsPlaying(true);
           }
 
@@ -216,20 +221,29 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
   void seekAllTrackToZero() {
-    for(Track tr in GlobalQueue.queue) {
+    for(MapEntry me in GlobalQueue.queue) {
+      Track tr = me.key;
       tr.seekTo(Duration(seconds: 0));
     }
   }
 
   void moveToNextTrack() {
     Track nextTrack;
+    int lastIndex;
     if (GlobalQueue.currentQueueIndex + 1 < GlobalQueue.queue.length) {
-      nextTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex + 1];
+      nextTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex + 1].key;
       GlobalQueue.currentQueueIndex++;
+      lastIndex = GlobalQueue.currentQueueIndex-1;
     } else {
-      nextTrack = GlobalQueue.queue[0];
+      nextTrack = GlobalQueue.queue[0].key;
       GlobalQueue.currentQueueIndex = 0;
+      lastIndex = GlobalQueue.queue.length-1;
     }
+    
+    if(GlobalQueue.queue[lastIndex].value) {
+      GlobalQueue.moveFromPermanentToNoPermanent(lastIndex);
+    }
+
     _isRepeatOnce = false;
     _isRepeatAlways = false;
     setPlaying(nextTrack, false);
@@ -238,7 +252,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   void moveToPreviousTrack() {
     Track previousTrack;
     if (GlobalQueue.currentQueueIndex - 1 >= 0) {
-      previousTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex - 1];
+      previousTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex - 1].key;
       GlobalQueue.currentQueueIndex--;
     } else {
       previousTrack = this.selectedTrack;
@@ -246,14 +260,15 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
     _isRepeatOnce = false;
     _isRepeatAlways = false;
+    GlobalQueue.reBuildQueue();
     setPlaying(previousTrack, false);
   }
 
   tabControllerBuilder() {
+    
     if(_songsTabCtrl == null || GlobalQueue.queue.length != _songsTabCtrl.length) {
 
       _songsTabCtrl = TabController(length: GlobalQueue.queue.length, initialIndex: GlobalQueue.currentQueueIndex, vsync: this);
-      
       _songsTabCtrl.addListener(() {
 
         setState(() {
@@ -274,6 +289,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           }
           _blockAnimation = false;
         });
+        //tabControllerBuilder();
 
       });
 
@@ -299,6 +315,66 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
 
   }
+
+
+
+  void skipNextButton() {
+    if(_songsTabCtrl.index < _songsTabCtrl.length-1) {
+      _songsTabCtrl.animateTo(_songsTabCtrl.index+1);
+    } else {
+      _blockAnimation = true;
+      _songsTabCtrl.index = 0;
+      _tabIndex = _songsTabCtrl.index;
+      _blockAnimation = false;
+      moveToNextTrack();
+    }
+  }
+
+
+  void repeatButtonOnTap() {
+    setState(() {
+      if(_isRepeatOnce && !_isRepeatAlways) {
+        _isRepeatOnce = false;
+        _isRepeatAlways = true;
+      } else if(_isRepeatAlways && !_isRepeatOnce) {
+        _isRepeatAlways = false;
+        _isRepeatOnce = false;
+      } else if(!_isRepeatOnce && !_isRepeatAlways) {
+        _isRepeatOnce = true;
+        _isRepeatAlways = false;
+      }
+    });
+  }
+
+  void shuffleButtonOnTap() {
+    setState(() {
+      if(_isShuffle) {
+        _isShuffle = false;
+        this.setPlaying(this.selectedTrack, true, playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
+      } else {
+        _isShuffle = true;
+        this.setPlaying(this.selectedTrack, true, playlist: this.selectedPlaylist, platformCtrl: this.selectedPlatform);
+      }
+    });
+  }
+
+  IconData repeatButtonIcon() {
+    if(!_isRepeatOnce && !_isRepeatAlways) return Icons.repeat;
+    else if(_isRepeatOnce && !_isRepeatAlways) return Icons.repeat_one;
+    else if(_isRepeatAlways && !_isRepeatOnce) return Icons.repeat;
+  }
+
+  Color repeatButtonColor() {
+    if(!_isRepeatOnce && !_isRepeatAlways) return Colors.white;
+    else if(_isRepeatOnce && !_isRepeatAlways) return Colors.cyanAccent;
+    else if(_isRepeatAlways && !_isRepeatOnce) return Colors.cyanAccent;
+  }
+
+  Color shuffleButtonColor() {
+    if(_isShuffle) return Colors.cyanAccent;
+    else return Colors.white;
+  }
+
 
   /*  FRONT PLAYER  */
 
@@ -410,7 +486,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   children: List.generate(
                     GlobalQueue.queue.length,
                     (index) {
-                      Track track = GlobalQueue.queue[index];
+                      Track track = GlobalQueue.queue[index].key;
                       return Stack(
                         children: [
                           Stack(
@@ -583,6 +659,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                           } else {
                             _blockAnimation = true;
                             _songsTabCtrl.index = 0;
+                            _tabIndex = _songsTabCtrl.index;
                             _blockAnimation = false;
                             moveToNextTrack();
                           }
