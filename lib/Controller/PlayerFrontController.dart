@@ -9,16 +9,24 @@ import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/PlayerView.dart';
 
-class _PlayerFrontController extends StatefulWidget {
+/*class PlayerFrontController extends StatefulWidget {
   final String title;
+  static _PlayerFrontController state;
 
-  _PlayerFrontController({Key key, this.title}) : super(key: key);
+  PlayerFrontController({Key key, this.title}) : super(key: key);
+
+  static PlayerFrontController getInstance() {
+    if(state == null) state = createStateStatic();
+    return PlayerFrontController();
+  }
+
+  static _PlayerFrontController createStateStatic() => _PlayerFrontController();
 
   @override
-  PlayerFrontController createState() => PlayerFrontController();
-}
+  _PlayerFrontController createState() => _PlayerFrontController();
+}*/
 
-class PlayerFrontController extends State<_PlayerFrontController> with TickerProviderStateMixin {
+class PlayerFrontController extends State<StatefulWidget> with TickerProviderStateMixin {
 
   // Map<String, Function> functions;
 
@@ -323,6 +331,8 @@ class PlayerFrontController extends State<_PlayerFrontController> with TickerPro
     PlayerView playerViewInstance = PlayerView.getInstance(this, functions, attributes);
     playerViewInstance.constantBuilder();
     playerViewInstance.sizeBuilder();
+
+    return playerViewInstance.buildPanel();
     
   }
 

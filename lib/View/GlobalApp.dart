@@ -93,7 +93,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
   void initPage() {
-    this.playerFrontController = new PlayerFrontController();
+    this.playerFrontController = PlayerFrontController();
     Widget playlistsPage = new PlaylistsPage(setPlaying: this.playerFrontController.setPlaying);
     Widget searchPage = new SearchPageMain();
     Widget profilePage = new ProfilePage();
@@ -124,7 +124,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
 
-    this.playerFrontController.build(context);
 
     return MaterialApp(
         theme: ThemeData(
@@ -140,7 +139,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                 physics: NeverScrollableScrollPhysics(),
                 children: this.pages,
               ),
-              this.playerFrontController.widget
+              this.playerFrontController.build(context)
             ]),
             bottomNavigationBar: Container(
                 height: this.playerFrontController.botBarHeight,

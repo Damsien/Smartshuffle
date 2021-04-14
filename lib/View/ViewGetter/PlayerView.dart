@@ -97,7 +97,7 @@ class PlayerView {
 
       _ratio = height;
 
-      _botBarHeight = botbar_height - (_ratio * botbar_height);
+      __attributes['botBarHeight'] = botbar_height - (_ratio * botbar_height);
       if (_imageSize >= image_size_little) _imageSize = image_size_large * _ratio;
       _sideMarge = (1 - _ratio) * side_marge;
       if(_playButtonSize >= playbutton_size_little) _playButtonSize = playbutton_size_large * _ratio;
