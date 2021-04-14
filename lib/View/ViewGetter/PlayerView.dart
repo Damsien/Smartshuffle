@@ -11,43 +11,29 @@ import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
-class FrontPlayer {
+class PlayerView {
 
-  static FrontPlayer getInstance(State state, Track track, Map<String, Function> functions) {
-    return FrontPlayer(state, track, functions);
+  static PlayerView getInstance(State state, Map<String, Function> functions, Map<String, Object> attributes) {
+    return PlayerView(state, functions, attributes);
   }
 
   State state;
   Map<String, Function> functions;
+  Map<String, Object> __attributes;
 
-  Track selectedTrack = Track(
-      service: ServicesLister.DEFAULT,
-      artist: '',
-      name: '',
-      id: null,
-      imageUrl: '');
-  Playlist selectedPlaylist = Playlist(
-    ownerId: '',
-    service: ServicesLister.DEFAULT,
-    id: null,
-    name: ''
-  );
-  PlatformsController selectedPlatform = PlatformsLister.platforms[ServicesLister.DEFAULT];
+  Track selectedTrack;
 
-  FrontPlayer(State state, Track track, Map<String, Function> functions) {
+  PlayerView(State state, Map<String, Function> functions, Map<String, Object> attributes) {
     this.state = state;
-    this.selectedTrack = track;
     this.functions = functions;
+    this.__attributes = attributes;
+
+    selectedTrack = __attributes['selectedTrack'];
   }
 
   double _screenWidth;
   double _screenHeight;
   double _ratio = 1;
-
-  PanelController _panelCtrl = PanelController();
-  TabController _songsTabCtrl;
-  int _tabIndex = 0;
-  bool _isPanelDraggable = true;
 
   // Front constant
   double image_size_large;
@@ -59,7 +45,6 @@ class FrontPlayer {
   double text_size_large;
   double text_size_little;
 
-  double _botBarHeight;
   double _imageSize;
   double _sideMarge;
   double _playButtonSize;
@@ -127,28 +112,34 @@ class FrontPlayer {
 
   buildPanel() {
     return SlidingUpPanel(
-      isDraggable: _isPanelDraggable,
+      isDraggable: __attributes['_isPanelDraggable'],
       onPanelSlide: (height) => switchPanelSize(height),
-      controller: _panelCtrl,
+      controller: __attributes['_panelCtrl'],
       minHeight: botbar_height+10,
       maxHeight: _screenHeight,
       panelBuilder: (scrollCtrl) {
-        if(this.selectedTrack.id == null) _panelCtrl.hide();
+        PanelController panelCtrl = __attributes['_panelCtrl'];
+        TabController songsTabCtrl = __attributes['_songsTabCtrl'];
+        PlatformsController selectedPlatform = __attributes['selectedPlatform'];
+
+        if(this.selectedTrack.id == null) {
+          panelCtrl.hide();
+        }
         return WillPopScope(
           onWillPop: () async {
-            if(_panelCtrl.isPanelOpen) {
-              _panelCtrl.close();
+            if(panelCtrl.isPanelOpen) {
+              panelCtrl.close();
               return false;
             } else
               return true;
           },
           child: GestureDetector(
-            onTap: () => _panelCtrl.panelPosition < 0.3 ? _panelCtrl.open() : null,
+            onTap: () => panelCtrl.panelPosition < 0.3 ? panelCtrl.open() : null,
             child: Stack(
               key: ValueKey('FrontPLayer'),
               children: [
                 TabBarView(
-                controller: _songsTabCtrl,
+                controller: songsTabCtrl,
                   children: List.generate(
                     GlobalQueue.queue.length,
                     (index) {
@@ -275,7 +266,7 @@ class FrontPlayer {
                                     opacity: _elementsOpacity,
                                     child: InkWell(
                                         onTap: () {
-                                          TabsView.getInstance(this.state).addToPlaylist(this.selectedPlatform, track);
+                                          TabsView.getInstance(this.state).addToPlaylist(selectedPlatform, track);
                                         },
                                         child: Icon(
                                         Icons.add,
@@ -339,8 +330,8 @@ class FrontPlayer {
                               this.selectedTrack.seekTo(Duration(seconds: 0));
                             });
                             this.selectedTrack.seekTo(Duration(seconds: 0));
-                          } else if(_songsTabCtrl.index > 0) {
-                            _songsTabCtrl.animateTo(_songsTabCtrl.index-1);
+                          } else if(songsTabCtrl.index > 0) {
+                            songsTabCtrl.animateTo(songsTabCtrl.index-1);
                           }
                         },
                         child: Icon(
