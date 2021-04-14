@@ -394,9 +394,10 @@ class TabsView {
                           ),
                           Container(
                             width: WidgetsBinding.instance.window.physicalSize.width,
-                            margin: EdgeInsets.only(left: 10, right: 10),
+                            margin: EdgeInsets.only(left: 10,right: 10),
                             child: ListTile(
                               subtitle: Container(
+                                height: 45,
                                 child: TextField(
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(),
@@ -413,15 +414,29 @@ class TabsView {
                                   icon: Icon(Icons.sort),
                                   tooltip: "Trier",
                                   itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                                    const PopupMenuItem(
+                                    PopupMenuItem(
                                       value: 'last_added',
-                                      child: Text('Ajouté récemment'),
+                                      child: Row(
+                                        children: [
+                                          Text('Ajouté récemment'),
+                                          (playlist.sortDirection['last_added'] != null ?
+                                            Icon(
+                                              (playlist.sortDirection['last_added'] ? Icons.arrow_upward : Icons.arrow_downward)
+                                            ) : Container(width: 0,height: 0,)
+                                          ),
+                                        ]
+                                      )
                                     ),
                                      PopupMenuItem(
                                       value: 'title',
                                       child: Row(
                                         children: [
-                                          Expanded(child:Text('Titre')),
+                                          Text('Titre'),
+                                          (playlist.sortDirection['title'] != null ?
+                                            Icon(
+                                              (playlist.sortDirection['title'] ? Icons.arrow_upward : Icons.arrow_downward)
+                                            ) : Container(width: 0,height: 0,)
+                                          ),
                                         ]
                                       ),
                                     ),
@@ -429,7 +444,12 @@ class TabsView {
                                       value: 'artist',
                                       child: Row(
                                         children: [
-                                          Expanded(child:Text('Artiste')),
+                                          Text('Artiste'),
+                                          (playlist.sortDirection['artist'] != null ?
+                                            Icon(
+                                              (playlist.sortDirection['artist'] ? Icons.arrow_upward : Icons.arrow_downward)
+                                            ) : Container(width: 0,height: 0,)
+                                          ),
                                         ]
                                       ),
                                     ),
@@ -559,6 +579,15 @@ class TabsView {
               children: [
                 Container(
                   child: FlatButton(
+                    child: Text("Ajouter en file d'attente", style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      addToQueue(track);
+                    },
+                  ),
+                ),
+                Container(
+                  child: FlatButton(
                     child: Text("Ajouter à une autre playlist", style: TextStyle(color: Colors.white)),
                     onPressed: () {
                       Navigator.pop(dialogContext);
@@ -572,15 +601,6 @@ class TabsView {
                     onPressed: () {
                       Navigator.pop(dialogContext);
                       removeFromPlaylist(ctrl, track, index, refresh: refresh);
-                    },
-                  ),
-                ),
-                Container(
-                  child: FlatButton(
-                    child: Text("Ajouter en file d'attente", style: TextStyle(color: Colors.white)),
-                    onPressed: () {
-                      Navigator.pop(dialogContext);
-                      addToQueue(track);
                     },
                   ),
                 ),
@@ -796,6 +816,8 @@ class TabsView {
   trackInformations(PlatformsController ctrl, Track track) {
     String name = track.name;
     String artist = track.artist;
+    String artist_string = "Artiste";
+    if(artist.contains(',')) artist_string = "Artistes";
     String album;
     if(track.album != null) album = track.album;
     else album = "Aucun";
@@ -810,7 +832,7 @@ class TabsView {
             child: Image(image: NetworkImage(track.imageUrl))
           ),
           content: Text(
-            "Nom: $name\nArtiste: $artist\nAlbum: $album\nService: $service", style: TextStyle(color: Colors.white)
+            "Nom: $name\n$artist_string: $artist\nAlbum: $album\nService: $service", style: TextStyle(color: Colors.white)
           ),
           actions: [
             FlatButton(

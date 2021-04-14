@@ -15,6 +15,8 @@ class Playlist {
   List<MapEntry<Track, DateTime>> tracks =
       new List<MapEntry<Track, DateTime>>();
 
+  Map<String, bool> sortDirection = {'title': null, 'last_added': null, 'artist': null};
+
   Playlist(
       {@required String name,
       @required String id,
@@ -100,33 +102,87 @@ class Playlist {
 
   List<Track> sort(String value) {
     if (value == 'last_added') {
-      tracks.sort((a, b) {
-        int _a = int.parse(a.value.year.toString() +
-            a.value.month.toString() +
-            a.value.day.toString());
-        int _b = int.parse(b.value.year.toString() +
-            b.value.month.toString() +
-            b.value.day.toString());
-        return _a.compareTo(_b);
-      });
+      if(this.sortDirection[value] == null || !this.sortDirection[value]) {
+        tracks.sort((a, b) {
+          int _a = int.parse(a.value.year.toString() +
+              a.value.month.toString() +
+              a.value.day.toString());
+          int _b = int.parse(b.value.year.toString() +
+              b.value.month.toString() +
+              b.value.day.toString());
+          return _a.compareTo(_b);
+        });
+        for(String me in this.sortDirection.keys) {
+          this.sortDirection[me] = null;
+        }
+        this.sortDirection[value] = true;
+      } else {
+        tracks.sort((a, b) {
+          int _a = int.parse(a.value.year.toString() +
+              a.value.month.toString() +
+              a.value.day.toString());
+          int _b = int.parse(b.value.year.toString() +
+              b.value.month.toString() +
+              b.value.day.toString());
+          return _b.compareTo(_a);
+        });
+        for(String me in this.sortDirection.keys) {
+          this.sortDirection[me] = null;
+        }
+        this.sortDirection[value] = false;
+      }
     }
 
     if (value == 'title') {
-      tracks.sort((a, b) {
-        String _a = a.key.name;
-        String _b = b.key.name;
+      if(this.sortDirection[value] == null || !this.sortDirection[value]) {
+        tracks.sort((a, b) {
+          String _a = a.key.name;
+          String _b = b.key.name;
 
-        return _a.compareTo(_b);
-      });
+          return _a.compareTo(_b);
+        });
+        for(String me in this.sortDirection.keys) {
+          this.sortDirection[me] = null;
+        }
+        this.sortDirection[value] = true;
+      } else {
+        tracks.sort((a, b) {
+          String _a = a.key.name;
+          String _b = b.key.name;
+
+          return _b.compareTo(_a);
+        });
+        for(String me in this.sortDirection.keys) {
+          this.sortDirection[me] = null;
+        }
+        this.sortDirection[value] = false;
+      }
     }
 
     if (value == 'artist') {
-      tracks.sort((a, b) {
-        String _a = a.key.artist;
-        String _b = b.key.artist;
+      if(this.sortDirection[value] == null || !this.sortDirection[value]) {
+        tracks.sort((a, b) {
+          String _a = a.key.artist;
+          String _b = b.key.artist;
 
-        return _a.compareTo(_b);
-      });
+          return _a.compareTo(_b);
+        });
+        for(String me in this.sortDirection.keys) {
+          this.sortDirection[me] = null;
+        }
+        this.sortDirection[value] = true;
+      } else {
+        tracks.sort((a, b) {
+          String _a = a.key.artist;
+          String _b = b.key.artist;
+
+          return _b.compareTo(_a);
+        });
+        for(String me in this.sortDirection.keys) {
+          this.sortDirection[me] = null;
+        }
+        this.sortDirection[value] = false;
+      }
     }
 
     return getTracks();

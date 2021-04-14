@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformDefaultController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
@@ -104,6 +105,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   @override
   void initState() {
     this.fakers();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     this.initPage();
     super.initState();
   }
@@ -170,7 +175,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             _songsTabCtrl.index = 0;
             _tabIndex = _songsTabCtrl.index;
           } else {
-            print("here");
             GlobalQueue.generateNonPermanentQueue(playlist, false, selectedTrack: track);
             _blockAnimation = true;
             _songsTabCtrl.index = GlobalQueue.currentQueueIndex;
@@ -240,7 +244,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       lastIndex = GlobalQueue.queue.length-1;
     }
     
-    if(GlobalQueue.queue[lastIndex].value) {
+    if(GlobalQueue.queue[GlobalQueue.currentQueueIndex].value) {
       GlobalQueue.moveFromPermanentToNoPermanent(lastIndex);
     }
 
@@ -324,9 +328,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   double _ratio = 1;
 
   PanelController _panelCtrl = PanelController();
+  PanelController _panelQueueCtrl = PanelController();
   TabController _songsTabCtrl;
   int _tabIndex = 0;
   bool _isPanelDraggable = true;
+  bool _isPanelQueueDraggable = true;
 
   // Front constant
   double image_size_large;
@@ -412,7 +418,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         return WillPopScope(
           onWillPop: () async {
             if(_panelCtrl.isPanelOpen) {
-              _panelCtrl.close();
+              if(_panelQueueCtrl.isPanelOpen) {
+                _panelQueueCtrl.close();
+              } else {
+                _panelCtrl.close();
+              }
               return false;
             } else
               return true;
@@ -699,9 +709,134 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                     )
                   )
                 ),
+                SlidingUpPanel(
+                  controller: _panelQueueCtrl,
+                  isDraggable: true,
+                  onPanelSlide: (height) {
+                    _panelCtrl.open();
+                  },
+                  minHeight: botbar_height,
+                  maxHeight: _screenHeight,
+                  panelBuilder: (scrollCtrl) {
+                    return GestureDetector(
+                      onTap: () => _panelQueueCtrl.panelPosition < 0.3 ? _panelQueueCtrl.open() : null,
+                      child: Container(
+                        color: Colors.black87,
+                        child: Column(
+                          children: [
+                            Container(
+                              margin: EdgeInsets.all(10),
+                              width: 30,
+                              height: 5,
+                              decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                                borderRadius: BorderRadius.all(Radius.circular(12.0))
+                              ),
+                            ),
+                            Container(
+                              height: _screenHeight-30,
+                              child: DefaultTabController(
+                                length: 2,
+                                child: Scaffold(
+                                  appBar: AppBar(
+                                    toolbarHeight: 50,
+                                    bottom: TabBar(
+                                      tabs: [
+                                        Tab(text: "Queue"),
+                                        Tab(text: "Lyrics"),
+                                      ],
+                                    ),
+                                  ),
+                                  body: TabBarView(
+                                    children: [
+                                      ReorderableListView(
+                                        scrollDirection: Axis.vertical,
+                                        //shrinkWrap: true,
+                                        onReorder: (int oldIndex, int newIndex) {
+                                          setState(() {
+                                            GlobalQueue.reorder(oldIndex, newIndex);
+                                          });
+                                        },
+                                        children: List.generate(
+                                          GlobalQueue.queue.length-GlobalQueue.currentQueueIndex,
+                                          (index) {
+                                            
+                                            List<Track> queue = List<Track>();
+                                            
+                                            for(MapEntry<Track, bool> tr in GlobalQueue.queue) {
+                                              queue.add(tr.key);
+                                            }
+
+                                            return Container(
+                                              key: ValueKey('ReorderableListView:Queue:$index'),
+                                              margin: EdgeInsets.only(left: 20, right: 20),
+                                              child: GestureDetector(
+                                              behavior: HitTestBehavior.deferToChild,
+                                              /*onLongPressUp: () {
+                                                print('long');
+                                              },
+                                              onLongPressEnd: (LongPressEndDetails details) {
+                                                print('end');
+                                              },*/
+                                              
+                                              child: Card(
+                                                child: Row(
+                                                  children: [
+                                                    Flexible(
+                                                      flex: 5,
+                                                      child: ListTile(
+                                                        title: Text(queue.elementAt(index+GlobalQueue.currentQueueIndex).name),
+                                                        leading: FractionallySizedBox(
+                                                          heightFactor: 0.8,
+                                                          child: AspectRatio(
+                                                            aspectRatio: 1,
+                                                            child: new Container(
+                                                              decoration: new BoxDecoration(
+                                                                image: new DecorationImage(
+                                                                  fit: BoxFit.fitHeight,
+                                                                  alignment: FractionalOffset.center,
+                                                                  image: NetworkImage(queue.elementAt(index).imageUrl),
+                                                                )
+                                                              ),
+                                                            ),
+                                                          )
+                                                        ),
+                                                        subtitle: Text(queue.elementAt(index).artist),
+                                                      )
+                                                    ),
+                                                    Flexible(
+                                                      flex: 1,
+                                                      child: Container (
+                                                          margin: EdgeInsets.only(left:20, right: 20),
+                                                          child: Icon(Icons.drag_handle)
+                                                        )
+                                                      )
+                                                    ]
+                                                  )
+                                                )
+                                              )
+                                            );
+                                          }
+                                        )
+                                      ),
+
+
+
+                                      Text("Work in progress"),
+                                    ],
+                                  ),
+                                )
+                              )
+                            )
+                          ],
+                        )
+                      )
+                    );
+                  }
+                )
               ],
-            )
-          )
+            ),
+          ),
         );
       },
     );

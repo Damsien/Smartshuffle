@@ -42,15 +42,17 @@ class GlobalQueue {
       queue.insert(currentQueueIndex+1, MapEntry(t, true));
     }
 
-    /*print("=======");
+    /*print("==== Queue ====");
     int i=0;
     for(MapEntry me in queue) {
       if(i == currentQueueIndex+1)
-        print(me.key.toString() + "  *");
+        print(me.key.toString() + " | isPermanent ? " + me.value.toString() + "  *");
       else
-        print(me.key);
+        print(me.key.toString() + " | isPermanent ? " + me.value.toString());
       i++;
-    }*/
+    }
+    print("==== End Q ====");*/
+
 
   }
 
@@ -66,13 +68,13 @@ class GlobalQueue {
 
   static orderedNoPermanentQueue(Playlist playlist, Track selectedTrack) {
     List<Track> tracks = playlist.getTracks();
+    for(Track tr in tracks) {
+      addToNoPermanentQueue(tr);
+    }
     if(selectedTrack != null) {
       currentQueueIndex = tracks.indexOf(selectedTrack);
     } else {
       currentQueueIndex = 0;
-    }
-    for(Track tr in tracks) {
-      addToNoPermanentQueue(tr);
     }
   }
 
@@ -105,7 +107,6 @@ class GlobalQueue {
   }
 
   static moveFromPermanentToNoPermanent(int index) {
-    print(permanentQueue[0]);
     noPermanentQueue.insert(index, permanentQueue[0]);
     permanentQueue.removeAt(0);
   }
