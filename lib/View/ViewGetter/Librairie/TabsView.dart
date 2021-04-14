@@ -257,7 +257,7 @@ class TabsView {
                                 children:[
                                   Container(
                                     margin: EdgeInsets.only(right: 10),
-                                    child: Icon(Icons.playlist_add, size: 30)
+                                    child: Icon(Icons.playlist_add, size: 35)
                                   )
                                 ]
                               )
