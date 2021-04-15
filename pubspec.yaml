@@ -29,6 +29,8 @@ dependencies:
   html: ^0.14.0+4
   device_apps: ^1.2.0
   sliding_up_panel: ^1.0.2
+  #reorderables: ^0.4.1
+  drag_and_drop_lists: ^0.3.1
 
     #google sign in
   firebase_auth: ^0.18.3

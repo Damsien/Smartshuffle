@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
 
+//import 'package:reorderables/reorderables.dart';
+import 'package:drag_and_drop_lists/drag_and_drop_lists.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -722,20 +724,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           child: SlidingUpPanel(
             controller: _panelQueueCtrl,
             isDraggable: _isPanelQueueDraggable,
-            onPanelSlide: (height) {
-              //_panelCtrl.open();
-            },
             //defaultPanelState: PanelState.CLOSED,
             minHeight: botbar_height,
             maxHeight: _screenHeight,
-            panelBuilder: (scrollCtrl) {
-              return GestureDetector(
-                  onVerticalDragStart: (DragStartDetails details) {
-                    setState(() {
-                      _isPanelQueueDraggable = false;
-                    });
-                  },
-                  child: Container(
+            panelBuilder: (ScrollController scrollCtrl) {
+              return Container(
                   color: Colors.black87,
                   child: Column(
                     children: [
@@ -764,9 +757,152 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                             ),
                             body: TabBarView(
                                 children: [
-                                  ReorderableListView(
+
+                                  DragAndDropLists(
+                                    onItemDraggingChanged: (DragAndDropItem details, bool isChanging) {
+                                      setState(() {
+                                        // Fix : Try catch don't work
+                                        try {
+                                          if(isChanging) _isPanelQueueDraggable = false;
+                                          else _isPanelQueueDraggable = true;
+                                        } catch(e) {}
+                                      });
+                                    },
+                                    scrollController: scrollCtrl,
+                                    onItemReorder: (int oldItemIndex, int oldListIndex, int newItemIndex, int newListIndex) {
+                                      setState(() {
+                                        GlobalQueue.reorder(oldItemIndex, newItemIndex);
+                                      });
+                                      _panelQueueCtrl.open();
+                                    },
+                                    children: [
+                                      DragAndDropList(
+                                        canDrag: false,
+                                        header: Text("oui"),
+                                        children: List.generate(
+                                          GlobalQueue.queue.length-GlobalQueue.currentQueueIndex,
+                                          (index) {
+                                            
+                                            List<Track> queue = List<Track>();
+                                            
+                                            for(MapEntry<Track, bool> tr in GlobalQueue.queue) {
+                                              queue.add(tr.key);
+                                            }
+
+                                            return DragAndDropItem(
+                                              child: Container(
+                                              key: ValueKey('ReorderableListView:Queue:$index'),
+                                              margin: EdgeInsets.only(left: 20, right: 20),
+                                              
+                                              child: Card(
+                                                child: Row(
+                                                  children: [
+                                                    Flexible(
+                                                      flex: 5,
+                                                      child: ListTile(
+                                                        title: Text(queue.elementAt(index+GlobalQueue.currentQueueIndex).name),
+                                                        leading: FractionallySizedBox(
+                                                          heightFactor: 0.8,
+                                                          child: AspectRatio(
+                                                            aspectRatio: 1,
+                                                            child: new Container(
+                                                              decoration: new BoxDecoration(
+                                                                image: new DecorationImage(
+                                                                  fit: BoxFit.fitHeight,
+                                                                  alignment: FractionalOffset.center,
+                                                                  image: NetworkImage(queue.elementAt(index).imageUrl),
+                                                                )
+                                                              ),
+                                                            ),
+                                                          )
+                                                        ),
+                                                        subtitle: Text(queue.elementAt(index).artist),
+                                                      )
+                                                    ),
+                                                    Flexible(
+                                                      flex: 1,
+                                                      child: Container (
+                                                          margin: EdgeInsets.only(left:20, right: 20),
+                                                          child: Icon(Icons.drag_handle)
+                                                        )
+                                                      )
+                                                    ]
+                                                  )
+                                                )
+                                              )
+                                            );
+                                          },
+                                        )
+                                      ),
+                                    ]
+                                  ),
+                                  /*
+                                  ReorderableColumn(
+                                    scrollController: scrollCtrl,
+                                    onReorder: (int oldIndex, int newIndex) {
+                                      setState(() {
+                                        GlobalQueue.reorder(oldIndex, newIndex);
+                                      });
+                                      _panelQueueCtrl.open();
+                                    },
+                                    children: List.generate(
+                                      GlobalQueue.queue.length-GlobalQueue.currentQueueIndex,
+                                      (index) {
+                                        
+                                        List<Track> queue = List<Track>();
+                                        
+                                        for(MapEntry<Track, bool> tr in GlobalQueue.queue) {
+                                          queue.add(tr.key);
+                                        }
+
+                                        return Container(
+                                          key: ValueKey('ReorderableListView:Queue:$index'),
+                                          margin: EdgeInsets.only(left: 20, right: 20),
+                                          
+                                          child: Card(
+                                            child: Row(
+                                              children: [
+                                                Flexible(
+                                                  flex: 5,
+                                                  child: ListTile(
+                                                    title: Text(queue.elementAt(index+GlobalQueue.currentQueueIndex).name),
+                                                    leading: FractionallySizedBox(
+                                                      heightFactor: 0.8,
+                                                      child: AspectRatio(
+                                                        aspectRatio: 1,
+                                                        child: new Container(
+                                                          decoration: new BoxDecoration(
+                                                            image: new DecorationImage(
+                                                              fit: BoxFit.fitHeight,
+                                                              alignment: FractionalOffset.center,
+                                                              image: NetworkImage(queue.elementAt(index).imageUrl),
+                                                            )
+                                                          ),
+                                                        ),
+                                                      )
+                                                    ),
+                                                    subtitle: Text(queue.elementAt(index).artist),
+                                                  )
+                                                ),
+                                                Flexible(
+                                                  flex: 1,
+                                                  child: Container (
+                                                      margin: EdgeInsets.only(left:20, right: 20),
+                                                      child: Icon(Icons.drag_handle)
+                                                    )
+                                                  )
+                                                ]
+                                              )
+                                            )
+                                          );
+                                      },
+                                    )
+                                  ),
+                                */
+                                /*PrimaryScrollController(controller: scrollCtrl,
+                                  child: ReorderableListView(
+                                    //scrollController: scrollCtrl,
                                     scrollDirection: Axis.vertical,
-                                    //shrinkWrap: true,
                                     onReorder: (int oldIndex, int newIndex) {
                                       setState(() {
                                         GlobalQueue.reorder(oldIndex, newIndex);
@@ -825,6 +961,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                       }
                                     )
                                   ),
+                                ),*/
 
 
 
@@ -836,7 +973,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                       )
                     ],
                   )
-                )
               );
             }
           )
@@ -853,7 +989,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
     if(_panelQueueCtrl.isAttached) {
       if(_panelCtrl.isAttached && !_panelCtrl.isPanelClosed) {
-        _panelQueueCtrl.show();
+        if(!_panelQueueCtrl.isPanelOpen) _panelQueueCtrl.show();
       } else {
         _panelQueueCtrl.hide();
       }
