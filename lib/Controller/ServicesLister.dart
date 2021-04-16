@@ -39,7 +39,8 @@ class GlobalQueue {
       queue.add(MapEntry(t, false));
     }
     for(Track t in permanentQueue.reversed) {
-      queue.insert(currentQueueIndex+1, MapEntry(t, true));
+      if(queue.isEmpty) queue.insert(0, MapEntry(t, true));
+      else queue.insert(currentQueueIndex+1, MapEntry(t, true));
     }
 
     noPermanentQueue.clear();

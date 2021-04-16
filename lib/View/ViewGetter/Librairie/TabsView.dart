@@ -232,7 +232,6 @@ class TabsView {
 
         if(snapshot.hasData) {
 
-          DismissDirection dismissDirection = DismissDirection.none;
           List<Track> tracks = snapshot.data;
 
           List<Widget> realTracks = List.generate(
@@ -242,7 +241,8 @@ class TabsView {
                         key: ValueKey('ReorderableListView:Tracks:$index'),
                         margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
                         child: InkWell(
-                          child: Dismissible(
+                          child: 
+                          /*Dismissible(
                             key: ValueKey('ReorderableListView:Tracks:Dismissible:$index'),
                             /*dismissThresholds: {DismissDirection.startToEnd: double.infinity,
                                                 DismissDirection.endToStart: double.infinity},*/
@@ -263,7 +263,8 @@ class TabsView {
                                 ]
                               )
                             ),
-                            child: Card(
+                            child: */
+                            Card(
                               child: ListTile(
                                 title: Text(
                                   tracks.elementAt(index).name,
@@ -310,8 +311,8 @@ class TabsView {
                               )
                             )
                           )
-                        )
-                      );
+                        );
+                      //);
                     }
                   );
 

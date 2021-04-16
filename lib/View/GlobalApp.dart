@@ -749,6 +749,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             maxHeight: _screenHeight,
             borderRadius: BorderRadius.only(topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
             panelBuilder: (ScrollController scrollCtrl) {
+
+              List<DragAndDropList> allList;
+
               return GestureDetector(
                 onTap: () => _panelQueueCtrl.panelPosition < 0.3 ? _panelQueueCtrl.open() : null,
                 child: Container(
@@ -801,11 +804,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                         });
                                       },
                                       scrollController: scrollCtrl,
-                                      onItemReorder: (int oldItemIndex, int oldListIndex, int newItemIndex, int newListIndex) {
-                                        setState(() {
-                                          GlobalQueue.reorder(oldItemIndex, newItemIndex);
-                                        });
-                                      },
                                       children: () {
 
                                         List<DragAndDropItem> permanentItems = 
@@ -818,6 +816,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                               for(Track tr in GlobalQueue.permanentQueue) {
                                                 queue.add(tr);
                                               }
+
+                                              String pos = queue.elementAt(index).name;
 
                                               return DragAndDropItem(
                                                 child: Container(
@@ -885,7 +885,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                 margin: EdgeInsets.only(left: 20, right: 20),
                                                 
                                                 child: Card(
-                                                  color: darken(_mainImageColor, amount: 0.2),
+                                                  color: darken(_mainImageColor, amount: 0.1),
                                                   child: Row(
                                                     children: [
                                                       Flexible(
@@ -927,21 +927,53 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
                                           DragAndDropList permanentList = DragAndDropList(
                                             canDrag: false,
-                                            header: Text("permanent"),
+                                            header: Container(
+                                              margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
+                                              child: Text(
+                                                "Prochain dans la file d'attente",
+                                                textAlign: TextAlign.left,
+                                                style: TextStyle(
+                                                  fontSize: 20
+                                                )
+                                              )
+                                            ),
                                             children: permanentItems
                                           );
 
                                           DragAndDropList noPermanentList = DragAndDropList(
                                             canDrag: false,
-                                            header: Text("noPermanent"),
+                                            header: Container(
+                                              margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
+                                              child: Text(
+                                                "Prochaine depuis " + this.selectedPlaylist.name,
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontSize: 20
+                                                )
+                                              )
+                                            ),
                                             children: noPermanentItems
                                           );
 
-                                          List<DragAndDropList> allList = [permanentList, noPermanentList];
+                                          if(GlobalQueue.permanentQueue.isEmpty)
+                                            allList = [noPermanentList];
+                                          else
+                                            allList = [permanentList, noPermanentList];
+
 
                                           return allList;
 
-                                      }.call()
+                                      }.call(),
+                                      onItemReorder: (int oldItemIndex, int oldListIndex, int newItemIndex, int newListIndex) {
+                                        setState(() {
+                                          GlobalQueue.reorder(oldItemIndex, newItemIndex);
+                                          var movedItem = allList[oldListIndex].children.removeAt(oldItemIndex);
+                                          allList[newListIndex].children.insert(newItemIndex, movedItem);
+                                        });
+                                        for(DragAndDropItem item in allList[1].children) {
+                                          //print(item.child.)
+                                        }
+                                      },
                                     ),
 
 
