@@ -1,4 +1,5 @@
 import 'package:device_apps/device_apps.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -231,7 +232,7 @@ class TabsView {
 
         if(snapshot.hasData) {
 
-
+          DismissDirection dismissDirection = DismissDirection.none;
           List<Track> tracks = snapshot.data;
 
           List<Widget> realTracks = List.generate(
@@ -245,7 +246,7 @@ class TabsView {
                             key: ValueKey('ReorderableListView:Tracks:Dismissible:$index'),
                             /*dismissThresholds: {DismissDirection.startToEnd: double.infinity,
                                                 DismissDirection.endToStart: double.infinity},*/
-                            direction: DismissDirection.endToStart,
+                            direction: dismissDirection,
                             confirmDismiss: (confirm) async {
                               addToQueue(tracks[index]);
                               return false;
@@ -257,7 +258,7 @@ class TabsView {
                                 children:[
                                   Container(
                                     margin: EdgeInsets.only(right: 10),
-                                    child: Icon(Icons.playlist_add, size: 35)
+                                    child: Icon(Icons.playlist_add, size: 30)
                                   )
                                 ]
                               )
@@ -286,7 +287,16 @@ class TabsView {
                                   )
                                 ),
                                 subtitle: Text(tracks.elementAt(index).artist),
-                                onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
+                                onLongPress: () {
+                                  addToQueue(tracks.elementAt(index));
+                                  String trackName = tracks.elementAt(index).name;
+                                  Fluttertoast.showToast(
+                                    msg: "$trackName ajouté à la file d'attente",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM,
+                                  );
+                                },
+                                //trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
                                 trailing: FractionallySizedBox(
                                   heightFactor: 1,
                                   child: InkWell(
@@ -582,6 +592,11 @@ class TabsView {
                     child: Text("Ajouter en file d'attente", style: TextStyle(color: Colors.white)),
                     onPressed: () {
                       Navigator.pop(dialogContext);
+                      Fluttertoast.showToast(
+                        msg: "$name ajouté à la file d'attente",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                      );
                       addToQueue(track);
                     },
                   ),
