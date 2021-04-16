@@ -239,7 +239,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     if (GlobalQueue.currentQueueIndex + 1 < GlobalQueue.queue.length) {
       nextTrack = GlobalQueue.queue[GlobalQueue.currentQueueIndex + 1].key;
       GlobalQueue.currentQueueIndex++;
-      lastIndex = GlobalQueue.currentQueueIndex-1;
+      lastIndex = GlobalQueue.currentQueueIndex;
     } else {
       nextTrack = GlobalQueue.queue[0].key;
       GlobalQueue.currentQueueIndex = 0;
@@ -757,7 +757,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                             ),
                             body: TabBarView(
                                 children: [
-
                                   DragAndDropLists(
                                     onItemDraggingChanged: (DragAndDropItem details, bool isChanging) {
                                       setState(() {
@@ -773,25 +772,23 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                       setState(() {
                                         GlobalQueue.reorder(oldItemIndex, newItemIndex);
                                       });
-                                      _panelQueueCtrl.open();
                                     },
-                                    children: [
-                                      DragAndDropList(
-                                        canDrag: false,
-                                        header: Text("oui"),
-                                        children: List.generate(
-                                          GlobalQueue.queue.length-GlobalQueue.currentQueueIndex,
+                                    children: () {
+
+                                      List<DragAndDropItem> permanentItems = 
+                                      List.generate(
+                                          GlobalQueue.permanentQueue.length,
                                           (index) {
                                             
                                             List<Track> queue = List<Track>();
                                             
-                                            for(MapEntry<Track, bool> tr in GlobalQueue.queue) {
-                                              queue.add(tr.key);
+                                            for(Track tr in GlobalQueue.permanentQueue) {
+                                              queue.add(tr);
                                             }
 
                                             return DragAndDropItem(
                                               child: Container(
-                                              key: ValueKey('ReorderableListView:Queue:$index'),
+                                              key: ValueKey('ReorderableListView:PermanentQueue:$index'),
                                               margin: EdgeInsets.only(left: 20, right: 20),
                                               
                                               child: Card(
@@ -800,7 +797,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                     Flexible(
                                                       flex: 5,
                                                       child: ListTile(
-                                                        title: Text(queue.elementAt(index+GlobalQueue.currentQueueIndex).name),
+                                                        title: Text(queue.elementAt(index).name),
                                                         leading: FractionallySizedBox(
                                                           heightFactor: 0.8,
                                                           child: AspectRatio(
@@ -832,9 +829,83 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                               )
                                             );
                                           },
-                                        )
-                                      ),
-                                    ]
+                                        );
+
+                                      List<DragAndDropItem> noPermanentItems = 
+                                      List.generate(
+                                          GlobalQueue.noPermanentQueue.length-(GlobalQueue.currentQueueIndex+1),
+                                          (index) {
+                                            
+                                            List<Track> queue = List<Track>();
+                                            
+                                            for(int i=0; i<GlobalQueue.noPermanentQueue.length; i++) {
+                                              if(i>GlobalQueue.currentQueueIndex) {
+                                                queue.add(GlobalQueue.noPermanentQueue[i]);
+                                              }
+                                            }
+
+                                            return DragAndDropItem(
+                                              child: Container(
+                                              key: ValueKey('ReorderableListView:NoPermanentQueue:$index'),
+                                              margin: EdgeInsets.only(left: 20, right: 20),
+                                              
+                                              child: Card(
+                                                child: Row(
+                                                  children: [
+                                                    Flexible(
+                                                      flex: 5,
+                                                      child: ListTile(
+                                                        title: Text(queue.elementAt(index).name),
+                                                        leading: FractionallySizedBox(
+                                                          heightFactor: 0.8,
+                                                          child: AspectRatio(
+                                                            aspectRatio: 1,
+                                                            child: new Container(
+                                                              decoration: new BoxDecoration(
+                                                                image: new DecorationImage(
+                                                                  fit: BoxFit.fitHeight,
+                                                                  alignment: FractionalOffset.center,
+                                                                  image: NetworkImage(queue.elementAt(index).imageUrl),
+                                                                )
+                                                              ),
+                                                            ),
+                                                          )
+                                                        ),
+                                                        subtitle: Text(queue.elementAt(index).artist),
+                                                      )
+                                                    ),
+                                                    Flexible(
+                                                      flex: 1,
+                                                      child: Container (
+                                                          margin: EdgeInsets.only(left:20, right: 20),
+                                                          child: Icon(Icons.drag_handle)
+                                                        )
+                                                      )
+                                                    ]
+                                                  )
+                                                )
+                                              )
+                                            );
+                                          },
+                                        );
+
+                                        DragAndDropList permanentList = DragAndDropList(
+                                          canDrag: false,
+                                          header: Text("permanent"),
+                                          children: permanentItems
+                                        );
+
+                                        DragAndDropList noPermanentList = DragAndDropList(
+                                          canDrag: false,
+                                          header: Text("noPermanent"),
+                                          children: noPermanentItems
+                                        );
+
+                                        List<DragAndDropList> allList = [permanentList, noPermanentList];
+
+                                        return allList;
+
+                                    }.call()
                                   ),
                                   /*
                                   ReorderableColumn(

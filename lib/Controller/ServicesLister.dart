@@ -42,16 +42,23 @@ class GlobalQueue {
       queue.insert(currentQueueIndex+1, MapEntry(t, true));
     }
 
-    /*print("==== Queue ====");
+    noPermanentQueue.clear();
+    for(MapEntry<Track, bool> me in queue) {
+      if(!me.value) noPermanentQueue.add(me.key);
+    }
+
+    /*
+    print("==== Queue ====");
     int i=0;
     for(MapEntry me in queue) {
-      if(i == currentQueueIndex+1)
+      if(i == currentQueueIndex)
         print(me.key.toString() + " | isPermanent ? " + me.value.toString() + "  *");
       else
         print(me.key.toString() + " | isPermanent ? " + me.value.toString());
       i++;
     }
-    print("==== End Q ====");*/
+    print("==== End Q ====");
+    */
 
 
   }
