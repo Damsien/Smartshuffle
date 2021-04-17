@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:focus_detector/focus_detector.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_lists.dart';
 import 'package:flutter/gestures.dart';
@@ -469,9 +469,14 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                           ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
 
                           Track track = GlobalQueue.queue[index].key;
-                          return FocusDetector(
-                            onVisibilityGained: () => isImageVisible.value = true,
-                            onVisibilityLost: () => isImageVisible.value = false,
+                          return VisibilityDetector(
+                            key: ValueKey("VisibilityDetector:PanelPlayer:Tracks:$index"),
+                            onVisibilityChanged: (VisibilityInfo visInfos) {
+                              if(visInfos.visibleFraction > 0.2)
+                                isImageVisible.value = true;
+                              else
+                                isImageVisible.value = false;
+                            },
                             child: Stack(
                               children: [
                                 Stack(

@@ -1,6 +1,5 @@
 
 import 'package:visibility_detector/visibility_detector.dart';
-import 'package:focus_detector/focus_detector.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/gestures.dart';
@@ -129,9 +128,14 @@ class TabsView {
                         key: ValueKey('ReorderableListView:Playlists:$index'),
                         margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
                         child: InkWell(
-                          child: FocusDetector(
-                            onVisibilityGained: () => isImageVisible.value = true,
-                            onVisibilityLost: () => isImageVisible.value = false,
+                          child: VisibilityDetector(
+                            key: ValueKey("VisibilityDetector:PlaylistsList:$index"),
+                            onVisibilityChanged: (VisibilityInfo visInfos) {
+                              if(visInfos.visibleFraction > 0.2)
+                                isImageVisible.value = true;
+                              else
+                                isImageVisible.value = false;
+                            },
                             child: Card(
                               child: Row(
                                 children: [
@@ -285,8 +289,10 @@ class TabsView {
                             VisibilityDetector(
                               key: ValueKey("VisibilityDetector:TracksList:$index"),
                               onVisibilityChanged: (VisibilityInfo visInfos) {
-                                print(index);
-                                print(visInfos.visibleFraction);
+                                if(visInfos.visibleFraction > 0.2)
+                                  isImageVisible.value = true;
+                                else
+                                  isImageVisible.value = false;
                               },
                               child: Card(
                                 child: InkWell(
@@ -789,9 +795,14 @@ class TabsView {
                           brightness: Brightness.dark
                         ),
                         child: Container(
-                          child: FocusDetector(
-                            onVisibilityGained: () => isImageVisible.value = true,
-                            onVisibilityLost: () => isImageVisible.value = false,
+                          child: VisibilityDetector(
+                            key: ValueKey("VisibilityDetector:ChoosingPlaylist:PlaylistsList:$index"),
+                            onVisibilityChanged: (VisibilityInfo visInfos) {
+                              if(visInfos.visibleFraction > 0.2)
+                                isImageVisible.value = true;
+                              else
+                                isImageVisible.value = false;
+                            },
                             child: Card(
                               child: ListTile(
                                 title: Text(ctrl.platform.playlists[index].name),
