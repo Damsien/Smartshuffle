@@ -223,18 +223,9 @@ class TabsView {
 
   /*  TRACKS VIEW   */
 
-  Widget tracksCreator(int tabIndex, PlatformsController ctrl, Playlist playlist, List<Widget> researchList, bool notResearch, Function setResearch, Function onReorder, Function returnToPlaylist, Function setPlaying) {
-    
-    return FutureBuilder<List<Track>>(
-      future: ctrl.getTracks(playlist),
-      builder: (BuildContext context, AsyncSnapshot<List<Track>> snapshot) {
-        Widget finalWidget;
 
-        if(snapshot.hasData) {
-
-          List<Track> tracks = snapshot.data;
-
-          List<Widget> realTracks = List.generate(
+  List<Widget> tracksListGenerator(List<Track> tracks, PlatformsController ctrl, Playlist playlist, Function setPlaying) {
+    return List.generate(
                     tracks.length,
                     (index) {
                       return Container(
@@ -265,49 +256,61 @@ class TabsView {
                             ),
                             child: */
                             Card(
-                              child: ListTile(
-                                title: Text(
-                                  tracks.elementAt(index).name,
-                                  style: (tracks[index].isPlaying ?
-                                    TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
-                                  )
-                                ),
-                                leading: FractionallySizedBox(
-                                  heightFactor: 0.8,
-                                  child: AspectRatio(
-                                    aspectRatio: 1,
-                                    child: new Container(
-                                      decoration: new BoxDecoration(
-                                        image: new DecorationImage(
-                                          fit: BoxFit.fitHeight,
-                                          alignment: FractionalOffset.center,
-                                          image: NetworkImage(tracks.elementAt(index).imageUrl),
-                                        )
-                                      ),
-                                    ),
-                                  )
-                                ),
-                                subtitle: Text(tracks.elementAt(index).artist),
-                                onLongPress: () {
-                                  addToQueue(tracks.elementAt(index));
-                                  String trackName = tracks.elementAt(index).name;
-                                  Fluttertoast.showToast(
-                                    msg: "$trackName ajouté à la file d'attente",
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.BOTTOM,
-                                  );
-                                },
-                                //trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
-                                trailing: FractionallySizedBox(
-                                  heightFactor: 1,
-                                  child: InkWell(
-                                    child: Icon(Icons.more_vert),
-                                    onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
-                                  )
-                                ),
+                              child: InkWell(
                                 onTap: () {
                                   setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
                                 },
+                                onDoubleTap: () {
+                                  addToQueue(tracks.elementAt(index));
+                                  String trackName = tracks.elementAt(index).name;
+                                  ScaffoldMessenger.of(this.state.context).showSnackBar(
+                                    SnackBar(
+                                      action: SnackBarAction(
+                                        label: 'Annuler',
+                                        onPressed: () {},
+                                      ),
+                                      duration: Duration(seconds: 1),
+                                      content: Text("$trackName ajouté à la file d'attente"),
+                                    )
+                                  );
+                                  /*Fluttertoast.showToast(
+                                    msg: "$trackName ajouté à la file d'attente",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.BOTTOM,
+                                  );*/
+                                },
+                                onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
+                                child: ListTile(
+                                  title: Text(
+                                    tracks.elementAt(index).name,
+                                    style: (tracks[index].isPlaying ?
+                                      TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
+                                    )
+                                  ),
+                                  leading: FractionallySizedBox(
+                                    heightFactor: 0.8,
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: new Container(
+                                        decoration: new BoxDecoration(
+                                          image: new DecorationImage(
+                                            fit: BoxFit.fitHeight,
+                                            alignment: FractionalOffset.center,
+                                            image: NetworkImage(tracks.elementAt(index).imageUrl),
+                                          )
+                                        ),
+                                      ),
+                                    )
+                                  ),
+                                  subtitle: Text(tracks.elementAt(index).artist),
+                                  trailing: FractionallySizedBox(
+                                    heightFactor: 1,
+                                    child: InkWell(
+                                      child: Icon(Icons.more_vert),
+                                      onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
+                                    )
+                                  ),
+                                )
                               )
                             )
                           )
@@ -315,6 +318,21 @@ class TabsView {
                       //);
                     }
                   );
+  }
+
+
+  Widget tracksCreator(int tabIndex, PlatformsController ctrl, Playlist playlist, List<Widget> researchList, bool notResearch, Function setResearch, Function onReorder, Function returnToPlaylist, Function setPlaying) {
+    
+    return FutureBuilder<List<Track>>(
+      future: ctrl.getTracks(playlist),
+      builder: (BuildContext context, AsyncSnapshot<List<Track>> snapshot) {
+        Widget finalWidget;
+
+        if(snapshot.hasData) {
+
+          List<Track> tracks = snapshot.data;
+
+          List<Widget> realTracks = tracksListGenerator(tracks, ctrl, playlist, setPlaying);
 
           List<Widget> listTracks = realTracks;
           
@@ -416,7 +434,7 @@ class TabsView {
                                     filled: true,
                                   ),
                                   onChanged: (val) {
-                                    setResearch(ctrl, playlist, val, tracks, trackMainDialog);
+                                    setResearch(ctrl, playlist, val, tracks);
                                   },
                                 )
                               ),
@@ -545,9 +563,13 @@ class TabsView {
               )
             ),
             onWillPop: () async {
-              setResearch(null, null, "", null, null);
-              returnToPlaylist(tabIndex);
-              return false;
+              if(!notResearch) {
+                setResearch(null, null, "", null);
+                return false;
+              } else {
+                returnToPlaylist(tabIndex);
+                return false;
+              }
             },
           );
 
@@ -593,10 +615,15 @@ class TabsView {
                     child: Text("Ajouter en file d'attente", style: TextStyle(color: Colors.white)),
                     onPressed: () {
                       Navigator.pop(dialogContext);
-                      Fluttertoast.showToast(
-                        msg: "$name ajouté à la file d'attente",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
+                      ScaffoldMessenger.of(this.state.context).showSnackBar(
+                        SnackBar(
+                          action: SnackBarAction(
+                            label: 'Annuler',
+                            onPressed: () {},
+                          ),
+                          duration: Duration(seconds: 1),
+                          content: Text("$name ajouté à la file d'attente"),
+                        )
                       );
                       addToQueue(track);
                     },

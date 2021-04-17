@@ -101,7 +101,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     );
   }
 
-  setResearch(PlatformsController ctrl, Playlist playlist, String value, List<Track> tracks, Function trackMainDialog) {
+  setResearch(PlatformsController ctrl, Playlist playlist, String value, List<Track> tracks) {
 
     setState(() {
       this.initialTabIndex = _tabController.index;
@@ -112,61 +112,16 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     });
 
     if(value != "") {
-      List<Widget> temp = new List<Widget>();
-      int i=0;
+      List<Track> temp = new List<Track>();
       for(Track track in tracks) {
         if(track.name.contains(value) || track.name.toLowerCase().contains(value)
         || track.artist.contains(value) || track.artist.toLowerCase().contains(value)) {
-          temp.add(
-            Container(
-              key: ValueKey('ResearchListView:Tracks:$i'),
-              margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
-              child: InkWell(
-                child: Card(
-                  child: ListTile(
-                    title: Text(
-                      track.name,
-                      style: (track.isPlaying ?
-                        TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
-                      )
-                    ),
-                    leading: FractionallySizedBox(
-                      heightFactor: 0.8,
-                      child: AspectRatio(
-                        aspectRatio: 1,
-                        child: new Container(
-                          decoration: new BoxDecoration(
-                            image: new DecorationImage(
-                              fit: BoxFit.fitHeight,
-                              alignment: FractionalOffset.center,
-                              image: NetworkImage(track.imageUrl),
-                            )
-                          ),
-                        ),
-                      )
-                    ),
-                    subtitle: Text(track.artist),
-                    onLongPress: () => trackMainDialog(ctrl, track, ctrl.platform.playlists.indexOf(playlist), refresh: this.setResearch),
-                    trailing: FractionallySizedBox(
-                      heightFactor: 1,
-                      child: InkWell(
-                        child: Icon(Icons.more_vert),
-                        onTap: () => trackMainDialog(ctrl, track, ctrl.platform.playlists.indexOf(playlist), refresh: this.setResearch),
-                      )
-                    ),
-                    onTap: () => setPlaying(track, true, playlist: playlist, platformCtrl: ctrl),
-                  )
-                )
-              )
-            )
-          );
-          i++;
+          temp.add(track);
         }
       }
       setState(() {
         this.researchList.clear();
-        for(Widget wid in temp)
-          this.researchList.add(wid);
+        this.researchList = TabsView.getInstance(this).tracksListGenerator(temp, ctrl, playlist, this.setPlaying);
       });
     }
   }

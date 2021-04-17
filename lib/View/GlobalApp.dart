@@ -754,6 +754,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
               return GestureDetector(
                 onTap: () => _panelQueueCtrl.panelPosition < 0.3 ? _panelQueueCtrl.open() : null,
+                onVerticalDragStart: (vertDragStart) {
+                  setState(() {
+                    _isPanelQueueDraggable = true;
+                  });
+                },
                 child: Container(
                   color: Colors.transparent,
                   child: Container(
@@ -802,6 +807,16 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                             else _isPanelQueueDraggable = true;
                                           } catch(e) {}
                                         });
+                                      },
+                                      onItemReorder: (int oldItemIndex, int oldListIndex, int newItemIndex, int newListIndex) {
+                                        setState(() {
+                                          GlobalQueue.reorder(oldItemIndex, newItemIndex);
+                                          var movedItem = allList[oldListIndex].children.removeAt(oldItemIndex);
+                                          allList[newListIndex].children.insert(newItemIndex, movedItem);
+                                        });
+                                        for(DragAndDropItem item in allList[1].children) {
+                                          //print(item.child.)
+                                        }
                                       },
                                       scrollController: scrollCtrl,
                                       children: () {
@@ -964,16 +979,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                           return allList;
 
                                       }.call(),
-                                      onItemReorder: (int oldItemIndex, int oldListIndex, int newItemIndex, int newListIndex) {
-                                        setState(() {
-                                          GlobalQueue.reorder(oldItemIndex, newItemIndex);
-                                          var movedItem = allList[oldListIndex].children.removeAt(oldItemIndex);
-                                          allList[newListIndex].children.insert(newItemIndex, movedItem);
-                                        });
-                                        for(DragAndDropItem item in allList[1].children) {
-                                          //print(item.child.)
-                                        }
-                                      },
                                     ),
 
 
