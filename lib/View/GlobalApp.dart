@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:focus_detector/focus_detector.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_lists.dart';
 import 'package:flutter/gestures.dart';
@@ -164,6 +165,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           }
         }
       }
+
+      
 
       if (track != null) {
         track.setIsPlaying(true);
@@ -462,150 +465,162 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                       children: List.generate(
                         GlobalQueue.queue.length,
                         (index) {
+
+                          ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
+
                           Track track = GlobalQueue.queue[index].key;
-                          return Stack(
-                            children: [
-                              Stack(
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                        image: NetworkImage(track.imageUrl),
-                                        fit: BoxFit.cover,
+                          return FocusDetector(
+                            onVisibilityGained: () => isImageVisible.value = true,
+                            onVisibilityLost: () => isImageVisible.value = false,
+                            child: Stack(
+                              children: [
+                                Stack(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: NetworkImage(track.imageUrl),
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  ClipRect(
-                                    child: BackdropFilter(
-                                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                        child: Container(
-                                          color: Colors.black.withOpacity(0.55),
-                                        )
-                                    ),
-                                  )
-                                ],
-                              ),
-                              Positioned(
-                                top: (_screenHeight * 0.77),
-                                right: (_screenWidth / 2) - _screenWidth * 0.45,
-                                child: Opacity(
-                                  opacity: _elementsOpacity,
-                                  child: InkWell(
-                                    child: Text(track.totalDuration.toString().split(':')[1] +
-                                        ":" + track.totalDuration.toString().split(':')[2].split(".")[0]
+                                    ClipRect(
+                                      child: BackdropFilter(
+                                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                          child: Container(
+                                            color: Colors.black.withOpacity(0.55),
+                                          )
+                                      ),
                                     )
-                                  )
-                                )
-                              ),
-                              Positioned(
-                                top: (_screenHeight * 0.77),
-                                left: (_screenWidth / 2) - _screenWidth * 0.45,
-                                child: Opacity(
-                                  opacity: _elementsOpacity,
-                                  child: InkWell(
-                                    child: Text(track.currentDuration.toString().split(':')[1] +
-                                      ":" + track.currentDuration.toString().split(':')[2].split(".")[0]
-                                    )
-                                  )
-                                )
-                              ),
-                              Positioned(
-                                top: (_screenHeight * 0.75),
-                                left: _screenWidth / 2 - ((_screenWidth - (_screenWidth / 4)) / 2),
-                                child: Opacity(
-                                  opacity: _elementsOpacity,
-                                  child: Container(
-                                    width: _screenWidth - (_screenWidth / 4),
-                                    child: Slider.adaptive(
-                                      value: () {
-                                        track.currentDuration.inSeconds / track.totalDuration.inSeconds >= 0
-                                        && track.currentDuration.inSeconds / track.totalDuration.inSeconds <= 1
-                                          ? _currentSliderValue = track.currentDuration.inSeconds / track.totalDuration.inSeconds
-                                          : _currentSliderValue = 0.0;
-                                          return _currentSliderValue;
-                                      }.call(),
-                                      onChanged: (double value) {
-                                        setState(() {
-                                          track.seekTo(Duration(seconds: (value * track.totalDuration.inSeconds).toInt()));
-                                        });
-                                      },
-                                      min: 0,
-                                      max: 1,
-                                      activeColor: Colors.cyanAccent,
-                                    )
-                                  )
-                                )
-                              ),
-                              Positioned(
-                                width: _imageSize,
-                                height: _imageSize,
-                                left: (_screenWidth / 2 - (_imageSize / 2) - _sideMarge),
-                                top: (_screenHeight / 4) * _ratio,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                      fit: BoxFit.cover,
-                                      image: NetworkImage(track.imageUrl),
-                                    )
-                                  ),
+                                  ],
                                 ),
-                              ),
-                              Positioned(
-                                left: _screenWidth * 0.2 * (1 - _ratio),
-                                top: (_screenHeight * 0.60) * _ratio + (_sideMarge*0.06),
-                                child: Row(
-                                  children: [
-                                    Column(
-                                      children: [
-                                        Container(
-                                          margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
-                                          width: _screenWidth - (_screenWidth * 0.1 * 4),
-                                          child: Text(
-                                            track.name,
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(fontSize: _textSize + (5 * _ratio)),
+                                Positioned(
+                                  top: (_screenHeight * 0.77),
+                                  right: (_screenWidth / 2) - _screenWidth * 0.45,
+                                  child: Opacity(
+                                    opacity: _elementsOpacity,
+                                    child: InkWell(
+                                      child: Text(track.totalDuration.toString().split(':')[1] +
+                                          ":" + track.totalDuration.toString().split(':')[2].split(".")[0]
+                                      )
+                                    )
+                                  )
+                                ),
+                                Positioned(
+                                  top: (_screenHeight * 0.77),
+                                  left: (_screenWidth / 2) - _screenWidth * 0.45,
+                                  child: Opacity(
+                                    opacity: _elementsOpacity,
+                                    child: InkWell(
+                                      child: Text(track.currentDuration.toString().split(':')[1] +
+                                        ":" + track.currentDuration.toString().split(':')[2].split(".")[0]
+                                      )
+                                    )
+                                  )
+                                ),
+                                Positioned(
+                                  top: (_screenHeight * 0.75),
+                                  left: _screenWidth / 2 - ((_screenWidth - (_screenWidth / 4)) / 2),
+                                  child: Opacity(
+                                    opacity: _elementsOpacity,
+                                    child: Container(
+                                      width: _screenWidth - (_screenWidth / 4),
+                                      child: Slider.adaptive(
+                                        value: () {
+                                          track.currentDuration.inSeconds / track.totalDuration.inSeconds >= 0
+                                          && track.currentDuration.inSeconds / track.totalDuration.inSeconds <= 1
+                                            ? _currentSliderValue = track.currentDuration.inSeconds / track.totalDuration.inSeconds
+                                            : _currentSliderValue = 0.0;
+                                            return _currentSliderValue;
+                                        }.call(),
+                                        onChanged: (double value) {
+                                          setState(() {
+                                            track.seekTo(Duration(seconds: (value * track.totalDuration.inSeconds).toInt()));
+                                          });
+                                        },
+                                        min: 0,
+                                        max: 1,
+                                        activeColor: Colors.cyanAccent,
+                                      )
+                                    )
+                                  )
+                                ),
+                                Positioned(
+                                  width: _imageSize,
+                                  height: _imageSize,
+                                  left: (_screenWidth / 2 - (_imageSize / 2) - _sideMarge),
+                                  top: (_screenHeight / 4) * _ratio,
+                                  child: ValueListenableBuilder(
+                                    valueListenable: isImageVisible,
+                                    builder: (BuildContext context, bool value, Widget child) {
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                            fit: BoxFit.cover,
+                                            image: NetworkImage(track.imageUrl),
                                           )
                                         ),
-                                        Container(
-                                          margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
-                                          width: _screenWidth - (_screenWidth * 0.1 * 4),
-                                          child: Text(
-                                            track.artist,
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                              fontSize: _textSize,
-                                              fontWeight: FontWeight.w200),
+                                      );
+                                    }
+                                  )
+                                ),
+                                Positioned(
+                                  left: _screenWidth * 0.2 * (1 - _ratio),
+                                  top: (_screenHeight * 0.60) * _ratio + (_sideMarge*0.06),
+                                  child: Row(
+                                    children: [
+                                      Column(
+                                        children: [
+                                          Container(
+                                            margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                            width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                            child: Text(
+                                              track.name,
+                                              textAlign: TextAlign.left,
+                                              style: TextStyle(fontSize: _textSize + (5 * _ratio)),
+                                            )
+                                          ),
+                                          Container(
+                                            margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                            width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                            child: Text(
+                                              track.artist,
+                                              textAlign: TextAlign.left,
+                                              style: TextStyle(
+                                                fontSize: _textSize,
+                                                fontWeight: FontWeight.w200),
+                                            )
                                           )
-                                        )
-                                      ],
-                                    ),
-                                    IgnorePointer(
-                                      ignoring: (_elementsOpacity == 1 ? false : true),
-                                      child: Opacity(
-                                        opacity: _elementsOpacity,
-                                        child: InkWell(
-                                            onTap: () {
-                                              TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, track);
-                                            },
-                                            child: Icon(
-                                            Icons.add,
-                                            size: _playButtonSize - 10,
+                                        ],
+                                      ),
+                                      IgnorePointer(
+                                        ignoring: (_elementsOpacity == 1 ? false : true),
+                                        child: Opacity(
+                                          opacity: _elementsOpacity,
+                                          child: InkWell(
+                                              onTap: () {
+                                                TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, track);
+                                              },
+                                              child: Icon(
+                                              Icons.add,
+                                              size: _playButtonSize - 10,
+                                            )
                                           )
                                         )
                                       )
-                                    )
-                                  ]
-                                )
-                              ),
-                              Opacity(
-                                opacity: 1 - _ratio,
-                                child: Container(
-                                  color: Colors.white,
-                                  width: track.currentDuration.inSeconds * _screenWidth / track.totalDuration.inSeconds,
-                                  height: 2,
+                                    ]
+                                  )
                                 ),
-                              )
-                            ],
+                                Opacity(
+                                  opacity: 1 - _ratio,
+                                  child: Container(
+                                    color: Colors.white,
+                                    width: track.currentDuration.inSeconds * _screenWidth / track.totalDuration.inSeconds,
+                                    height: 2,
+                                  ),
+                                )
+                              ],
+                            )
                           );
                         }
                       )

@@ -1,3 +1,6 @@
+
+import 'package:visibility_detector/visibility_detector.dart';
+import 'package:focus_detector/focus_detector.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/gestures.dart';
@@ -119,45 +122,66 @@ class TabsView {
                   children: List.generate(
                     playlists.length,
                     (index) {
+
+                      ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
+
                       return Container(
                         key: ValueKey('ReorderableListView:Playlists:$index'),
                         margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
                         child: InkWell(
-                          child: Card(
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  flex: 5,
-                                  child: ListTile(
-                                    title: Text(playlists.elementAt(index).name),
-                                    leading: FractionallySizedBox(
-                                      heightFactor: 0.8,
-                                      child: AspectRatio(
-                                        aspectRatio: 1,
-                                        child: new Container(
-                                          decoration: new BoxDecoration(
-                                            image: new DecorationImage(
-                                              fit: BoxFit.fitHeight,
-                                              alignment: FractionalOffset.center,
-                                              image: NetworkImage(playlists.elementAt(index).imageUrl),
-                                            )
-                                          ),
-                                        ),
-                                      )
-                                    ),
-                                    subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" tracks"),
-                                    onLongPress: () => playlistOption(ctrl, playlists.elementAt(index), index),
-                                    onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
+                          child: FocusDetector(
+                            onVisibilityGained: () => isImageVisible.value = true,
+                            onVisibilityLost: () => isImageVisible.value = false,
+                            child: Card(
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    flex: 5,
+                                    child: ListTile(
+                                      title: Text(playlists.elementAt(index).name),
+                                      leading: FractionallySizedBox(
+                                        heightFactor: 0.8,
+                                        child: AspectRatio(
+                                          aspectRatio: 1,
+                                          child: ValueListenableBuilder(
+                                            builder: (BuildContext context, bool value, Widget child) {
+                                              if(value) {
+                                                return Visibility(
+                                                  visible: value,
+                                                  child: Container(
+                                                    decoration: new BoxDecoration(
+                                                      image: new DecorationImage(
+                                                        fit: BoxFit.fitHeight,
+                                                        alignment: FractionalOffset.center,
+                                                        image: NetworkImage(playlists.elementAt(index).imageUrl),
+                                                      )
+                                                    ),
+                                                  ),
+                                                );
+                                              } else {
+                                                return Container(
+                                                  child: Icon(Icons.audiotrack)
+                                                );
+                                              }
+                                            },
+                                            valueListenable: isImageVisible,
+                                          )
+                                        )
+                                      ),
+                                      subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" tracks"),
+                                      onLongPress: () => playlistOption(ctrl, playlists.elementAt(index), index),
+                                      onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
+                                    )
+                                  ),
+                                  Flexible(
+                                    flex: 1,
+                                    child: Container(
+                                      margin: EdgeInsets.only(left:20, right: 20),
+                                      child: Icon(Icons.drag_handle)
+                                    )
                                   )
-                                ),
-                                Flexible(
-                                  flex: 1,
-                                  child: Container(
-                                    margin: EdgeInsets.only(left:20, right: 20),
-                                    child: Icon(Icons.drag_handle)
-                                  )
-                                )
-                              ]
+                                ]
+                              )
                             )
                           )
                         )
@@ -228,6 +252,9 @@ class TabsView {
     return List.generate(
                     tracks.length,
                     (index) {
+
+                      ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
+
                       return Container(
                         key: ValueKey('ReorderableListView:Tracks:$index'),
                         margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
@@ -255,61 +282,79 @@ class TabsView {
                               )
                             ),
                             child: */
-                            Card(
-                              child: InkWell(
-                                onTap: () {
-                                  setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
-                                },
-                                onDoubleTap: () {
-                                  addToQueue(tracks.elementAt(index));
-                                  String trackName = tracks.elementAt(index).name;
-                                  ScaffoldMessenger.of(this.state.context).showSnackBar(
-                                    SnackBar(
-                                      action: SnackBarAction(
-                                        label: 'Annuler',
-                                        onPressed: () {},
-                                      ),
-                                      duration: Duration(seconds: 1),
-                                      content: Text("$trackName ajouté à la file d'attente"),
-                                    )
-                                  );
-                                  /*Fluttertoast.showToast(
-                                    msg: "$trackName ajouté à la file d'attente",
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.BOTTOM,
-                                  );*/
-                                },
-                                onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
-                                child: ListTile(
-                                  title: Text(
-                                    tracks.elementAt(index).name,
-                                    style: (tracks[index].isPlaying ?
-                                      TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
-                                    )
-                                  ),
-                                  leading: FractionallySizedBox(
-                                    heightFactor: 0.8,
-                                    child: AspectRatio(
-                                      aspectRatio: 1,
-                                      child: new Container(
-                                        decoration: new BoxDecoration(
-                                          image: new DecorationImage(
-                                            fit: BoxFit.fitHeight,
-                                            alignment: FractionalOffset.center,
-                                            image: NetworkImage(tracks.elementAt(index).imageUrl),
-                                          )
+                            VisibilityDetector(
+                              key: ValueKey("VisibilityDetector:TracksList:$index"),
+                              onVisibilityChanged: (VisibilityInfo visInfos) {
+                                print(index);
+                                print(visInfos.visibleFraction);
+                              },
+                              child: Card(
+                                child: InkWell(
+                                  onTap: () {
+                                    setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
+                                  },
+                                  onDoubleTap: () {
+                                    addToQueue(tracks.elementAt(index));
+                                    String trackName = tracks.elementAt(index).name;
+                                    ScaffoldMessenger.of(this.state.context).showSnackBar(
+                                      SnackBar(
+                                        action: SnackBarAction(
+                                          label: 'Annuler',
+                                          onPressed: () {},
                                         ),
-                                      ),
-                                    )
-                                  ),
-                                  subtitle: Text(tracks.elementAt(index).artist),
-                                  trailing: FractionallySizedBox(
-                                    heightFactor: 1,
-                                    child: InkWell(
-                                      child: Icon(Icons.more_vert),
-                                      onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
-                                    )
-                                  ),
+                                        duration: Duration(seconds: 1),
+                                        content: Text("$trackName ajouté à la file d'attente"),
+                                      )
+                                    );
+                                    /*Fluttertoast.showToast(
+                                      msg: "$trackName ajouté à la file d'attente",
+                                      toastLength: Toast.LENGTH_SHORT,
+                                      gravity: ToastGravity.BOTTOM,
+                                    );*/
+                                  },
+                                  onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
+                                  child: ListTile(
+                                    title: Text(
+                                      tracks.elementAt(index).name,
+                                      style: (tracks[index].isPlaying ?
+                                        TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
+                                      )
+                                    ),
+                                    leading: FractionallySizedBox(
+                                      heightFactor: 0.8,
+                                      child: AspectRatio(
+                                        aspectRatio: 1,
+                                        child: ValueListenableBuilder(
+                                          builder: (BuildContext context, bool value, Widget child) {
+                                            if(value) {
+                                              return Container(
+                                                decoration: new BoxDecoration(
+                                                  image: new DecorationImage(
+                                                    fit: BoxFit.fitHeight,
+                                                    alignment: FractionalOffset.center,
+                                                    image: NetworkImage(tracks.elementAt(index).imageUrl),
+                                                  )
+                                                ),
+                                              );
+                                            } else {
+                                              return Container(
+                                                child: Icon(Icons.audiotrack)
+                                              );
+                                            }
+                                          },
+                                          valueListenable: isImageVisible,
+                                        )
+                                      )
+                                    ),
+                                    subtitle: Text(tracks.elementAt(index).artist),
+                                    trailing: FractionallySizedBox(
+                                      heightFactor: 1,
+                                      child: InkWell(
+                                        child: Icon(Icons.more_vert),
+                                        onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
+                                      )
+                                    ),
+                                  )
                                 )
                               )
                             )
@@ -735,61 +780,82 @@ class TabsView {
                 allCards = List.generate(
                   ctrl.platform.playlists.length,
                   (index) {
+
+                    ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
+
                     if(ctrl.platform.playlists[index].ownerId == ctrl.getUserInformations()['ownerId']) {
                       return Theme(
                         data: ThemeData(
                           brightness: Brightness.dark
                         ),
                         child: Container(
-                          child: Card(
-                            child: ListTile(
-                              title: Text(ctrl.platform.playlists[index].name),
-                              leading: FractionallySizedBox(
-                                heightFactor: 0.8,
-                                child: AspectRatio(
-                                  aspectRatio: 1,
-                                  child: new Container(
-                                    decoration: new BoxDecoration(
-                                      image: new DecorationImage(
-                                        fit: BoxFit.fitHeight,
-                                        alignment: FractionalOffset.center,
-                                        image: NetworkImage(ctrl.platform.playlists[index].imageUrl),
-                                      )
-                                    ),
-                                  ),
-                                )
-                              ),
-                              subtitle: Text(ctrl.platform.playlists[index].getTracks().length.toString() + " tracks"),
-                              onTap: () {
-                                Navigator.pop(dialogContext);
-                                String id = ctrl.addTrackToPlaylist(index, track, false);
-                                if(id == null) {
-                                  showDialog(
-                                    context: this.state.context,
-                                    builder: (dialogContext) {
-                                      return AlertDialog(
-                                        title: Text("La musique existe déjà, voulez-vous quand même l'ajouter ?", style: TextStyle(color: Colors.white)),
-                                        actions: [
-                                          FlatButton(
-                                            child: Text("Non", style: TextStyle(color: Colors.white)),
-                                            onPressed: () => Navigator.pop(dialogContext),
-                                          ),
-                                          FlatButton(
-                                            child: Text("Oui", style: TextStyle(color: Colors.white)),
-                                            onPressed: () {
-                                              Navigator.pop(dialogContext);
-                                              this.state.setState(() {
-                                                ctrl.addTrackToPlaylist(index, track, true);
-                                              });
-                                            },
-                                          )
-                                        ],
-                                        backgroundColor: Colors.grey[800],
-                                      );
-                                    }
-                                  );
-                                }
-                              },
+                          child: FocusDetector(
+                            onVisibilityGained: () => isImageVisible.value = true,
+                            onVisibilityLost: () => isImageVisible.value = false,
+                            child: Card(
+                              child: ListTile(
+                                title: Text(ctrl.platform.playlists[index].name),
+                                leading: FractionallySizedBox(
+                                  heightFactor: 0.8,
+                                  child: AspectRatio(
+                                    aspectRatio: 1,
+                                    child: ValueListenableBuilder(
+                                      builder: (BuildContext context, bool value, Widget child) {
+                                        if(value) {
+                                          return Visibility(
+                                            visible: value,
+                                            child: Container(
+                                              decoration: new BoxDecoration(
+                                                image: new DecorationImage(
+                                                  fit: BoxFit.fitHeight,
+                                                  alignment: FractionalOffset.center,
+                                                  image: NetworkImage(ctrl.platform.playlists[index].imageUrl),
+                                                )
+                                              ),
+                                            ),
+                                          );
+                                        } else {
+                                          return Container(
+                                            child: Icon(Icons.audiotrack)
+                                          );
+                                        }
+                                      },
+                                      valueListenable: isImageVisible,
+                                    )
+                                  )
+                                ),
+                                subtitle: Text(ctrl.platform.playlists[index].getTracks().length.toString() + " tracks"),
+                                onTap: () {
+                                  Navigator.pop(dialogContext);
+                                  String id = ctrl.addTrackToPlaylist(index, track, false);
+                                  if(id == null) {
+                                    showDialog(
+                                      context: this.state.context,
+                                      builder: (dialogContext) {
+                                        return AlertDialog(
+                                          title: Text("La musique existe déjà, voulez-vous quand même l'ajouter ?", style: TextStyle(color: Colors.white)),
+                                          actions: [
+                                            FlatButton(
+                                              child: Text("Non", style: TextStyle(color: Colors.white)),
+                                              onPressed: () => Navigator.pop(dialogContext),
+                                            ),
+                                            FlatButton(
+                                              child: Text("Oui", style: TextStyle(color: Colors.white)),
+                                              onPressed: () {
+                                                Navigator.pop(dialogContext);
+                                                this.state.setState(() {
+                                                  ctrl.addTrackToPlaylist(index, track, true);
+                                                });
+                                              },
+                                            )
+                                          ],
+                                          backgroundColor: Colors.grey[800],
+                                        );
+                                      }
+                                    );
+                                  }
+                                },
+                              )
                             )
                           )
                         )
