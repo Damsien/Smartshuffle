@@ -28,7 +28,7 @@ class PlatformSpotifyController extends PlatformsController {
   Future<List<Playlist>> getPlaylists({bool refreshing}) async {
     List<Playlist> finalPlaylists = List<Playlist>();
     List<Playlist> playlists = await spController.getPlaylistsList();
-    for (Playlist play in platform.playlists) {
+    for (Playlist play in platform.playlists.value) {
       for (int i = 0; i < playlists.length; i++) {
         if (play.id == playlists[i].id) {
           finalPlaylists.add(playlists[i]);
@@ -40,14 +40,19 @@ class PlatformSpotifyController extends PlatformsController {
       play.setTracks(await spController.getPlaylistSongs(play));
       finalPlaylists.add(play);
     }
-    for (int i = 0; i < platform.playlists.length; i++) {
-      if (platform.playlists[i].getTracks().length == 0 || refreshing == true)
+    for (int i = 0; i < platform.playlists.value.length; i++) {
+      if (platform.playlists.value[i].getTracks().length == 0 || refreshing == true)
         finalPlaylists[i]
             .setTracks(await spController.getPlaylistSongs(finalPlaylists[i]));
       else
-        finalPlaylists[i].setTracks(platform.playlists[i].getTracks());
+        finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks());
     }
     return platform.setPlaylist(finalPlaylists);
+  }
+  
+  @override
+  ValueNotifier<List<Playlist>> getPlaylistsUpdate() {
+    return platform.playlists;
   }
 
   @override

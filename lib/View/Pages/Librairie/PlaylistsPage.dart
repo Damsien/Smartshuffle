@@ -32,7 +32,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
   bool exitPage = true;
   TabController _tabController;
-  int initialTabIndex = 0;
+  ValueNotifier<int> initialTabIndex = ValueNotifier<int>(0);
 
   List<MapEntry<PlatformsController, Playlist>> tracksList;
 
@@ -53,17 +53,15 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
 
   onReorderPlaylists(PlatformsController ctrl, List<Playlist> playlists, int oldIndex, int newIndex) {
-    setState(() {
-      playlists = ctrl.platform.reorder(oldIndex, newIndex);
-      this.initialTabIndex = _tabController.index;
-    });
+    playlists = ctrl.platform.reorder(oldIndex, newIndex);
+    this.initialTabIndex.value = _tabController.index;
   }
 
   openPlaylist(int tabIndex, MapEntry<ServicesLister, PlatformsController> elem, Playlist playlist) {
     setState(() {
       this.distribution[tabIndex] = TabsView.TracksView;
       this.tracksList[tabIndex] = MapEntry(elem.value, playlist);
-      this.initialTabIndex = _tabController.index;
+      this.initialTabIndex.value = _tabController.index;
       this.tabKey = UniqueKey();
     });
   }
@@ -73,14 +71,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
   onReorderTracks(PlatformsController ctrl, Playlist playlist, List<Track> tracks, int oldIndex, int newIndex) {
     setState(() {
       tracks = playlist.reorder(oldIndex, newIndex);
-      this.initialTabIndex = _tabController.index;
+      this.initialTabIndex.value = _tabController.index;
     });
   }
 
   returnToPlaylist(int tabIndex) {
     setState(() {
       this.distribution[tabIndex] = TabsView.PlaylistsView;
-      this.initialTabIndex = _tabController.index;
+      this.initialTabIndex.value = _tabController.index;
       this.tabKey = UniqueKey();
     });
   }
@@ -104,7 +102,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
   setResearch(PlatformsController ctrl, Playlist playlist, String value, List<Track> tracks) {
 
     setState(() {
-      this.initialTabIndex = _tabController.index;
+      this.initialTabIndex.value = _tabController.index;
       if(value != "")
         this.notResearch[_tabController.index] = false;
       else
@@ -127,15 +125,15 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
   }
 
   setPlaying(Track track, bool queueCreate, {Playlist playlist, PlatformsController platformCtrl, bool isShuffle, bool isRepeatOnce, bool isRepeatAlways}) {
-    setState(() {
-      this.initialTabIndex = _tabController.index;
+    //setState(() {
+      this.initialTabIndex.value = _tabController.index;
       widget.setPlaying(track, queueCreate,
        playlist: playlist,
        platformCtrl: platformCtrl,
        isShuffle: isShuffle,
        isRepeatOnce: isRepeatOnce,
        isRepeatAlways: isRepeatAlways);
-    });
+    //});
   }
 
 
@@ -201,11 +199,11 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
     tabConstructor(this.tabsView);
 
-    if(this.initialTabIndex >= this.userPlatforms.length)
-      this.initialTabIndex = 0;
+    if(this.initialTabIndex.value >= this.userPlatforms.length)
+      this.initialTabIndex.value = 0;
     this._tabController = new TabController(
       length: this.userPlatforms.length,
-      initialIndex: this.initialTabIndex,
+      initialIndex: this.initialTabIndex.value,
       vsync: this
     );
 

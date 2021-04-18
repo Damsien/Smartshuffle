@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 
-class Track {
+class Track with ChangeNotifier {
   String id;
   String name;
   String artist;
@@ -9,10 +9,11 @@ class Track {
   Duration currentDuration = Duration(seconds: 0);
   Duration totalDuration = Duration(minutes: 3);
   ServicesLister service;
-  String imageUrl;
+  String imageUrlLittle;
+  String imageUrlLarge;
   String addDate;
 
-  bool isPlaying = false;
+  ValueNotifier<bool> isPlaying = ValueNotifier<bool>(false);
 
   Track(
       {@required String name,
@@ -21,20 +22,24 @@ class Track {
       @required id,
       Duration totalDuration,
       String album,
-      String imageUrl,
+      String imageUrlLittle,
+      String imageUrlLarge,
       String addDate}) {
     this.id = id;
     this.name = name;
     this.artist = artist;
     if (totalDuration != null) this.totalDuration = totalDuration;
     this.album = album;
-    this.imageUrl = imageUrl;
+    this.imageUrlLittle = imageUrlLittle;
+    this.imageUrlLarge = imageUrlLarge;
     this.service = service;
     this.addDate = addDate;
   }
 
   bool setIsPlaying(bool isPlaying) {
-    return this.isPlaying = isPlaying;
+    this.isPlaying.value = isPlaying;
+    notifyListeners();
+    return this.isPlaying.value;
   }
 
   void setId(String id) {
@@ -50,9 +55,9 @@ class Track {
   /*  CONTROLS  */
 
   bool playPause() {
-    isPlaying ? isPlaying= false : isPlaying = true;
+    isPlaying.value ? isPlaying.value = false : isPlaying.value = true;
     // TODO playPause
-    return isPlaying;
+    return isPlaying.value;
   }
 
   void seekTo(Duration duration) {

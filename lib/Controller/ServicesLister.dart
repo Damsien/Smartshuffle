@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:math';
 
+import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformDefaultController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformSpotifyController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformYoutubeController.dart';
@@ -28,25 +29,27 @@ class PlatformsLister {
 
 class GlobalQueue {
   
-  static List<Track> permanentQueue = List<Track>();
-  static List<Track> noPermanentQueue = List<Track>();
-  static List<MapEntry<Track, bool>> queue = List<MapEntry<Track, bool>>(); //bool : isPermanent ?
+  static ValueNotifier<List<Track>> permanentQueue = ValueNotifier<List<Track>>(List<Track>());
+  static ValueNotifier<List<Track>> noPermanentQueue = ValueNotifier<List<Track>>(List<Track>());
+  static ValueNotifier<List<MapEntry<Track, bool>>> queue = ValueNotifier<List<MapEntry<Track, bool>>>(List<MapEntry<Track, bool>>()); //bool : isPermanent ?
   static int currentQueueIndex = 0;
 
   static reBuildQueue() {
-    queue.clear();
-    for(Track t in noPermanentQueue) {
-      queue.add(MapEntry(t, false));
+    queue.value.clear();
+    for(Track t in noPermanentQueue.value) {
+      queue.value.add(MapEntry(t, false));
     }
-    for(Track t in permanentQueue.reversed) {
-      if(queue.isEmpty) queue.insert(0, MapEntry(t, true));
-      else queue.insert(currentQueueIndex+1, MapEntry(t, true));
+    for(Track t in permanentQueue.value.reversed) {
+      if(queue.value.isEmpty) queue.value.insert(0, MapEntry(t, true));
+      else queue.value.insert(currentQueueIndex+1, MapEntry(t, true));
     }
 
-    noPermanentQueue.clear();
-    for(MapEntry<Track, bool> me in queue) {
-      if(!me.value) noPermanentQueue.add(me.key);
+    noPermanentQueue.value.clear();
+    for(MapEntry<Track, bool> me in queue.value) {
+      if(!me.value) noPermanentQueue.value.add(me.key);
     }
+
+    queue.notifyListeners();
 
     /*
     print("==== Queue ====");
@@ -67,9 +70,9 @@ class GlobalQueue {
   static shuffleNoPermanentQueue(Playlist playlist, Track selectedTrack) {
     List<Track> tracks = playlist.getTracks();
     tracks.shuffle();
-    if(selectedTrack != null) noPermanentQueue.insert(0, selectedTrack);
+    if(selectedTrack != null) noPermanentQueue.value.insert(0, selectedTrack);
     for(Track tr in tracks) {
-      if(!noPermanentQueue.contains(tr))  addToNoPermanentQueue(tr);
+      if(!noPermanentQueue.value.contains(tr))  addToNoPermanentQueue(tr);
     }
     currentQueueIndex = 0;
   }
@@ -94,46 +97,71 @@ class GlobalQueue {
   }
 
   static addToPermanentQueue(Track track) {
-    permanentQueue.add(track);
+    permanentQueue.value.add(track);
     reBuildQueue();
   }
 
   static insertInPermanentQueue(int index, Track track) {
-    permanentQueue.insert(index, track);
+    permanentQueue.value.insert(index, track);
     reBuildQueue();
   }
 
   static replaceInPermanentQueue(int index, Track track) {
-    if(index >= permanentQueue.length) permanentQueue.add(track);
-    else permanentQueue[index] = track;
+    if(index >= permanentQueue.value.length) permanentQueue.value.add(track);
+    else permanentQueue.value[index] = track;
     reBuildQueue();
   }
 
   static addToNoPermanentQueue(Track track) {
-    noPermanentQueue.add(track);
+    noPermanentQueue.value.add(track);
     reBuildQueue();
   }
 
   static moveFromPermanentToNoPermanent(int index) {
-    noPermanentQueue.insert(index, permanentQueue[0]);
-    permanentQueue.removeAt(0);
+    noPermanentQueue.value.insert(index, permanentQueue.value[0]);
+    permanentQueue.value.removeAt(0);
   }
 
   static resetNoPermanentQueue() {
-    noPermanentQueue.clear();
+    noPermanentQueue.value.clear();
     currentQueueIndex = 0;
     //reBuildQueue();
   }
 
   static resetQueue() {
-    permanentQueue.clear();
-    noPermanentQueue.clear();
-    queue.clear();
+    permanentQueue.value.clear();
+    noPermanentQueue.value.clear();
+    queue.value.clear();
   }
 
-  static reorder(int oldIndex, int newIndex) {
-    MapEntry<Track, bool> track = queue.removeAt(oldIndex);
-    queue.insert(newIndex, track);
+  static reorder(int oldIndex, int oldList, int newIndex, int newList) {
+    switch(oldList) {
+      case 0: {
+        switch(newList) {
+          case 0: {
+            Track track = permanentQueue.value.removeAt(oldIndex);
+            permanentQueue.value.insert(newIndex, track);
+          } break;
+          case 1: {
+            Track track = permanentQueue.value.removeAt(oldIndex);
+            noPermanentQueue.value.insert(newIndex+currentQueueIndex+1-permanentQueue.value.length, track);
+          } break;
+        }
+      } break;
+      case 1: {
+        switch(newList) {
+          case 0: {
+            Track track = noPermanentQueue.value.removeAt(oldIndex+currentQueueIndex+1-permanentQueue.value.length);
+            permanentQueue.value.insert(newIndex, track);
+          } break;
+          case 1: {
+            Track track = noPermanentQueue.value.removeAt(oldIndex+currentQueueIndex+1-permanentQueue.value.length);
+            noPermanentQueue.value.insert(newIndex+currentQueueIndex+1-permanentQueue.value.length, track);
+          } break;
+        }
+      } break;
+    }
+    reBuildQueue();
   }
 
   

@@ -120,12 +120,14 @@ class API {
     for (int i = 0; i < items.length; i++) {
       String name = items[i]['snippet']['title'];
       String id = items[i]['id'];
-      String imageUrl = items[i]['snippet']['thumbnails']['default']['url'];
+      String imageUrlLittle = items[i]['snippet']['thumbnails']['default']['url'];
+      String imageUrlLarge = items[i]['snippet']['thumbnails']['default']['url'];
       list.add(Track(
           id: id,
           name: name,
           service: ServicesLister.YOUTUBE,
-          imageUrl: imageUrl,
+          imageUrlLittle: imageUrlLittle,
+          imageUrlLarge: imageUrlLarge,
           artist: 'unknow'));
     }
   }

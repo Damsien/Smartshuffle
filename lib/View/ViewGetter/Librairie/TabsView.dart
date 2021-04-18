@@ -58,7 +58,7 @@ class TabsView {
         if(snapshot.hasData) {
 
           
-          List<Playlist> playlists = snapshot.data;
+          List<Playlist> realPlaylists = snapshot.data;
           finalWidget = Theme(
             key: PageStorageKey('TabBarView:'+ctrl.platform.name+':Playlists'),
             data: ThemeData(
@@ -71,132 +71,137 @@ class TabsView {
                 onRefresh: () async {
                   List<Playlist> plays = await ctrl.getPlaylists(refreshing: true);
                   this.state.setState(() {
-                    playlists = plays;
+                    realPlaylists = plays;
                   });
                 },
-                child: ReorderableListView(
-                  onReorder: (int oldIndex, int newIndex) {
-                    onReorder(ctrl, playlists, oldIndex, newIndex);
-                  },
-                  header: Container(
-                    width: WidgetsBinding.instance.window.physicalSize.width,
-                    height: 165,
-                    margin: EdgeInsets.only(left: 30, right: 30, bottom: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                child: ValueListenableBuilder(
+                  valueListenable: ctrl.getPlaylistsUpdate(),
+                  builder: (_, List<Playlist> playlists, __) {
+                    return ReorderableListView(
+                      onReorder: (int oldIndex, int newIndex) {
+                        onReorder(ctrl, playlists, oldIndex, newIndex);
+                      },
+                      header: Container(
+                        width: WidgetsBinding.instance.window.physicalSize.width,
+                        height: 165,
+                        margin: EdgeInsets.only(left: 30, right: 30, bottom: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              margin: EdgeInsets.only(top: 30, bottom: 20),
-                              child: Text(ctrl.getPlatformInformations()['name'], style: TextStyle(fontSize: 30))
-                            ),
-                            Container(
-                              child: RaisedButton(
-                                onPressed: () => createPlaylist(ctrl),
-                                colorBrightness: Brightness.dark,
-                                color: Colors.grey[800],
-                                child: Wrap(
-                                  spacing: 8.0,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: [
-                                    Icon(Icons.add), Text("Ajouter une playlist")
-                                  ]
-                                )
-                              )
-                            ),
-                          ]
-                        ),
-                        InkWell(
-                          onTap: () => openApp(ctrl.platform),
-                          child: FractionallySizedBox(
-                            heightFactor: 0.5,
-                            child: Image(image: AssetImage(ctrl.platform.platformInformations['logo']))
-                          )
-                        )
-                      ]
-                    )
-                  ),
-                  children: List.generate(
-                    playlists.length,
-                    (index) {
-
-                      ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
-
-                      return Container(
-                        key: ValueKey('ReorderableListView:Playlists:$index'),
-                        margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
-                        child: InkWell(
-                          child: VisibilityDetector(
-                            key: ValueKey("VisibilityDetector:PlaylistsList:$index"),
-                            onVisibilityChanged: (VisibilityInfo visInfos) {
-                              if(visInfos.visibleFraction > 0.2)
-                                isImageVisible.value = true;
-                              else
-                                isImageVisible.value = false;
-                            },
-                            child: Card(
-                              child: Row(
-                                children: [
-                                  Flexible(
-                                    flex: 5,
-                                    child: ListTile(
-                                      title: Text(playlists.elementAt(index).name),
-                                      leading: FractionallySizedBox(
-                                        heightFactor: 0.8,
-                                        child: AspectRatio(
-                                          aspectRatio: 1,
-                                          child: ValueListenableBuilder(
-                                            builder: (BuildContext context, bool value, Widget child) {
-                                              if(value) {
-                                                return Visibility(
-                                                  visible: value,
-                                                  child: Container(
-                                                    decoration: new BoxDecoration(
-                                                      image: new DecorationImage(
-                                                        fit: BoxFit.fitHeight,
-                                                        alignment: FractionalOffset.center,
-                                                        image: NetworkImage(playlists.elementAt(index).imageUrl),
-                                                      )
-                                                    ),
-                                                  ),
-                                                );
-                                              } else {
-                                                return Container(
-                                                  child: Icon(Icons.audiotrack)
-                                                );
-                                              }
-                                            },
-                                            valueListenable: isImageVisible,
-                                          )
-                                        )
-                                      ),
-                                      subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" tracks"),
-                                      onLongPress: () => playlistOption(ctrl, playlists.elementAt(index), index),
-                                      onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
-                                    )
-                                  ),
-                                  Flexible(
-                                    flex: 1,
-                                    child: Container(
-                                      margin: EdgeInsets.only(left:20, right: 20),
-                                      child: Icon(Icons.drag_handle)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  margin: EdgeInsets.only(top: 30, bottom: 20),
+                                  child: Text(ctrl.getPlatformInformations()['name'], style: TextStyle(fontSize: 30))
+                                ),
+                                Container(
+                                  child: RaisedButton(
+                                    onPressed: () => createPlaylist(ctrl),
+                                    colorBrightness: Brightness.dark,
+                                    color: Colors.grey[800],
+                                    child: Wrap(
+                                      spacing: 8.0,
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      children: [
+                                        Icon(Icons.add), Text("Ajouter une playlist")
+                                      ]
                                     )
                                   )
-                                ]
+                                ),
+                              ]
+                            ),
+                            InkWell(
+                              onTap: () => openApp(ctrl.platform),
+                              child: FractionallySizedBox(
+                                heightFactor: 0.5,
+                                child: Image(image: AssetImage(ctrl.platform.platformInformations['logo']))
                               )
                             )
-                          )
+                          ]
                         )
-                      );
-                    }
-                  )..add(
-                    Container(
-                      key: UniqueKey(),
-                      height: 80,
-                    )
-                  )
+                      ),
+                      children: List.generate(
+                        playlists.length,
+                        (index) {
+
+                          ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
+
+                          return Container(
+                            key: ValueKey('ReorderableListView:Playlists:$index'),
+                            margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
+                            child: InkWell(
+                              child: VisibilityDetector(
+                                key: ValueKey("VisibilityDetector:PlaylistsList:$index"),
+                                onVisibilityChanged: (VisibilityInfo visInfos) {
+                                  if(visInfos.visibleFraction > 0.2)
+                                    isImageVisible.value = true;
+                                  else
+                                    isImageVisible.value = false;
+                                },
+                                child: Card(
+                                  child: Row(
+                                    children: [
+                                      Flexible(
+                                        flex: 5,
+                                        child: ListTile(
+                                          title: Text(playlists.elementAt(index).name),
+                                          leading: FractionallySizedBox(
+                                            heightFactor: 0.8,
+                                            child: AspectRatio(
+                                              aspectRatio: 1,
+                                              child: ValueListenableBuilder(
+                                                builder: (BuildContext context, bool value, Widget child) {
+                                                  if(value) {
+                                                    return Visibility(
+                                                      visible: value,
+                                                      child: Container(
+                                                        decoration: new BoxDecoration(
+                                                          image: new DecorationImage(
+                                                            fit: BoxFit.fitHeight,
+                                                            alignment: FractionalOffset.center,
+                                                            image: NetworkImage(playlists.elementAt(index).imageUrl),
+                                                          )
+                                                        ),
+                                                      ),
+                                                    );
+                                                  } else {
+                                                    return Container(
+                                                      child: Icon(Icons.audiotrack)
+                                                    );
+                                                  }
+                                                },
+                                                valueListenable: isImageVisible,
+                                              )
+                                            )
+                                          ),
+                                          subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" tracks"),
+                                          onLongPress: () => playlistOption(ctrl, playlists.elementAt(index), index),
+                                          onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
+                                        )
+                                      ),
+                                      Flexible(
+                                        flex: 1,
+                                        child: Container(
+                                          margin: EdgeInsets.only(left:20, right: 20),
+                                          child: Icon(Icons.drag_handle)
+                                        )
+                                      )
+                                    ]
+                                  )
+                                )
+                              )
+                            )
+                          );
+                        }
+                      )..add(
+                        Container(
+                          key: UniqueKey(),
+                          height: 80,
+                        )
+                      )
+                    );
+                  }
                 )
               )
             )
@@ -257,116 +262,117 @@ class TabsView {
                     tracks.length,
                     (index) {
 
+                      /*Dismissible(
+                          key: ValueKey('ReorderableListView:Tracks:Dismissible:$index'),
+                          /*dismissThresholds: {DismissDirection.startToEnd: double.infinity,
+                                              DismissDirection.endToStart: double.infinity},*/
+                          direction: dismissDirection,
+                          confirmDismiss: (confirm) async {
+                            addToQueue(tracks[index]);
+                            return false;
+                          },
+                          background: Card(
+                            child: Wrap(
+                              alignment: WrapAlignment.end,
+                              runAlignment: WrapAlignment.center,
+                              children:[
+                                Container(
+                                  margin: EdgeInsets.only(right: 10),
+                                  child: Icon(Icons.playlist_add, size: 30)
+                                )
+                              ]
+                            )
+                          ),*/
+
                       ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
 
-                      return Container(
-                        key: ValueKey('ReorderableListView:Tracks:$index'),
-                        margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
-                        child: InkWell(
-                          child: 
-                          /*Dismissible(
-                            key: ValueKey('ReorderableListView:Tracks:Dismissible:$index'),
-                            /*dismissThresholds: {DismissDirection.startToEnd: double.infinity,
-                                                DismissDirection.endToStart: double.infinity},*/
-                            direction: dismissDirection,
-                            confirmDismiss: (confirm) async {
-                              addToQueue(tracks[index]);
-                              return false;
+                      return VisibilityDetector(
+                        key: ValueKey("VisibilityDetector:TracksList:$index"),
+                        onVisibilityChanged: (VisibilityInfo visInfos) {
+                          if(visInfos.visibleFraction > 0.2)
+                            isImageVisible.value = true;
+                          else
+                            isImageVisible.value = false;
+                        },
+                        child: Container(
+                          key: ValueKey('ListView:Tracks:$index'),
+                          margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
+                          child: InkWell(
+                            onTap: () {
+                              setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
                             },
-                            background: Card(
-                              child: Wrap(
-                                alignment: WrapAlignment.end,
-                                runAlignment: WrapAlignment.center,
-                                children:[
-                                  Container(
-                                    margin: EdgeInsets.only(right: 10),
-                                    child: Icon(Icons.playlist_add, size: 30)
-                                  )
-                                ]
-                              )
-                            ),
-                            child: */
-                            VisibilityDetector(
-                              key: ValueKey("VisibilityDetector:TracksList:$index"),
-                              onVisibilityChanged: (VisibilityInfo visInfos) {
-                                if(visInfos.visibleFraction > 0.2)
-                                  isImageVisible.value = true;
-                                else
-                                  isImageVisible.value = false;
-                              },
-                              child: Card(
-                                child: InkWell(
-                                  onTap: () {
-                                    setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
-                                  },
-                                  onDoubleTap: () {
-                                    addToQueue(tracks.elementAt(index));
-                                    String trackName = tracks.elementAt(index).name;
-                                    ScaffoldMessenger.of(this.state.context).showSnackBar(
-                                      SnackBar(
-                                        action: SnackBarAction(
-                                          label: 'Annuler',
-                                          onPressed: () {},
-                                        ),
-                                        duration: Duration(seconds: 1),
-                                        content: Text("$trackName ajouté à la file d'attente"),
-                                      )
-                                    );
-                                    /*Fluttertoast.showToast(
-                                      msg: "$trackName ajouté à la file d'attente",
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.BOTTOM,
-                                    );*/
-                                  },
-                                  onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
-                                  child: ListTile(
-                                    title: Text(
-                                      tracks.elementAt(index).name,
-                                      style: (tracks[index].isPlaying ?
-                                        TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
-                                      )
-                                    ),
-                                    leading: FractionallySizedBox(
-                                      heightFactor: 0.8,
-                                      child: AspectRatio(
-                                        aspectRatio: 1,
-                                        child: ValueListenableBuilder(
-                                          builder: (BuildContext context, bool value, Widget child) {
-                                            if(value) {
-                                              return Container(
-                                                decoration: new BoxDecoration(
-                                                  image: new DecorationImage(
-                                                    fit: BoxFit.fitHeight,
-                                                    alignment: FractionalOffset.center,
-                                                    image: NetworkImage(tracks.elementAt(index).imageUrl),
-                                                  )
-                                                ),
-                                              );
-                                            } else {
-                                              return Container(
-                                                child: Icon(Icons.audiotrack)
-                                              );
-                                            }
-                                          },
-                                          valueListenable: isImageVisible,
+                            onDoubleTap: () {
+                              addToQueue(tracks.elementAt(index));
+                              String trackName = tracks.elementAt(index).name;
+                              ScaffoldMessenger.of(this.state.context).showSnackBar(
+                                SnackBar(
+                                  action: SnackBarAction(
+                                    label: 'Annuler',
+                                    onPressed: () {},
+                                  ),
+                                  duration: Duration(seconds: 1),
+                                  content: Text("$trackName ajouté à la file d'attente"),
+                                )
+                              );
+                              /*Fluttertoast.showToast(
+                                msg: "$trackName ajouté à la file d'attente",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                              );*/
+                            },
+                            onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
+                            child: Card(
+                                child: ListTile(
+                                  title: ValueListenableBuilder(
+                                    valueListenable: tracks[index].isPlaying,
+                                    builder: (_, value, __) {
+                                      return Text(
+                                        tracks.elementAt(index).name,
+                                        style: (value ?
+                                          TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
                                         )
+                                      );
+                                    }
+                                  ),
+                                  leading: FractionallySizedBox(
+                                    heightFactor: 0.8,
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: ValueListenableBuilder(
+                                        builder: (BuildContext context, bool value, Widget child) {
+                                          if(value) {
+                                            return Container(
+                                              decoration: new BoxDecoration(
+                                                image: new DecorationImage(
+                                                  fit: BoxFit.fitHeight,
+                                                  alignment: FractionalOffset.center,
+                                                  image: NetworkImage(tracks.elementAt(index).imageUrlLittle),
+                                                )
+                                              ),
+                                            );
+                                          } else {
+                                            return Container(
+                                              child: Icon(Icons.audiotrack)
+                                            );
+                                          }
+                                        },
+                                        valueListenable: isImageVisible,
                                       )
-                                    ),
-                                    subtitle: Text(tracks.elementAt(index).artist),
-                                    trailing: FractionallySizedBox(
-                                      heightFactor: 1,
-                                      child: InkWell(
-                                        child: Icon(Icons.more_vert),
-                                        onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.indexOf(playlist)),
-                                      )
-                                    ),
-                                  )
+                                    )
+                                  ),
+                                  subtitle: Text(tracks.elementAt(index).artist),
+                                  trailing: FractionallySizedBox(
+                                    heightFactor: 1,
+                                    child: InkWell(
+                                      child: Icon(Icons.more_vert),
+                                      onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
+                                    )
+                                  ),
                                 )
                               )
                             )
                           )
                         );
-                      //);
                     }
                   );
   }
@@ -386,6 +392,8 @@ class TabsView {
           List<Widget> realTracks = tracksListGenerator(tracks, ctrl, playlist, setPlaying);
 
           List<Widget> listTracks = realTracks;
+
+          ScrollController scrollCtrl = ScrollController();
           
 
           finalWidget = WillPopScope(
@@ -397,6 +405,7 @@ class TabsView {
               child: Container(
                 color: Colors.black54,
                 child: SingleChildScrollView(
+                  controller: scrollCtrl,
                   padding: EdgeInsets.only(bottom: 100),
                   child: Column(
                     children: [
@@ -598,14 +607,22 @@ class TabsView {
                       ),
                       Visibility(
                         visible: notResearch,
-                        child: Column(
-                          children: listTracks
+                        child: Container(
+                          height: 80*listTracks.length.toDouble(),
+                          child: ListView(
+                            controller: scrollCtrl,
+                            children: listTracks,
+                          )
                         )
                       ),
                       Visibility(
                         visible: !notResearch,
-                        child: Column(
-                          children: researchList,
+                        child: Container(
+                          height: 80*listTracks.length.toDouble(),
+                          child: ListView(
+                            controller: scrollCtrl,
+                            children: researchList,
+                          )
                         )
                       )
                     ]
@@ -784,12 +801,12 @@ class TabsView {
               mainAxisSize: MainAxisSize.min,
               children: () {
                 allCards = List.generate(
-                  ctrl.platform.playlists.length,
+                  ctrl.platform.playlists.value.length,
                   (index) {
 
                     ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
 
-                    if(ctrl.platform.playlists[index].ownerId == ctrl.getUserInformations()['ownerId']) {
+                    if(ctrl.platform.playlists.value[index].ownerId == ctrl.getUserInformations()['ownerId']) {
                       return Theme(
                         data: ThemeData(
                           brightness: Brightness.dark
@@ -805,7 +822,7 @@ class TabsView {
                             },
                             child: Card(
                               child: ListTile(
-                                title: Text(ctrl.platform.playlists[index].name),
+                                title: Text(ctrl.platform.playlists.value[index].name),
                                 leading: FractionallySizedBox(
                                   heightFactor: 0.8,
                                   child: AspectRatio(
@@ -820,7 +837,7 @@ class TabsView {
                                                 image: new DecorationImage(
                                                   fit: BoxFit.fitHeight,
                                                   alignment: FractionalOffset.center,
-                                                  image: NetworkImage(ctrl.platform.playlists[index].imageUrl),
+                                                  image: NetworkImage(ctrl.platform.playlists.value[index].imageUrl),
                                                 )
                                               ),
                                             ),
@@ -835,7 +852,7 @@ class TabsView {
                                     )
                                   )
                                 ),
-                                subtitle: Text(ctrl.platform.playlists[index].getTracks().length.toString() + " tracks"),
+                                subtitle: Text(ctrl.platform.playlists.value[index].getTracks().length.toString() + " tracks"),
                                 onTap: () {
                                   Navigator.pop(dialogContext);
                                   String id = ctrl.addTrackToPlaylist(index, track, false);
@@ -903,7 +920,7 @@ class TabsView {
 
   removeFromPlaylist(PlatformsController ctrl, Track track, int playlistIndex, {Function refresh}) {
     String name = track.name;
-    String playlistName = ctrl.platform.playlists[playlistIndex].name;
+    String playlistName = ctrl.platform.playlists.value[playlistIndex].name;
     showDialog(
       context: this.state.context,
       builder: (dialogContext) {
@@ -918,7 +935,7 @@ class TabsView {
               child: Text("Valider", style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
-                int trackIndex = ctrl.platform.playlists[playlistIndex].getTracks().indexOf(track);
+                int trackIndex = ctrl.platform.playlists.value[playlistIndex].getTracks().indexOf(track);
                 this.state.setState(() {
                   ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
                   if(refresh != null) refresh(null, null, "", null, null);
@@ -949,7 +966,7 @@ class TabsView {
           title: Container(
             width: 200,
             height: 200,
-            child: Image(image: NetworkImage(track.imageUrl))
+            child: Image(image: NetworkImage(track.imageUrlLarge))
           ),
           content: Text(
             "Nom: $name\n$artist_string: $artist\nAlbum: $album\nService: $service", style: TextStyle(color: Colors.white)
@@ -973,7 +990,7 @@ class TabsView {
   /*  CRUD PLAYLISTS  */
 
   createPlaylist(PlatformsController ctrl) {
-    String value = "Playlist " + ctrl.platform.name + " n°" + ctrl.platform.playlists.length.toString();
+    String value = "Playlist " + ctrl.platform.name + " n°" + ctrl.platform.playlists.value.length.toString();
 
     showDialog(
       context: this.state.context,
@@ -1157,7 +1174,7 @@ class TabsView {
               mainAxisSize: MainAxisSize.min,
               children: () {
                 allCards = List.generate(
-                  defaultCtrl.platform.playlists.length,
+                  defaultCtrl.platform.playlists.value.length,
                   (index) {
                     return Theme(
                       data: ThemeData(
@@ -1166,7 +1183,7 @@ class TabsView {
                       child: Container(
                         child: Card(
                           child: ListTile(
-                            title: Text(defaultCtrl.platform.playlists[index].name),
+                            title: Text(defaultCtrl.platform.playlists.value[index].name),
                             leading: FractionallySizedBox(
                               heightFactor: 0.8,
                               child: AspectRatio(
@@ -1176,17 +1193,17 @@ class TabsView {
                                     image: new DecorationImage(
                                       fit: BoxFit.fitHeight,
                                       alignment: FractionalOffset.center,
-                                      image: NetworkImage(defaultCtrl.platform.playlists[index].imageUrl),
+                                      image: NetworkImage(defaultCtrl.platform.playlists.value[index].imageUrl),
                                     )
                                   ),
                                 ),
                               )
                             ),
-                            subtitle: Text(defaultCtrl.platform.playlists[index].getTracks().length.toString() + " tracks"),
+                            subtitle: Text(defaultCtrl.platform.playlists.value[index].getTracks().length.toString() + " tracks"),
                             onTap: () {
                               Navigator.pop(dialogContext);
                               //TODO Message de confirmation
-                              defaultCtrl.mergePlaylist(defaultCtrl.platform.playlists[index], playlist);
+                              defaultCtrl.mergePlaylist(defaultCtrl.platform.playlists.value[index], playlist);
                             },
                           )
                         )

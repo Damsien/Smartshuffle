@@ -61,6 +61,8 @@ abstract class PlatformsController {
 
   Future<List<Track>> getTracks(Playlist playlist);
 
+  ValueNotifier<List<Playlist>> getPlaylistsUpdate();
+
   /*  CONNECTION    */
 
   connect();

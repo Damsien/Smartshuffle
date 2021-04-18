@@ -142,23 +142,27 @@ class API {
       String artist = "None";
       String id = null;
       //* Le format d'image est 64x64
-      String imageUrl = null;
+      String imageUrlLittle = null;
+      //* Le format d'image est 
+      String imageUrlLarge = null;
       String addDate = null;
       try {
         id = items[i]['track']['id'];
         name = items[i]['track']['name'];
         addDate = items[i]['added_at'];
         artist = _getAllArtist(items[i]['track']['album']['artists']);
-        imageUrl = items[i]['track']['album']['images'][2]['url'];
+        imageUrlLittle = items[i]['track']['album']['images'][2]['url'];
+        imageUrlLarge = items[i]['track']['album']['images'][0]['url'];
       } catch (e) {
-        imageUrl = "https://source.unsplash.com/random";
+        imageUrlLittle = "https://source.unsplash.com/random";
       }
       if (id != null) {
         list.add(Track(
             id: id,
             name: name,
             service: ServicesLister.SPOTIFY,
-            imageUrl: imageUrl,
+            imageUrlLittle: imageUrlLittle,
+            imageUrlLarge: imageUrlLarge,
             artist: artist));
       }
     }

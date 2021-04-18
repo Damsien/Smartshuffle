@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
@@ -10,7 +11,7 @@ class Platform {
       'account': 'xxx@xxx.com',
       'isConnected': false
   };
-  List<Playlist> playlists = new List<Playlist>();
+  ValueNotifier<List<Playlist>> playlists = ValueNotifier<List<Playlist>>(List<Playlist>());
 
   Platform(String name, {Map platformInformations, Map userInformations, List<Playlist> playlists}) {
     this.name = name;
@@ -20,7 +21,7 @@ class Platform {
       }
     }
     if(userInformations != null) this.userInformations = userInformations;
-    if(playlists != null) this.playlists = playlists;
+    if(playlists != null) this.playlists.value = playlists;
     this.platformInformations['name'] = this.name;
   }
 
@@ -29,37 +30,37 @@ class Platform {
 
   String addTrackToPlaylistByIndex(int playlistIndex, Track track, bool force) {
     bool exist = false;
-    for(Track tr in playlists[playlistIndex].getTracks()) {
+    for(Track tr in playlists.value[playlistIndex].getTracks()) {
       if(track.id == tr.id) exist = true;
     }
     if(!exist || force)
-      return playlists.elementAt(playlistIndex).addTrack(track);
+      return playlists.value.elementAt(playlistIndex).addTrack(track);
     return null;
   }
   
   Track removeTrackFromPlaylistByIndex(int playlistIndex, int trackIndex) {
-    Track deletedTrack = playlists.elementAt(playlistIndex).removeTrack(trackIndex);
+    Track deletedTrack = playlists.value.elementAt(playlistIndex).removeTrack(trackIndex);
     return deletedTrack;
   }
 
 
 
   Playlist addPlaylist(Playlist playlist) {
-    playlists.add(playlist);
-    Playlist newPlaylist = playlists.removeAt(playlists.length-1);
-    playlists.insert(0, newPlaylist);
+    playlists.value.add(playlist);
+    Playlist newPlaylist = playlists.value.removeAt(playlists.value.length-1);
+    playlists.value.insert(0, newPlaylist);
     return newPlaylist;
   }
 
   Playlist removePlaylist(int playlistIndex) {
-    Playlist deletedPlaylist = playlists.removeAt(playlistIndex);
+    Playlist deletedPlaylist = playlists.value.removeAt(playlistIndex);
     return deletedPlaylist;
   }
 
 
 
   List<Playlist> setPlaylist(List<Playlist> playlists) {
-    return this.playlists = playlists;
+    return this.playlists.value = playlists;
   }
 
 
@@ -69,10 +70,11 @@ class Platform {
   }
 
   List<Playlist> reorder(int oldIndex, int newIndex) {
-    Playlist elem = playlists.removeAt(oldIndex);
-    playlists.insert(newIndex, elem);
+    Playlist elem = playlists.value.removeAt(oldIndex);
+    playlists.value.insert(newIndex, elem);
+    playlists.notifyListeners();
     //Save in system
-    return playlists;
+    return playlists.value;
   }
 
 

@@ -31,8 +31,13 @@ class PlatformDefaultController extends PlatformsController {
   @override
   Future<List<Playlist>> getPlaylists({bool refreshing}) {
     Completer<List<Playlist>> completer = Completer<List<Playlist>>();
-    completer.complete(platform.playlists);
+    completer.complete(platform.playlists.value);
     return completer.future;
+  }
+
+  @override
+  ValueNotifier<List<Playlist>> getPlaylistsUpdate() {
+    return platform.playlists;
   }
 
   @override
@@ -69,7 +74,7 @@ class PlatformDefaultController extends PlatformsController {
       String playlistUri,
       List<MapEntry<Track, DateTime>> tracks}) {
     if (playlist != null) {
-      for (Playlist play in this.platform.playlists) {
+      for (Playlist play in this.platform.playlists.value) {
         if (play.id == playlist.id) return null;
       }
       return this.platform.addPlaylist(playlist)
@@ -79,7 +84,7 @@ class PlatformDefaultController extends PlatformsController {
         name: name,
         ownerId: ownerId,
         ownerName: ownerName,
-        id: this.platform.playlists.length.toString(),
+        id: this.platform.playlists.value.length.toString(),
         service: ServicesLister.DEFAULT,
         imageUrl: imageUrl,
         uri: playlistUri,

@@ -30,6 +30,11 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
+  ValueNotifier<List<Playlist>> getPlaylistsUpdate() {
+    return platform.playlists;
+  }
+
+  @override
   Future<List<Track>> getTracks(Playlist playlist) async {
     return playlist.setTracks(await yt.getPlaylistSongs(playlist));
   }
