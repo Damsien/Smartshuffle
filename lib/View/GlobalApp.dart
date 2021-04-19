@@ -145,7 +145,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
   /*    BACK PLAYER    */
-  List<ValueNotifier<bool>> _isTrackVisible = List<ValueNotifier<bool>>();
 
   setPlaying(Track track, bool queueCreate, {Playlist playlist, PlatformsController platformCtrl, bool isShuffle, bool isRepeatOnce, bool isRepeatAlways}) {
 
@@ -304,11 +303,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           _blockAnimation = false;
 
       });
-      _isTrackVisible = List<ValueNotifier<bool>>(GlobalQueue.queue.value.length);
-      Iterable<ValueNotifier<bool>> valuesIt = Iterable.generate(_isTrackVisible.length, (val) {
-        return ValueNotifier<bool>(false);
-      });
-      _isTrackVisible.setAll(0, valuesIt);
 
     }
 
@@ -471,20 +465,12 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                           return VisibilityDetector(
                             key: ValueKey("VisibilityDetector:PanelPlayer:Tracks:$index"),
                             onVisibilityChanged: (VisibilityInfo visInfos) {
-                              if(visInfos.visibleFraction > 0)  {
-                                _isTrackVisible[index].value = true;
-                              }
                               if(visInfos.visibleFraction > 0.2)
                                 isImageVisible.value = true;
                               else
                                 isImageVisible.value = false;
                             },
                             child: ValueListenableBuilder(
-                              valueListenable: _isTrackVisible[index],
-                              builder: (___, bool isTrackVisibleVal ,____) {
-
-                            if(isTrackVisibleVal) {
-                            return ValueListenableBuilder(
                               valueListenable: GlobalQueue.queue,
                               builder: (_, List<MapEntry<Track, bool>> queue ,__) {
 
@@ -637,11 +623,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                     )
                                   ],
                                 );
-                              }
-                            );
-                            } else {
-                              return Container(color: _mainImageColor.value);
-                            }
                               }
                             )
                           );
