@@ -51,10 +51,10 @@ class GlobalQueue {
 
     queue.notifyListeners();
 
-    /*
+    
     print("==== Queue ====");
     int i=0;
-    for(MapEntry me in queue) {
+    for(MapEntry me in queue.value) {
       if(i == currentQueueIndex)
         print(me.key.toString() + " | isPermanent ? " + me.value.toString() + "  *");
       else
@@ -62,7 +62,7 @@ class GlobalQueue {
       i++;
     }
     print("==== End Q ====");
-    */
+    
 
 
   }

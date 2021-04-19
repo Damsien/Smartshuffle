@@ -148,6 +148,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   setPlaying(Track track, bool queueCreate, {Playlist playlist, PlatformsController platformCtrl, bool isShuffle, bool isRepeatOnce, bool isRepeatAlways}) {
 
+    tabControllerBuilder();
+
     if(isShuffle != null) _isShuffle = isShuffle;
     if(isRepeatOnce != null) _isRepeatOnce = isRepeatOnce;
     if(isRepeatAlways != null) _isRepeatAlways = isRepeatAlways;
@@ -275,36 +277,16 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     setPlaying(previousTrack, false);
   }
 
-  tabControllerBuilder() {
+
+  tabControllerChecker() {
     
     if(_panelQueueCtrl.isAttached) {
       _panelQueueCtrl.show();
     }
     
-    if(_songsTabCtrl == null || GlobalQueue.queue.value.length != _songsTabCtrl.length) {
-
-      _songsTabCtrl = TabController(length: GlobalQueue.queue.value.length, initialIndex: GlobalQueue.currentQueueIndex, vsync: this);
-      _songsTabCtrl.addListener(() {
-
-          seekAllTrackToZero();
-          if(_songsTabCtrl.index == 1 && (_tabIndex == _songsTabCtrl.length-1 || _tabIndex == 0)) {
-            _tabIndex = 0;
-            _blockAnimation = false;
-          }
-          if(!_blockAnimation) {
-            if(_songsTabCtrl.index > _tabIndex) {
-              _tabIndex = _songsTabCtrl.index;
-              moveToNextTrack();
-            } else if(_songsTabCtrl.index < _tabIndex) {
-              _tabIndex = _songsTabCtrl.index;
-              moveToPreviousTrack();
-            }
-          }
-          _blockAnimation = false;
-
-      });
-
-    }
+    //if(_songsTabCtrl == null || GlobalQueue.queue.value.length != _songsTabCtrl.length) {
+      tabControllerBuilder();
+    //}
 
 
     if(this.selectedTrack.value.currentDuration >= this.selectedTrack.value.totalDuration) {
@@ -326,11 +308,66 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
 
+  tabControllerBuilder() {
+    
+      int length;
+      int initialIndex;
+      switch(GlobalQueue.currentQueueIndex) {
+        case 0: length = 3; initialIndex = 0; break;
+        case 1: length = 4; initialIndex = 1; break;
+        default: length = 5; initialIndex = 2; break;
+      }
+      if(GlobalQueue.queue.value.isEmpty) length = 0;
+
+      /*print(length);
+      print(initialIndex);*/
+
+      setState(() {
+
+        _songsTabCtrl = TabController(length: length, initialIndex: initialIndex, vsync: this);
+        _songsTabCtrl.addListener(() {
+
+            seekAllTrackToZero();
+            if(_songsTabCtrl.index > _tabIndex) {
+              _tabIndex = _songsTabCtrl.index;
+              moveToNextTrack();
+              //tabControllerBuilder();
+            } else if(_songsTabCtrl.index < _tabIndex) {
+              _tabIndex = _songsTabCtrl.index;
+              moveToPreviousTrack();
+              //tabControllerBuilder();
+            }
+
+            /*if(_songsTabCtrl.index == 1 && (_tabIndex == _songsTabCtrl.length-1 || _tabIndex == 0)) {
+              _tabIndex = 0;
+              _blockAnimation = false;
+            }
+            if(!_blockAnimation) {
+              if(_songsTabCtrl.index > _tabIndex) {
+                _tabIndex = _songsTabCtrl.index;
+                moveToNextTrack();
+              } else if(_songsTabCtrl.index < _tabIndex) {
+                _tabIndex = _songsTabCtrl.index;
+                moveToPreviousTrack();
+              }
+            }*/
+            _blockAnimation = false;
+
+        });
+        _tabView = tabViewBuilder();
+
+      });
+
+  }
+
+
   /*  FRONT PLAYER  */
 
   double _screenWidth;
   double _screenHeight;
   double _ratio = 1;
+
+  Widget _tabView;
 
   PanelController _panelCtrl = PanelController();
   PanelController _panelQueueCtrl = PanelController();
@@ -425,6 +462,207 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
 
+  tabViewBuilder() {
+    return TabBarView(
+      controller: _songsTabCtrl,
+      children: List.generate(
+        _songsTabCtrl.length,
+        (index) {
+
+          ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
+
+          return VisibilityDetector(
+            key: ValueKey("VisibilityDetector:PanelPlayer:Tracks:$index"),
+            onVisibilityChanged: (VisibilityInfo visInfos) {
+              if(visInfos.visibleFraction > 0.2)
+                isImageVisible.value = true;
+              else
+                isImageVisible.value = false;
+            },
+            child: ValueListenableBuilder(
+              valueListenable: GlobalQueue.queue,
+              builder: (_, List<MapEntry<Track, bool>> queue ,__) {
+
+                List<Track> realQueue = List<Track>();
+
+                for(int i=0; i<_songsTabCtrl.length; i++) {
+                  switch(_songsTabCtrl.length) {
+                    case 3: {
+                      realQueue.add(GlobalQueue.queue.value[GlobalQueue.currentQueueIndex+i].key);
+                    } break;
+                    case 4 : {
+                      realQueue.add(GlobalQueue.queue.value[GlobalQueue.currentQueueIndex+i-1].key);
+                    } break;
+                    case 5 : {
+                      realQueue.add(GlobalQueue.queue.value[GlobalQueue.currentQueueIndex+i-2].key);
+                    } break;
+                  }
+                }
+
+                print('------');
+                print(_songsTabCtrl.index);
+                for(Track tr in realQueue) {
+                  print(tr);
+                }
+
+                Track trackUp = realQueue[index];
+
+                return Stack(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: NetworkImage(trackUp.imageUrlLittle),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        ClipRect(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                color: Colors.black.withOpacity(0.55),
+                              )
+                          ),
+                        )
+                      ],
+                    ),
+                    Positioned(
+                      top: (_screenHeight * 0.77),
+                      right: (_screenWidth / 2) - _screenWidth * 0.45,
+                      child: Opacity(
+                        opacity: _elementsOpacity,
+                        child: InkWell(
+                          child: Text(trackUp.totalDuration.toString().split(':')[1] +
+                              ":" + trackUp.totalDuration.toString().split(':')[2].split(".")[0]
+                          )
+                        )
+                      )
+                    ),
+                    Positioned(
+                      top: (_screenHeight * 0.77),
+                      left: (_screenWidth / 2) - _screenWidth * 0.45,
+                      child: Opacity(
+                        opacity: _elementsOpacity,
+                        child: InkWell(
+                          child: Text(trackUp.currentDuration.toString().split(':')[1] +
+                            ":" + trackUp.currentDuration.toString().split(':')[2].split(".")[0]
+                          )
+                        )
+                      )
+                    ),
+                    Positioned(
+                      top: (_screenHeight * 0.75),
+                      left: _screenWidth / 2 - ((_screenWidth - (_screenWidth / 4)) / 2),
+                      child: Opacity(
+                        opacity: _elementsOpacity,
+                        child: Container(
+                          width: _screenWidth - (_screenWidth / 4),
+                          child: Slider.adaptive(
+                            value: () {
+                              trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds >= 0
+                              && trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds <= 1
+                                ? _currentSliderValue = trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds
+                                : _currentSliderValue = 0.0;
+                                return _currentSliderValue;
+                            }.call(),
+                            onChanged: (double value) {
+                              trackUp.seekTo(Duration(seconds: (value * trackUp.totalDuration.inSeconds).toInt()));
+                            },
+                            min: 0,
+                            max: 1,
+                            activeColor: Colors.cyanAccent,
+                          )
+                        )
+                      )
+                    ),
+                    Positioned(
+                      width: _imageSize,
+                      height: _imageSize,
+                      left: (_screenWidth / 2 - (_imageSize / 2) - _sideMarge),
+                      top: (_screenHeight / 4) * _ratio,
+                      child: ValueListenableBuilder(
+                        valueListenable: isImageVisible,
+                        builder: (BuildContext context, bool value, Widget child) {
+                          return Container(
+                            decoration: BoxDecoration(
+                                image: DecorationImage(
+                                fit: BoxFit.cover,
+                                image: NetworkImage(trackUp.imageUrlLarge),
+                              )
+                            ),
+                          );
+                        }
+                      )
+                    ),
+                    Positioned(
+                      left: _screenWidth * 0.2 * (1 - _ratio),
+                      top: (_screenHeight * 0.60) * _ratio + (_sideMarge*0.06),
+                      child: Row(
+                        children: [
+                          Column(
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                child: Text(
+                                  trackUp.name,
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(fontSize: _textSize + (5 * _ratio)),
+                                )
+                              ),
+                              Container(
+                                margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                child: Text(
+                                  trackUp.artist,
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: _textSize,
+                                    fontWeight: FontWeight.w200),
+                                )
+                              )
+                            ],
+                          ),
+                          IgnorePointer(
+                            ignoring: (_elementsOpacity == 1 ? false : true),
+                            child: Opacity(
+                              opacity: _elementsOpacity,
+                              child: InkWell(
+                                  onTap: () {
+                                    TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, trackUp);
+                                  },
+                                  child: Icon(
+                                  Icons.add,
+                                  size: _playButtonSize - 10,
+                                )
+                              )
+                            )
+                          )
+                        ]
+                      )
+                    ),
+                    Opacity(
+                      opacity: 1 - _ratio,
+                      child: Container(
+                        color: Colors.white,
+                        width: trackUp.currentDuration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
+                        height: 2,
+                      ),
+                    )
+                  ],
+                );
+              }
+            )
+          );
+        }
+      )
+    );
+  }
+
+
 
   buildPanel() {
     return Stack(
@@ -454,181 +692,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                 child: Stack(
                   key: ValueKey('FrontPLayer'),
                   children: [
-                    TabBarView(
-                    controller: _songsTabCtrl,
-                      children: List.generate(
-                        GlobalQueue.queue.value.length,
-                        (index) {
-
-                          ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
-
-                          return VisibilityDetector(
-                            key: ValueKey("VisibilityDetector:PanelPlayer:Tracks:$index"),
-                            onVisibilityChanged: (VisibilityInfo visInfos) {
-                              if(visInfos.visibleFraction > 0.2)
-                                isImageVisible.value = true;
-                              else
-                                isImageVisible.value = false;
-                            },
-                            child: ValueListenableBuilder(
-                              valueListenable: GlobalQueue.queue,
-                              builder: (_, List<MapEntry<Track, bool>> queue ,__) {
-
-                                Track trackUp = queue[index].key;
-
-                              return Stack(
-                                  children: [
-                                    Stack(
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            image: DecorationImage(
-                                              image: NetworkImage(trackUp.imageUrlLittle),
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                        ),
-                                        ClipRect(
-                                          child: BackdropFilter(
-                                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                              child: Container(
-                                                color: Colors.black.withOpacity(0.55),
-                                              )
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                    Positioned(
-                                      top: (_screenHeight * 0.77),
-                                      right: (_screenWidth / 2) - _screenWidth * 0.45,
-                                      child: Opacity(
-                                        opacity: _elementsOpacity,
-                                        child: InkWell(
-                                          child: Text(trackUp.totalDuration.toString().split(':')[1] +
-                                              ":" + trackUp.totalDuration.toString().split(':')[2].split(".")[0]
-                                          )
-                                        )
-                                      )
-                                    ),
-                                    Positioned(
-                                      top: (_screenHeight * 0.77),
-                                      left: (_screenWidth / 2) - _screenWidth * 0.45,
-                                      child: Opacity(
-                                        opacity: _elementsOpacity,
-                                        child: InkWell(
-                                          child: Text(trackUp.currentDuration.toString().split(':')[1] +
-                                            ":" + trackUp.currentDuration.toString().split(':')[2].split(".")[0]
-                                          )
-                                        )
-                                      )
-                                    ),
-                                    Positioned(
-                                      top: (_screenHeight * 0.75),
-                                      left: _screenWidth / 2 - ((_screenWidth - (_screenWidth / 4)) / 2),
-                                      child: Opacity(
-                                        opacity: _elementsOpacity,
-                                        child: Container(
-                                          width: _screenWidth - (_screenWidth / 4),
-                                          child: Slider.adaptive(
-                                            value: () {
-                                              trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds >= 0
-                                              && trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds <= 1
-                                                ? _currentSliderValue = trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds
-                                                : _currentSliderValue = 0.0;
-                                                return _currentSliderValue;
-                                            }.call(),
-                                            onChanged: (double value) {
-                                              trackUp.seekTo(Duration(seconds: (value * trackUp.totalDuration.inSeconds).toInt()));
-                                            },
-                                            min: 0,
-                                            max: 1,
-                                            activeColor: Colors.cyanAccent,
-                                          )
-                                        )
-                                      )
-                                    ),
-                                    Positioned(
-                                      width: _imageSize,
-                                      height: _imageSize,
-                                      left: (_screenWidth / 2 - (_imageSize / 2) - _sideMarge),
-                                      top: (_screenHeight / 4) * _ratio,
-                                      child: ValueListenableBuilder(
-                                        valueListenable: isImageVisible,
-                                        builder: (BuildContext context, bool value, Widget child) {
-                                          return Container(
-                                            decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                fit: BoxFit.cover,
-                                                image: NetworkImage(trackUp.imageUrlLarge),
-                                              )
-                                            ),
-                                          );
-                                        }
-                                      )
-                                    ),
-                                    Positioned(
-                                      left: _screenWidth * 0.2 * (1 - _ratio),
-                                      top: (_screenHeight * 0.60) * _ratio + (_sideMarge*0.06),
-                                      child: Row(
-                                        children: [
-                                          Column(
-                                            children: [
-                                              Container(
-                                                margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
-                                                width: _screenWidth - (_screenWidth * 0.1 * 4),
-                                                child: Text(
-                                                  trackUp.name,
-                                                  textAlign: TextAlign.left,
-                                                  style: TextStyle(fontSize: _textSize + (5 * _ratio)),
-                                                )
-                                              ),
-                                              Container(
-                                                margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
-                                                width: _screenWidth - (_screenWidth * 0.1 * 4),
-                                                child: Text(
-                                                  trackUp.artist,
-                                                  textAlign: TextAlign.left,
-                                                  style: TextStyle(
-                                                    fontSize: _textSize,
-                                                    fontWeight: FontWeight.w200),
-                                                )
-                                              )
-                                            ],
-                                          ),
-                                          IgnorePointer(
-                                            ignoring: (_elementsOpacity == 1 ? false : true),
-                                            child: Opacity(
-                                              opacity: _elementsOpacity,
-                                              child: InkWell(
-                                                  onTap: () {
-                                                    TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, trackUp);
-                                                  },
-                                                  child: Icon(
-                                                  Icons.add,
-                                                  size: _playButtonSize - 10,
-                                                )
-                                              )
-                                            )
-                                          )
-                                        ]
-                                      )
-                                    ),
-                                    Opacity(
-                                      opacity: 1 - _ratio,
-                                      child: Container(
-                                        color: Colors.white,
-                                        width: trackUp.currentDuration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
-                                        height: 2,
-                                      ),
-                                    )
-                                  ],
-                                );
-                              }
-                            )
-                          );
-                        }
-                      )
-                    ),
+                    _tabView,
                     Positioned(
                       top: (_screenHeight * 0.80) * _ratio + (_sideMarge*0.07),
                       right: ((_screenWidth / 2) - (_playButtonSize / 2) - _sideMarge),
@@ -832,9 +896,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                             },
                                             onItemReorder: (int i1, int l1, int i2, int l2) { },
                                             itemOnAccept: (DragAndDropItem i1, DragAndDropItem i2) {
-                                              /*print("------------");
-                                              print(i1.child.key);
-                                              print(i2.child.key);*/
                                               if(i1 != null && i2 != null) {
                                                 int oldItemIndex = int.parse(i1.child.key.toString().split(':')[2]);
                                                 int newItemIndex = int.parse(i2.child.key.toString().split(':')[2]);
@@ -1061,9 +1122,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
 
-
     constantBuilder();
-    tabControllerBuilder();
+    tabControllerChecker();
     sizeBuilder();
 
 
