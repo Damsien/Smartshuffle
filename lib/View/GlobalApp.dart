@@ -303,7 +303,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
             if(_songsTabCtrl.page.toInt() > _tabIndex) {
               _tabIndex = _songsTabCtrl.page.toInt();
-              print(_tabIndex);
               moveToNextTrack();
             } else if(_songsTabCtrl.page.toInt() < _tabIndex) {
               _tabIndex = _songsTabCtrl.page.toInt();
@@ -888,9 +887,21 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                               scrollController: scrollCtrl,
                                               children: () {
 
+                                                int permaLength = GlobalQueue.permanentQueue.value.length;
+                                                int noPermaLength = GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1);
+
+                                                if(!_panelQueueCtrl.isPanelOpen) {
+                                                  permaLength = permaLength > 10 ? 10 : permaLength;
+                                                  noPermaLength = noPermaLength > 10 ? 10 : noPermaLength;
+                                                } else {
+                                                  permaLength = GlobalQueue.permanentQueue.value.length;
+                                                  noPermaLength = GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1);
+                                                }
+
+                                                
                                                 List<DragAndDropItem> permanentItems = 
                                                 List.generate(
-                                                    GlobalQueue.permanentQueue.value.length,
+                                                    permaLength,
                                                     (index) {
 
                                                       return DragAndDropItem(
@@ -951,13 +962,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                     },
                                                   );
 
-                                                if(_panelQueueCtrl.panelPosition > 0.8)
-                                                  permanentItems = permanentItems.length < 15 ? permanentItems : permanentItems.sublist(0, 15);
 
                                                 List<DragAndDropItem> noPermanentItems = 
                                                 List.generate(
-                                                    GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
-                                                    GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0,
+                                                    noPermaLength,
                                                     (index) {
 
                                                       return DragAndDropItem(
@@ -1020,9 +1028,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                     },
                                                   );
 
-                                                  if(_panelQueueCtrl.panelPosition > 0.8)
-                                                    noPermanentItems = noPermanentItems.length < 15 ? noPermanentItems : noPermanentItems.sublist(0, 15);
-
+                                              
                                                   DragAndDropList permanentList = DragAndDropList(
                                                     canDrag: false,
                                                     header: Container(

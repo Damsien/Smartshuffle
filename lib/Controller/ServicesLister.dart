@@ -51,7 +51,7 @@ class GlobalQueue {
 
     queue.notifyListeners();
 
-    
+    /*
     print("==== Queue ====");
     int i=0;
     for(MapEntry me in queue.value) {
@@ -61,7 +61,7 @@ class GlobalQueue {
         print(me.key.toString() + " | isPermanent ? " + me.value.toString());
       i++;
     }
-    print("==== End Q ====");
+    print("==== End Q ====");*/
     
 
 
