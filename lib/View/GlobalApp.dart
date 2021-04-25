@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_lists.dart';
@@ -145,7 +146,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
   /*    BACK PLAYER    */
-  List<ValueNotifier<bool>> _isTrackVisible = List<ValueNotifier<bool>>();
 
   setPlaying(Track track, bool queueCreate, {Playlist playlist, PlatformsController platformCtrl, bool isShuffle, bool isRepeatOnce, bool isRepeatAlways}) {
 
@@ -180,13 +180,15 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           if(_isShuffle) {
             GlobalQueue.generateNonPermanentQueue(playlist, true, selectedTrack: track);
             _blockAnimation = true;
-            _songsTabCtrl.index = 0;
-            _tabIndex = _songsTabCtrl.index;
+            if(_songsTabCtrl.hasClients) {
+              _songsTabCtrl.jumpToPage(0);
+              _tabIndex = _songsTabCtrl.page.toInt();
+            }
           } else {
             GlobalQueue.generateNonPermanentQueue(playlist, false, selectedTrack: track);
             _blockAnimation = true;
-            _songsTabCtrl.index = GlobalQueue.currentQueueIndex;
-            _tabIndex = _songsTabCtrl.index;
+            _songsTabCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+            _tabIndex = _songsTabCtrl.page.toInt();
             _blockAnimation = false;
           }
 
@@ -203,15 +205,19 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           if(_isShuffle) {
             GlobalQueue.generateNonPermanentQueue(playlist, true);
             _blockAnimation = true;
-            _songsTabCtrl.index = 0;
-            _tabIndex = _songsTabCtrl.index;
+            if(_songsTabCtrl.hasClients) {
+              _songsTabCtrl.jumpToPage(0);
+              _tabIndex = _songsTabCtrl.page.toInt();
+            }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
             this.selectedTrack.value.setIsPlaying(true);
           } else {
             GlobalQueue.generateNonPermanentQueue(playlist, false);
             _blockAnimation = true;
-            _songsTabCtrl.index = 0;
-            _tabIndex = _songsTabCtrl.index;
+            if(_songsTabCtrl.hasClients) {
+              _songsTabCtrl.jumpToPage(0);
+              _tabIndex = _songsTabCtrl.page.toInt();
+            }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
             this.selectedTrack.value.setIsPlaying(true);
           }
@@ -224,7 +230,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
       }
 
-    mainImageColorRetriever();
+    //mainImageColorRetriever();
     
     if(_panelCtrl.isAttached && this.selectedTrack.value.id != null && !_panelCtrl.isPanelShown) {
       _panelCtrl.show();
@@ -282,33 +288,36 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       _panelQueueCtrl.show();
     }
     
-    if(_songsTabCtrl == null || GlobalQueue.queue.value.length != _songsTabCtrl.length) {
+    if(_songsTabCtrl == null) {
 
-      _songsTabCtrl = TabController(length: GlobalQueue.queue.value.length, initialIndex: GlobalQueue.currentQueueIndex, vsync: this);
+      _songsTabCtrl = PageController(initialPage: GlobalQueue.currentQueueIndex, keepPage: false);
       _songsTabCtrl.addListener(() {
 
           seekAllTrackToZero();
-          if(_songsTabCtrl.index == 1 && (_tabIndex == _songsTabCtrl.length-1 || _tabIndex == 0)) {
+          if(_songsTabCtrl.page.toInt() == 1 && (_tabIndex == GlobalQueue.queue.value.length-1 || _tabIndex == 0)) {
             _tabIndex = 0;
             _blockAnimation = false;
           }
+
           if(!_blockAnimation) {
-            if(_songsTabCtrl.index > _tabIndex) {
-              _tabIndex = _songsTabCtrl.index;
+
+            if(_songsTabCtrl.page.toInt() > _tabIndex) {
+              _tabIndex = _songsTabCtrl.page.toInt();
+              print(_tabIndex);
               moveToNextTrack();
-            } else if(_songsTabCtrl.index < _tabIndex) {
-              _tabIndex = _songsTabCtrl.index;
+            } else if(_songsTabCtrl.page.toInt() < _tabIndex) {
+              _tabIndex = _songsTabCtrl.page.toInt();
               moveToPreviousTrack();
             }
           }
           _blockAnimation = false;
 
-      });
+      });/*
       _isTrackVisible = List<ValueNotifier<bool>>(GlobalQueue.queue.value.length);
       Iterable<ValueNotifier<bool>> valuesIt = Iterable.generate(_isTrackVisible.length, (val) {
         return ValueNotifier<bool>(false);
       });
-      _isTrackVisible.setAll(0, valuesIt);
+      _isTrackVisible.setAll(0, valuesIt);*/
 
     }
 
@@ -320,11 +329,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           _isRepeatOnce = false;
         } else if(_isRepeatAlways) {
           this.selectedTrack.value.seekTo(Duration(seconds: 0));
-        } else if(_songsTabCtrl.index < _songsTabCtrl.length-1) {
-          _songsTabCtrl.animateTo(_songsTabCtrl.index+1);
+        } else if(_songsTabCtrl.page.toInt() < GlobalQueue.queue.value.length-1) {
+          _songsTabCtrl.jumpToPage(GlobalQueue.queue.value.length+1);
         } else {
           _blockAnimation = true;
-          _songsTabCtrl.animateTo(0);
+          _songsTabCtrl.jumpToPage(0);
           moveToNextTrack();
         }
     }
@@ -340,7 +349,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   PanelController _panelCtrl = PanelController();
   PanelController _panelQueueCtrl = PanelController();
-  TabController _songsTabCtrl;
+  PageController _songsTabCtrl;
   int _tabIndex = 0;
   bool _isPanelDraggable = true;
   ValueNotifier<bool> _isPanelQueueDraggable = ValueNotifier<bool>(true);
@@ -355,7 +364,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   double text_size_large;
   double text_size_little;
 
-  ValueNotifier<Color> _mainImageColor = ValueNotifier<Color>(Colors.black87);
+  Color _mainImageColor = Colors.black87;
   double _botBarHeight;
   double _imageSize;
   double _sideMarge;
@@ -423,230 +432,230 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     return hslDark.toColor();
   }
 
-  mainImageColorRetriever() async {
+  /*mainImageColorRetriever() async {
     PaletteGenerator paletteGenerator = await PaletteGenerator.fromImageProvider(
       NetworkImage(this.selectedTrack.value.imageUrlLittle)
     );
     _mainImageColor.value = darken(paletteGenerator.dominantColor.color, amount: 0.4);
-  }
+  }*/
 
 
 
   buildPanel() {
     return Stack(
       children: [
-        SlidingUpPanel(
-          isDraggable: _isPanelDraggable,
-          onPanelSlide: (height) => switchPanelSize(height),
-          controller: _panelCtrl,
-          minHeight: botbar_height+10,
-          maxHeight: _screenHeight,
-          panelBuilder: (scrollCtrl) {
-            if(this.selectedTrack.value.id == null) _panelCtrl.hide();
-            return WillPopScope(
-              onWillPop: () async {
-                if(_panelCtrl.isPanelOpen) {
-                  if(_panelQueueCtrl.isPanelOpen) {
-                    _panelQueueCtrl.close();
-                  } else {
-                    _panelCtrl.close();
-                  }
-                  return false;
-                } else
-                  return true;
-              },
-              child: GestureDetector(
+        WillPopScope(
+          onWillPop: () async {
+            if(_panelCtrl.isPanelOpen) {
+              if(_panelQueueCtrl.isPanelOpen) {
+                _panelQueueCtrl.close();
+              } else {
+                _panelCtrl.close();
+              }
+              return false;
+            } else
+              return true;
+          },
+          child: SlidingUpPanel(
+            isDraggable: _songsTabCtrl.hasClients ? ((_songsTabCtrl.page??0.0 % 1) < 0 && (_songsTabCtrl.page??0.0 % 1) > 1 ? false : true) : true,
+            onPanelSlide: (height) => switchPanelSize(height),
+            controller: _panelCtrl,
+            minHeight: botbar_height+10,
+            maxHeight: _screenHeight,
+            panelBuilder: (scrollCtrl) {
+              if(this.selectedTrack.value.id == null) _panelCtrl.hide();
+              return GestureDetector(
                 onTap: () => _panelCtrl.panelPosition < 0.3 ? _panelCtrl.open() : null,
                 child: Stack(
                   key: ValueKey('FrontPLayer'),
                   children: [
-                    TabBarView(
-                    controller: _songsTabCtrl,
-                      children: List.generate(
-                        GlobalQueue.queue.value.length,
-                        (index) {
+                    ExtentsPageView.extents(
+                      extents: 3,
+                      physics: _panelCtrl.panelPosition < 1 && _panelCtrl.panelPosition > 0.01 ? NeverScrollableScrollPhysics() : PageScrollPhysics(),
+                      //itemCount: GlobalQueue.queue.value.length,
+                      onPageChanged: (index) {
+                        if(index >= GlobalQueue.queue.value.length) {
+                          _blockAnimation = true;
+                          _songsTabCtrl.jumpToPage(index % GlobalQueue.queue.value.length);
+                          _tabIndex = _songsTabCtrl.page.toInt();
+                          moveToNextTrack();
+                        }
+                      },
+                      controller: _songsTabCtrl,
+                      itemBuilder: (buildContext, index) {
 
-                          ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
+                        int realIndex = index % GlobalQueue.queue.value.length;
 
-                          return VisibilityDetector(
-                            key: ValueKey("VisibilityDetector:PanelPlayer:Tracks:$index"),
-                            onVisibilityChanged: (VisibilityInfo visInfos) {
-                              if(visInfos.visibleFraction > 0)  {
-                                _isTrackVisible[index].value = true;
-                              }
-                              if(visInfos.visibleFraction > 0.2)
-                                isImageVisible.value = true;
-                              else
-                                isImageVisible.value = false;
-                            },
-                            child: ValueListenableBuilder(
-                              valueListenable: _isTrackVisible[index],
-                              builder: (___, bool isTrackVisibleVal ,____) {
+                        ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
+                        return VisibilityDetector(
+                          key: ValueKey("VisibilityDetector:PanelPlayer:Tracks:$realIndex"),
+                          onVisibilityChanged: (VisibilityInfo visInfos) {
+                            if(visInfos.visibleFraction > 0.2)
+                              isImageVisible.value = true;
+                            else
+                              isImageVisible.value = false;
+                          },
+                          child: ValueListenableBuilder(
+                            valueListenable: GlobalQueue.queue,
+                            builder: (_, List<MapEntry<Track, bool>> queue ,__) {
 
-                            if(isTrackVisibleVal) {
-                            return ValueListenableBuilder(
-                              valueListenable: GlobalQueue.queue,
-                              builder: (_, List<MapEntry<Track, bool>> queue ,__) {
+                              Track trackUp = queue[realIndex].key;
 
-                                Track trackUp = queue[index].key;
-
-                              return Stack(
-                                  children: [
-                                    Stack(
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            image: DecorationImage(
-                                              image: NetworkImage(trackUp.imageUrlLittle),
-                                              fit: BoxFit.cover,
-                                            ),
+                            return Stack(
+                                children: [
+                                  Stack(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            image: NetworkImage(trackUp.imageUrlLittle),
+                                            fit: BoxFit.cover,
                                           ),
                                         ),
-                                        ClipRect(
-                                          child: BackdropFilter(
-                                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                              child: Container(
-                                                color: Colors.black.withOpacity(0.55),
-                                              )
+                                      ),
+                                      ClipRect(
+                                        child: BackdropFilter(
+                                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                            child: Container(
+                                              color: Colors.black.withOpacity(0.55),
+                                            )
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  Positioned(
+                                    top: (_screenHeight * 0.77),
+                                    right: (_screenWidth / 2) - _screenWidth * 0.45,
+                                    child: Opacity(
+                                      opacity: _elementsOpacity,
+                                      child: InkWell(
+                                        child: Text(trackUp.totalDuration.toString().split(':')[1] +
+                                            ":" + trackUp.totalDuration.toString().split(':')[2].split(".")[0]
+                                        )
+                                      )
+                                    )
+                                  ),
+                                  Positioned(
+                                    top: (_screenHeight * 0.77),
+                                    left: (_screenWidth / 2) - _screenWidth * 0.45,
+                                    child: Opacity(
+                                      opacity: _elementsOpacity,
+                                      child: InkWell(
+                                        child: Text(trackUp.currentDuration.toString().split(':')[1] +
+                                          ":" + trackUp.currentDuration.toString().split(':')[2].split(".")[0]
+                                        )
+                                      )
+                                    )
+                                  ),
+                                  Positioned(
+                                    top: (_screenHeight * 0.75),
+                                    left: _screenWidth / 2 - ((_screenWidth - (_screenWidth / 4)) / 2),
+                                    child: Opacity(
+                                      opacity: _elementsOpacity,
+                                      child: Container(
+                                        width: _screenWidth - (_screenWidth / 4),
+                                        child: Slider.adaptive(
+                                          value: () {
+                                            trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds >= 0
+                                            && trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds <= 1
+                                              ? _currentSliderValue = trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds
+                                              : _currentSliderValue = 0.0;
+                                              return _currentSliderValue;
+                                          }.call(),
+                                          onChanged: (double value) {
+                                            trackUp.seekTo(Duration(seconds: (value * trackUp.totalDuration.inSeconds).toInt()));
+                                          },
+                                          min: 0,
+                                          max: 1,
+                                          activeColor: Colors.cyanAccent,
+                                        )
+                                      )
+                                    )
+                                  ),
+                                  Positioned(
+                                    width: _imageSize,
+                                    height: _imageSize,
+                                    left: (_screenWidth / 2 - (_imageSize / 2) - _sideMarge),
+                                    top: (_screenHeight / 4) * _ratio,
+                                    child: ValueListenableBuilder(
+                                      valueListenable: isImageVisible,
+                                      builder: (BuildContext context, bool value, Widget child) {
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                              fit: BoxFit.cover,
+                                              image: NetworkImage(trackUp.imageUrlLarge),
+                                            )
                                           ),
-                                        )
-                                      ],
-                                    ),
-                                    Positioned(
-                                      top: (_screenHeight * 0.77),
-                                      right: (_screenWidth / 2) - _screenWidth * 0.45,
-                                      child: Opacity(
-                                        opacity: _elementsOpacity,
-                                        child: InkWell(
-                                          child: Text(trackUp.totalDuration.toString().split(':')[1] +
-                                              ":" + trackUp.totalDuration.toString().split(':')[2].split(".")[0]
-                                          )
-                                        )
-                                      )
-                                    ),
-                                    Positioned(
-                                      top: (_screenHeight * 0.77),
-                                      left: (_screenWidth / 2) - _screenWidth * 0.45,
-                                      child: Opacity(
-                                        opacity: _elementsOpacity,
-                                        child: InkWell(
-                                          child: Text(trackUp.currentDuration.toString().split(':')[1] +
-                                            ":" + trackUp.currentDuration.toString().split(':')[2].split(".")[0]
-                                          )
-                                        )
-                                      )
-                                    ),
-                                    Positioned(
-                                      top: (_screenHeight * 0.75),
-                                      left: _screenWidth / 2 - ((_screenWidth - (_screenWidth / 4)) / 2),
-                                      child: Opacity(
-                                        opacity: _elementsOpacity,
-                                        child: Container(
-                                          width: _screenWidth - (_screenWidth / 4),
-                                          child: Slider.adaptive(
-                                            value: () {
-                                              trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds >= 0
-                                              && trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds <= 1
-                                                ? _currentSliderValue = trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds
-                                                : _currentSliderValue = 0.0;
-                                                return _currentSliderValue;
-                                            }.call(),
-                                            onChanged: (double value) {
-                                              trackUp.seekTo(Duration(seconds: (value * trackUp.totalDuration.inSeconds).toInt()));
-                                            },
-                                            min: 0,
-                                            max: 1,
-                                            activeColor: Colors.cyanAccent,
-                                          )
-                                        )
-                                      )
-                                    ),
-                                    Positioned(
-                                      width: _imageSize,
-                                      height: _imageSize,
-                                      left: (_screenWidth / 2 - (_imageSize / 2) - _sideMarge),
-                                      top: (_screenHeight / 4) * _ratio,
-                                      child: ValueListenableBuilder(
-                                        valueListenable: isImageVisible,
-                                        builder: (BuildContext context, bool value, Widget child) {
-                                          return Container(
-                                            decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                fit: BoxFit.cover,
-                                                image: NetworkImage(trackUp.imageUrlLarge),
+                                        );
+                                      }
+                                    )
+                                  ),
+                                  Positioned(
+                                    left: _screenWidth * 0.2 * (1 - _ratio),
+                                    top: (_screenHeight * 0.60) * _ratio + (_sideMarge*0.06),
+                                    child: Row(
+                                      children: [
+                                        Column(
+                                          children: [
+                                            Container(
+                                              margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                              width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                              child: Text(
+                                                trackUp.name,
+                                                textAlign: TextAlign.left,
+                                                style: TextStyle(fontSize: _textSize + (5 * _ratio)),
                                               )
                                             ),
-                                          );
-                                        }
-                                      )
-                                    ),
-                                    Positioned(
-                                      left: _screenWidth * 0.2 * (1 - _ratio),
-                                      top: (_screenHeight * 0.60) * _ratio + (_sideMarge*0.06),
-                                      child: Row(
-                                        children: [
-                                          Column(
-                                            children: [
-                                              Container(
-                                                margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
-                                                width: _screenWidth - (_screenWidth * 0.1 * 4),
-                                                child: Text(
-                                                  trackUp.name,
-                                                  textAlign: TextAlign.left,
-                                                  style: TextStyle(fontSize: _textSize + (5 * _ratio)),
-                                                )
-                                              ),
-                                              Container(
-                                                margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
-                                                width: _screenWidth - (_screenWidth * 0.1 * 4),
-                                                child: Text(
-                                                  trackUp.artist,
-                                                  textAlign: TextAlign.left,
-                                                  style: TextStyle(
-                                                    fontSize: _textSize,
-                                                    fontWeight: FontWeight.w200),
-                                                )
+                                            Container(
+                                              margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                              width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                              child: Text(
+                                                trackUp.artist,
+                                                textAlign: TextAlign.left,
+                                                style: TextStyle(
+                                                  fontSize: _textSize,
+                                                  fontWeight: FontWeight.w200),
                                               )
-                                            ],
-                                          ),
-                                          IgnorePointer(
-                                            ignoring: (_elementsOpacity == 1 ? false : true),
-                                            child: Opacity(
-                                              opacity: _elementsOpacity,
-                                              child: InkWell(
-                                                  onTap: () {
-                                                    TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, trackUp);
-                                                  },
-                                                  child: Icon(
-                                                  Icons.add,
-                                                  size: _playButtonSize - 10,
-                                                )
+                                            )
+                                          ],
+                                        ),
+                                        IgnorePointer(
+                                          ignoring: (_elementsOpacity == 1 ? false : true),
+                                          child: Opacity(
+                                            opacity: _elementsOpacity,
+                                            child: InkWell(
+                                                onTap: () {
+                                                  TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, trackUp);
+                                                },
+                                                child: Icon(
+                                                Icons.add,
+                                                size: _playButtonSize - 10,
                                               )
                                             )
                                           )
-                                        ]
-                                      )
-                                    ),
-                                    Opacity(
-                                      opacity: 1 - _ratio,
-                                      child: Container(
-                                        color: Colors.white,
-                                        width: trackUp.currentDuration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
-                                        height: 2,
-                                      ),
+                                        )
+                                      ]
                                     )
-                                  ],
-                                );
-                              }
-                            );
-                            } else {
-                              return Container(color: _mainImageColor.value);
+                                  ),
+                                  Opacity(
+                                    opacity: 1 - _ratio,
+                                    child: Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth: trackUp.currentDuration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
+                                        minWidth: trackUp.currentDuration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds
+                                      ),
+                                      color: Colors.white,
+                                      width: trackUp.currentDuration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
+                                      height: 2,
+                                    ),
+                                  )
+                                ],
+                              );
                             }
-                              }
-                            )
-                          );
-                        }
-                      )
+                          )
+                        );
+                      },
                     ),
                     Positioned(
                       top: (_screenHeight * 0.80) * _ratio + (_sideMarge*0.07),
@@ -668,12 +677,12 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                         opacity: _elementsOpacity,
                         child: InkWell(
                             onTap: () {
-                              if(_songsTabCtrl.index < _songsTabCtrl.length-1) {
-                                _songsTabCtrl.animateTo(_songsTabCtrl.index+1);
+                              if(_songsTabCtrl.page.toInt() < GlobalQueue.queue.value.length-1) {
+                                _songsTabCtrl.animateToPage(_songsTabCtrl.page.toInt()+1, duration: Duration(milliseconds: 500), curve: Curves.ease);
                               } else {
                                 _blockAnimation = true;
-                                _songsTabCtrl.index = 0;
-                                _tabIndex = _songsTabCtrl.index;
+                                _songsTabCtrl.jumpToPage(0);
+                                _tabIndex = _songsTabCtrl.page.toInt();
                                 _blockAnimation = false;
                                 moveToNextTrack();
                               }
@@ -694,8 +703,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                             onTap: () {
                               if(this.selectedTrack.value.currentDuration.inSeconds >= 1) {
                                 this.selectedTrack.value.seekTo(Duration(seconds: 0));
-                              } else if(_songsTabCtrl.index > 0) {
-                                _songsTabCtrl.animateTo(_songsTabCtrl.index-1);
+                              } else if(_songsTabCtrl.page.toInt() > 0) {
+                                _songsTabCtrl.animateToPage(_songsTabCtrl.page.toInt()-1, duration: Duration(milliseconds: 500), curve: Curves.ease);
                               }
                             },
                             child: Icon(
@@ -771,15 +780,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                     )
                   ],
                 ),
-              ),
-            );
+              );
           },
         ),
+      ),
         ValueListenableBuilder(
-          valueListenable: _mainImageColor,
-          builder: (BuildContext context, Color imageColor, Widget child) {
-        
-        return ValueListenableBuilder(
           valueListenable: _isPanelQueueDraggable,
           builder: (BuildContext context, bool value, Widget child) {
             return IgnorePointer(
@@ -809,7 +814,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                               topLeft: const Radius.circular(15.0),
                               topRight: const Radius.circular(15.0),
                             ),
-                            color: darken(imageColor, amount: 0.1),
+                            color: _mainImageColor,
                           ),
                           child: Column(
                             children: [
@@ -827,9 +832,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                 child: DefaultTabController(
                                   length: 2,
                                   child: Scaffold(
-                                    backgroundColor: imageColor,
+                                    backgroundColor: _mainImageColor,
                                     appBar: AppBar(
-                                      backgroundColor: darken(imageColor, amount: 0.1),
+                                      backgroundColor: _mainImageColor,
                                       toolbarHeight: 50,
                                       bottom: TabBar(
                                         tabs: [
@@ -844,159 +849,94 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                       },
                                       child: TabBarView(
                                         children: [
-                                          DragAndDropLists(
-                                            onItemDraggingChanged: (DragAndDropItem details, bool isChanging) {
-                                              if(isChanging == null || isChanging) _isPanelQueueDraggable.value = false;
-                                              else _isPanelQueueDraggable.value = true;
-                                            },
-                                            onItemReorder: (int i1, int l1, int i2, int l2) { },
-                                            itemOnAccept: (DragAndDropItem i1, DragAndDropItem i2) {
-                                              /*print("------------");
-                                              print(i1.child.key);
-                                              print(i2.child.key);*/
-                                              if(i1 != null && i2 != null) {
-                                                int oldItemIndex = int.parse(i1.child.key.toString().split(':')[2]);
-                                                int newItemIndex = int.parse(i2.child.key.toString().split(':')[2]);
-                                                if(allList.length == 1) {
-                                                  GlobalQueue.reorder(oldItemIndex, 1, newItemIndex, 1);
-                                                } else {
-                                                  String oldList = i1.child.key.toString().split(':')[1];
-                                                  String newList = i2.child.key.toString().split(':')[1];
-                                                  switch(oldList) {
-                                                    case 'PermanentQueue': {
-                                                      switch(newList) {
-                                                        case 'PermanentQueue': GlobalQueue.reorder(oldItemIndex, 0, newItemIndex, 0); break;
-                                                        case 'NoPermanentQueue': GlobalQueue.reorder(oldItemIndex, 0, newItemIndex, 1); break;
-                                                      }
-                                                    } break;
-                                                    case 'NoPermanentQueue': {
-                                                      switch(newList) {
-                                                        case 'PermanentQueue': GlobalQueue.reorder(oldItemIndex, 1, newItemIndex, 0); break;
-                                                        case 'NoPermanentQueue': GlobalQueue.reorder(oldItemIndex, 1, newItemIndex, 1); break;
-                                                      }
-                                                    } break;
+
+                                            DragAndDropLists(
+                                              onItemDraggingChanged: (DragAndDropItem details, bool isChanging) {
+                                                if(isChanging == null || isChanging) _isPanelQueueDraggable.value = false;
+                                                else _isPanelQueueDraggable.value = true;
+                                              },
+                                              onItemReorder: (int i1, int l1, int i2, int l2) { },
+                                              itemOnAccept: (DragAndDropItem i1, DragAndDropItem i2) {
+                                                /*print("------------");
+                                                print(i1.child.key);
+                                                print(i2.child.key);*/
+                                                if(i1 != null && i2 != null) {
+                                                  int oldItemIndex = int.parse(i1.child.key.toString().split(':')[2]);
+                                                  int newItemIndex = int.parse(i2.child.key.toString().split(':')[2]);
+                                                  if(allList.length == 1) {
+                                                    GlobalQueue.reorder(oldItemIndex, 1, newItemIndex, 1);
+                                                  } else {
+                                                    String oldList = i1.child.key.toString().split(':')[1];
+                                                    String newList = i2.child.key.toString().split(':')[1];
+                                                    switch(oldList) {
+                                                      case 'PermanentQueue': {
+                                                        switch(newList) {
+                                                          case 'PermanentQueue': GlobalQueue.reorder(oldItemIndex, 0, newItemIndex, 0); break;
+                                                          case 'NoPermanentQueue': GlobalQueue.reorder(oldItemIndex, 0, newItemIndex, 1); break;
+                                                        }
+                                                      } break;
+                                                      case 'NoPermanentQueue': {
+                                                        switch(newList) {
+                                                          case 'PermanentQueue': GlobalQueue.reorder(oldItemIndex, 1, newItemIndex, 0); break;
+                                                          case 'NoPermanentQueue': GlobalQueue.reorder(oldItemIndex, 1, newItemIndex, 1); break;
+                                                        }
+                                                      } break;
+                                                    }
                                                   }
                                                 }
-                                              }
-                                            },
-                                            scrollController: scrollCtrl,
-                                            children: () {
+                                              },
+                                              scrollController: scrollCtrl,
+                                              children: () {
 
-                                              List<DragAndDropItem> permanentItems = 
-                                              List.generate(
-                                                  GlobalQueue.permanentQueue.value.length,
-                                                  (index) {
+                                                List<DragAndDropItem> permanentItems = 
+                                                List.generate(
+                                                    GlobalQueue.permanentQueue.value.length,
+                                                    (index) {
 
-                                                    return DragAndDropItem(
-                                                      child: ValueListenableBuilder(
-                                                        valueListenable: GlobalQueue.permanentQueue,
-                                                        key: ValueKey('ReorderableListView:PermanentQueue:$index:'),
-                                                        builder: (BuildContext context, List<Track> value, Widget child) {
-                                                    
-                                                          List<Track> queue = List<Track>();
-                                                          
-                                                          for(Track tr in GlobalQueue.permanentQueue.value) {
-                                                            queue.add(tr);
-                                                          }
-
-                                                          return Container(
-                                                            margin: EdgeInsets.only(left: 20, right: 20),
+                                                      return DragAndDropItem(
+                                                        child: ValueListenableBuilder(
+                                                          valueListenable: GlobalQueue.permanentQueue,
+                                                          key: ValueKey('ReorderableListView:PermanentQueue:$index:'),
+                                                          builder: (BuildContext context, List<Track> value, Widget child) {
+                                                      
+                                                            List<Track> queue = List<Track>();
                                                             
-                                                            child:  Card(
-                                                              color: darken(imageColor, amount: 0.1),
-                                                              child: Row(
-                                                                children: [
-                                                                  Flexible(
-                                                                    flex: 5,
-                                                                    child: ListTile(
-                                                                      title: Text(queue.elementAt(index).name),
-                                                                      leading: FractionallySizedBox(
-                                                                        heightFactor: 0.8,
-                                                                        child: AspectRatio(
-                                                                          aspectRatio: 1,
-                                                                          child: new Container(
-                                                                            decoration: new BoxDecoration(
-                                                                              image: new DecorationImage(
-                                                                                fit: BoxFit.fitHeight,
-                                                                                alignment: FractionalOffset.center,
-                                                                                image: NetworkImage(queue.elementAt(index).imageUrlLittle),
-                                                                              )
-                                                                            ),
-                                                                          ),
-                                                                        )
-                                                                      ),
-                                                                      subtitle: Text(queue.elementAt(index).artist),
-                                                                    )
-                                                                  ),
-                                                                  Flexible(
-                                                                    flex: 1,
-                                                                    child: Container (
-                                                                      margin: EdgeInsets.only(left:20, right: 20),
-                                                                      child: Icon(Icons.drag_handle)
-                                                                    )
-                                                                  )
-                                                                ]
-                                                              )
-                                                            )
-                                                          );
-                                                        }
-                                                      )
-                                                    );
-                                                  },
-                                                );
-
-                                              List<DragAndDropItem> noPermanentItems = 
-                                              List.generate(
-                                                  GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
-                                                  GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0,
-                                                  (index) {
-
-                                                    return DragAndDropItem(
-                                                      child: ValueListenableBuilder(
-                                                        valueListenable: GlobalQueue.noPermanentQueue,
-                                                        key: ValueKey('ReorderableListView:NoPermanentQueue:$index:'),
-                                                        builder: (BuildContext context, List<Track> value, Widget child) {
-                                                    
-                                                          List<Track> queue = List<Track>();
-                                                          
-                                                          for(int i=0; i<GlobalQueue.noPermanentQueue.value.length; i++) {
-                                                            if(i>GlobalQueue.currentQueueIndex) {
-                                                              queue.add(GlobalQueue.noPermanentQueue.value[i]);
+                                                            for(Track tr in GlobalQueue.permanentQueue.value) {
+                                                              queue.add(tr);
                                                             }
-                                                          }
 
-                                                          return Container(
-                                                            margin: EdgeInsets.only(left: 20, right: 20),
-                                                            
-                                                            child: Card(
-                                                              color: darken(imageColor, amount: 0.1),
-                                                              child: Row(
-                                                                children: [
-                                                                  Flexible(
-                                                                    flex: 5,
-                                                                    child: ListTile(
-                                                                      title: Text(queue.elementAt(index).name),
-                                                                      leading: FractionallySizedBox(
-                                                                        heightFactor: 0.8,
-                                                                        child: AspectRatio(
-                                                                          aspectRatio: 1,
-                                                                          child: new Container(
-                                                                            decoration: new BoxDecoration(
-                                                                              image: new DecorationImage(
-                                                                                fit: BoxFit.fitHeight,
-                                                                                alignment: FractionalOffset.center,
-                                                                                image: NetworkImage(queue.elementAt(index).imageUrlLittle),
-                                                                              )
+                                                            return Container(
+                                                              margin: EdgeInsets.only(left: 20, right: 20),
+                                                              
+                                                              child:  Card(
+                                                                color: _mainImageColor,
+                                                                child: Row(
+                                                                  children: [
+                                                                    Flexible(
+                                                                      flex: 5,
+                                                                      child: ListTile(
+                                                                        title: Text(queue.elementAt(index).name),
+                                                                        leading: FractionallySizedBox(
+                                                                          heightFactor: 0.8,
+                                                                          child: AspectRatio(
+                                                                            aspectRatio: 1,
+                                                                            child: new Container(
+                                                                              decoration: new BoxDecoration(
+                                                                                image: new DecorationImage(
+                                                                                  fit: BoxFit.fitHeight,
+                                                                                  alignment: FractionalOffset.center,
+                                                                                  image: NetworkImage(queue.elementAt(index).imageUrlLittle),
+                                                                                )
+                                                                              ),
                                                                             ),
-                                                                          ),
-                                                                        )
-                                                                      ),
-                                                                      subtitle: Text(queue.elementAt(index).artist),
-                                                                    )
-                                                                  ),
-                                                                  Flexible(
-                                                                    flex: 1,
-                                                                    child: Container (
+                                                                          )
+                                                                        ),
+                                                                        subtitle: Text(queue.elementAt(index).artist),
+                                                                      )
+                                                                    ),
+                                                                    Flexible(
+                                                                      flex: 1,
+                                                                      child: Container (
                                                                         margin: EdgeInsets.only(left:20, right: 20),
                                                                         child: Icon(Icons.drag_handle)
                                                                       )
@@ -1005,52 +945,123 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                                 )
                                                               )
                                                             );
-                                                        }
+                                                          }
+                                                        )
+                                                      );
+                                                    },
+                                                  );
+
+                                                if(_panelQueueCtrl.panelPosition > 0.8)
+                                                  permanentItems = permanentItems.length < 15 ? permanentItems : permanentItems.sublist(0, 15);
+
+                                                List<DragAndDropItem> noPermanentItems = 
+                                                List.generate(
+                                                    GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
+                                                    GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0,
+                                                    (index) {
+
+                                                      return DragAndDropItem(
+                                                        child: ValueListenableBuilder(
+                                                          valueListenable: GlobalQueue.noPermanentQueue,
+                                                          key: ValueKey('ReorderableListView:NoPermanentQueue:$index:'),
+                                                          builder: (BuildContext context, List<Track> value, Widget child) {
+                                                      
+                                                            List<Track> queue = List<Track>();
+                                                            
+                                                            for(int i=0; i<GlobalQueue.noPermanentQueue.value.length; i++) {
+                                                              if(i>GlobalQueue.currentQueueIndex) {
+                                                                queue.add(GlobalQueue.noPermanentQueue.value[i]);
+                                                              }
+                                                            }
+
+                                                            return Container(
+                                                              margin: EdgeInsets.only(left: 20, right: 20),
+                                                              
+                                                              child: Card(
+                                                                color: _mainImageColor,
+                                                                child: Row(
+                                                                  children: [
+                                                                    Flexible(
+                                                                      flex: 5,
+                                                                      child: ListTile(
+                                                                        title: Text(queue.elementAt(index).name),
+                                                                        leading: FractionallySizedBox(
+                                                                          heightFactor: 0.8,
+                                                                          child: AspectRatio(
+                                                                            aspectRatio: 1,
+                                                                            child: new Container(
+                                                                              decoration: new BoxDecoration(
+                                                                                image: new DecorationImage(
+                                                                                  fit: BoxFit.fitHeight,
+                                                                                  alignment: FractionalOffset.center,
+                                                                                  image: NetworkImage(queue.elementAt(index).imageUrlLittle),
+                                                                                )
+                                                                              ),
+                                                                            ),
+                                                                          )
+                                                                        ),
+                                                                        subtitle: Text(queue.elementAt(index).artist),
+                                                                      )
+                                                                    ),
+                                                                    Flexible(
+                                                                      flex: 1,
+                                                                      child: Container (
+                                                                          margin: EdgeInsets.only(left:20, right: 20),
+                                                                          child: Icon(Icons.drag_handle)
+                                                                        )
+                                                                      )
+                                                                    ]
+                                                                  )
+                                                                )
+                                                              );
+                                                          }
+                                                        )
+                                                      );
+                                                    },
+                                                  );
+
+                                                  if(_panelQueueCtrl.panelPosition > 0.8)
+                                                    noPermanentItems = noPermanentItems.length < 15 ? noPermanentItems : noPermanentItems.sublist(0, 15);
+
+                                                  DragAndDropList permanentList = DragAndDropList(
+                                                    canDrag: false,
+                                                    header: Container(
+                                                      margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
+                                                      child: Text(
+                                                        "Prochain dans la file d'attente",
+                                                        textAlign: TextAlign.left,
+                                                        style: TextStyle(
+                                                          fontSize: 20
+                                                        )
                                                       )
-                                                    );
-                                                  },
-                                                );
+                                                    ),
+                                                    children: permanentItems
+                                                  );
 
-                                                DragAndDropList permanentList = DragAndDropList(
-                                                  canDrag: false,
-                                                  header: Container(
-                                                    margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
-                                                    child: Text(
-                                                      "Prochain dans la file d'attente",
-                                                      textAlign: TextAlign.left,
-                                                      style: TextStyle(
-                                                        fontSize: 20
+                                                  DragAndDropList noPermanentList = DragAndDropList(
+                                                    canDrag: false,
+                                                    header: Container(
+                                                      margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
+                                                      child: Text(
+                                                        "Prochaine depuis " + this.selectedPlaylist.name,
+                                                        textAlign: TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontSize: 20
+                                                        )
                                                       )
-                                                    )
-                                                  ),
-                                                  children: permanentItems
-                                                );
+                                                    ),
+                                                    children: noPermanentItems
+                                                  );
 
-                                                DragAndDropList noPermanentList = DragAndDropList(
-                                                  canDrag: false,
-                                                  header: Container(
-                                                    margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
-                                                    child: Text(
-                                                      "Prochaine depuis " + this.selectedPlaylist.name,
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        fontSize: 20
-                                                      )
-                                                    )
-                                                  ),
-                                                  children: noPermanentItems
-                                                );
+                                                  if(GlobalQueue.permanentQueue.value.isEmpty)
+                                                    allList = [noPermanentList];
+                                                  else
+                                                    allList = [permanentList, noPermanentList];
 
-                                                if(GlobalQueue.permanentQueue.value.isEmpty)
-                                                  allList = [noPermanentList];
-                                                else
-                                                  allList = [permanentList, noPermanentList];
+                                                  return allList;
 
-
-                                                return allList;
-
-                                            }.call(),
-                                          ),
+                                              }.call(),
+                                            ),
 
 
                                           Text("Work in progress"),
@@ -1068,8 +1079,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   }
                 )
               )
-            );
-          }
             );
           }
         )

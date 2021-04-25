@@ -284,17 +284,7 @@ class TabsView {
                             )
                           ),*/
 
-                      ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
-
-                      return VisibilityDetector(
-                        key: ValueKey("VisibilityDetector:TracksList:$index"),
-                        onVisibilityChanged: (VisibilityInfo visInfos) {
-                          if(visInfos.visibleFraction > 0.2)
-                            isImageVisible.value = true;
-                          else
-                            isImageVisible.value = false;
-                        },
-                        child: Container(
+                      return Container(
                           key: ValueKey('ListView:Tracks:$index'),
                           margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
                           child: InkWell(
@@ -338,25 +328,14 @@ class TabsView {
                                     heightFactor: 0.8,
                                     child: AspectRatio(
                                       aspectRatio: 1,
-                                      child: ValueListenableBuilder(
-                                        builder: (BuildContext context, bool value, Widget child) {
-                                          if(value) {
-                                            return Container(
-                                              decoration: new BoxDecoration(
-                                                image: new DecorationImage(
-                                                  fit: BoxFit.fitHeight,
-                                                  alignment: FractionalOffset.center,
-                                                  image: NetworkImage(tracks.elementAt(index).imageUrlLittle),
-                                                )
-                                              ),
-                                            );
-                                          } else {
-                                            return Container(
-                                              child: Icon(Icons.audiotrack)
-                                            );
-                                          }
-                                        },
-                                        valueListenable: isImageVisible,
+                                      child: Container(
+                                        decoration: new BoxDecoration(
+                                          image: new DecorationImage(
+                                            fit: BoxFit.fitHeight,
+                                            alignment: FractionalOffset.center,
+                                            image: NetworkImage(tracks.elementAt(index).imageUrlLittle),
+                                          )
+                                        ),
                                       )
                                     )
                                   ),
@@ -371,10 +350,82 @@ class TabsView {
                                 )
                               )
                             )
-                          )
-                        );
+                          );
                     }
                   );
+  }
+
+
+  Widget listTracksBuilder(BuildContext buildContext, int index, List<Track> tracks, PlatformsController ctrl, Playlist playlist, Function setPlaying) {
+    ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
+
+    return Container(
+        key: ValueKey('ListView:Tracks:$index'),
+        margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
+        child: InkWell(
+          onTap: () {
+            setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
+          },
+          onDoubleTap: () {
+            addToQueue(tracks.elementAt(index));
+            String trackName = tracks.elementAt(index).name;
+            ScaffoldMessenger.of(this.state.context).showSnackBar(
+              SnackBar(
+                action: SnackBarAction(
+                  label: 'Annuler',
+                  onPressed: () {},
+                ),
+                duration: Duration(seconds: 1),
+                content: Text("$trackName ajouté à la file d'attente"),
+              )
+            );
+            /*Fluttertoast.showToast(
+              msg: "$trackName ajouté à la file d'attente",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+            );*/
+          },
+          onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
+          child: Card(
+              child: ListTile(
+                title: ValueListenableBuilder(
+                  valueListenable: tracks[index].isPlaying,
+                  builder: (_, value, __) {
+                    return Text(
+                      tracks.elementAt(index).name,
+                      style: (value ?
+                        TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
+                      )
+                    );
+                  }
+                ),
+                leading: FractionallySizedBox(
+                  heightFactor: 0.8,
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      decoration: new BoxDecoration(
+                        image: new DecorationImage(
+                          fit: BoxFit.fitHeight,
+                          alignment: FractionalOffset.center,
+                          image: NetworkImage(tracks.elementAt(index).imageUrlLittle),
+                        )
+                      ),
+                    )
+                  )
+                ),
+                subtitle: Text(tracks.elementAt(index).artist),
+                trailing: FractionallySizedBox(
+                  heightFactor: 1,
+                  child: InkWell(
+                    child: Icon(Icons.more_vert),
+                    onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
+                  )
+                ),
+              )
+            )
+          )
+        );
   }
 
 
@@ -388,10 +439,6 @@ class TabsView {
         if(snapshot.hasData) {
 
           List<Track> tracks = snapshot.data;
-
-          List<Widget> realTracks = tracksListGenerator(tracks, ctrl, playlist, setPlaying);
-
-          List<Widget> listTracks = realTracks;
 
           ScrollController scrollCtrl = ScrollController();
           
@@ -608,17 +655,18 @@ class TabsView {
                       Visibility(
                         visible: notResearch,
                         child: Container(
-                          height: 80*listTracks.length.toDouble(),
-                          child: ListView(
+                          height: 80*tracks.length.toDouble(),
+                          child: ListView.builder (
                             controller: scrollCtrl,
-                            children: listTracks,
+                            itemCount: tracks.length,
+                            itemBuilder: (buildContext, index) => listTracksBuilder(buildContext, index, tracks, ctrl, playlist, setPlaying),
                           )
                         )
                       ),
                       Visibility(
                         visible: !notResearch,
                         child: Container(
-                          height: 80*listTracks.length.toDouble(),
+                          height: 80*researchList.length.toDouble(),
                           child: ListView(
                             controller: scrollCtrl,
                             children: researchList,
