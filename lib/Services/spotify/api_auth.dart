@@ -16,12 +16,17 @@ class APIAuth {
 
     String token = await SpotifySdk.getAuthenticationToken(
         clientId: clientId, redirectUrl: redirectUri, scope: _scopes);
+    await SpotifySdk.connectToSpotifyRemote(
+          clientId: clientId,
+          redirectUrl: redirectUri);
+    await SpotifySdk.connectToSpotifyRemote(clientId: clientId, redirectUrl: redirectUri, accessToken: token);
     storage.write(key: "SpotifyToken", value: token);
 
     return token;
   }
 
   static Future<bool> logout() async {
+    await SpotifySdk.disconnect();
     //TODO:Effacer le token quand il sera sauvegarder
     await storage.delete(key: "SpotifyToken");
     return false;

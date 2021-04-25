@@ -52,7 +52,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   Map<ServicesLister, PlatformsController> userPlatforms =
       new Map<ServicesLister, PlatformsController>();
   ValueNotifier<Track> selectedTrack = ValueNotifier<Track>(Track(
-      service: ServicesLister.DEFAULT,
+      service: null,
       artist: '',
       name: '',
       id: null,
@@ -60,11 +60,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       imageUrlLarge: ''));
   Playlist selectedPlaylist = Playlist(
     ownerId: '',
-    service: ServicesLister.DEFAULT,
+    service: null,
     id: null,
     name: ''
   );
-  PlatformsController selectedPlatform = PlatformsLister.platforms[ServicesLister.DEFAULT];
+  PlatformsController selectedPlatform;
 
   bool _isShuffle = true;
   bool _isRepeatOnce = false;
@@ -102,11 +102,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             true);
       }
     }
-
-    //Queue
-    /*GlobalQueue.addToPermanentQueue(PlatformsLister
-        .platforms[ServicesLister.DEFAULT].platform.playlists[0]
-        .getTracks()[0]);*/
   }
 
   @override
@@ -295,7 +290,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
           seekAllTrackToZero();
           if(_songsTabCtrl.page.toInt() == 1 && (_tabIndex == GlobalQueue.queue.value.length-1 || _tabIndex == 0)) {
-            _tabIndex = 0;
+            _tabIndex  = 0;
             _blockAnimation = false;
           }
 
@@ -349,7 +344,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   PanelController _panelCtrl = PanelController();
   PanelController _panelQueueCtrl = PanelController();
   PageController _songsTabCtrl;
-  int _tabIndex = 0;
+  int _tabIndex = (0);
   bool _isPanelDraggable = true;
   ValueNotifier<bool> _isPanelQueueDraggable = ValueNotifier<bool>(true);
 
@@ -663,9 +658,14 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                         onTap: () {
                           this.selectedTrack.value.playPause() == true ? _playButtonIcon = "play" : _playButtonIcon = "pause";
                         },
-                        child: Icon(
-                          _playButtonIcon == "play" ? Icons.play_arrow : Icons.pause,
-                          size: _playButtonSize,
+                        child: ValueListenableBuilder(
+                          valueListenable: GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.isPlaying,
+                          builder: (buildContext, bool isPlaying, _) {
+                            return Icon(
+                              isPlaying ? Icons.play_arrow : Icons.pause,
+                              size: _playButtonSize,
+                            );
+                          }
                         )
                       )
                     ),
@@ -888,14 +888,16 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                               children: () {
 
                                                 int permaLength = GlobalQueue.permanentQueue.value.length;
-                                                int noPermaLength = GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1);
+                                                int noPermaLength = (GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
+                                                    GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0);
 
                                                 if(!_panelQueueCtrl.isPanelOpen) {
                                                   permaLength = permaLength > 10 ? 10 : permaLength;
                                                   noPermaLength = noPermaLength > 10 ? 10 : noPermaLength;
                                                 } else {
                                                   permaLength = GlobalQueue.permanentQueue.value.length;
-                                                  noPermaLength = GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1);
+                                                  noPermaLength = (GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
+                                                    GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0);
                                                 }
 
                                                 

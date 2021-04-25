@@ -4,6 +4,7 @@ import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Services/spotify/api_controller.dart' as spotify;
+import 'package:spotify_sdk/spotify_sdk.dart';
 
 class PlatformSpotifyController extends PlatformsController {
   PlatformSpotifyController(Platform platform) : super(platform);
@@ -129,4 +130,20 @@ class PlatformSpotifyController extends PlatformsController {
     spotify.API api = new spotify.API();
     api.setPlaylistName(playlist);
   }
+
+  @override
+  pause() {
+    SpotifySdk.pause();
+  }
+
+  @override
+  play(String spotifyId) {
+    SpotifySdk.play(spotifyUri: 'spotify:track:$spotifyId');
+  }
+
+  @override
+  resume() {
+    SpotifySdk.resume();
+  }
+
 }

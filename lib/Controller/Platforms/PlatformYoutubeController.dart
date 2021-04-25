@@ -89,4 +89,23 @@ class PlatformYoutubeController extends PlatformsController {
   void renamePlaylist(Playlist playlist, String name) {
     // TODO: implement renamePlaylist
   }
+
+  @override
+  pause() {
+    // TODO: implement pause
+    throw UnimplementedError();
+  }
+
+  @override
+  play(String youtubeUri) {
+    // TODO: implement play
+    throw UnimplementedError();
+  }
+
+  @override
+  resume() {
+    // TODO: implement resume
+    throw UnimplementedError();
+  }
+
 }

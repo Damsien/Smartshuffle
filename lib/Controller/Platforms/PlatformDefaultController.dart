@@ -102,4 +102,23 @@ class PlatformDefaultController extends PlatformsController {
   }
 
   void renamePlaylist(Playlist playlist, String name) {}
+
+  @override
+  pause() {
+    // TODO: implement pause
+    throw UnimplementedError();
+  }
+
+  @override
+  play(String uri) {
+    // TODO: implement play
+    throw UnimplementedError();
+  }
+
+  @override
+  resume() {
+    // TODO: implement resume
+    throw UnimplementedError();
+  }
+
 }

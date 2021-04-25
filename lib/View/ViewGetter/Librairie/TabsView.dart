@@ -1006,7 +1006,7 @@ class TabsView {
     String album;
     if(track.album != null) album = track.album;
     else album = "Aucun";
-    String service = track.service.toString().split(".")[1];
+    String service = track.serviceName.toString().split(".")[1];
     showDialog(
       context: this.state.context,
       builder: (dialogContext) {

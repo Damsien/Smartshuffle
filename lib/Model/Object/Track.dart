@@ -1,19 +1,25 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class Track with ChangeNotifier {
-  String id;
-  String name;
-  String artist;
-  String album;
-  Duration currentDuration = Duration(seconds: 0);
-  Duration totalDuration = Duration(minutes: 3);
-  ServicesLister service;
-  String imageUrlLittle;
-  String imageUrlLarge;
-  String addDate;
+  String _id;
+  String _name;
+  String _artist;
+  String _album;
+  Duration _currentDuration = Duration(seconds: 0);
+  Duration _totalDuration = Duration(minutes: 3);
+  ServicesLister _service;
+  String _imageUrlLittle;
+  String _imageUrlLarge;
+  String _addDate;
 
-  ValueNotifier<bool> isPlaying = ValueNotifier<bool>(false);
+  static const String PLAYMODE_PLAY = "play";
+  static const String PLAYMODE_RESUME = "resume";
+  static const String PLAYMODE_PAUSE = "pause";
+
+  ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
 
   Track(
       {@required String name,
@@ -25,43 +31,71 @@ class Track with ChangeNotifier {
       String imageUrlLittle,
       String imageUrlLarge,
       String addDate}) {
-    this.id = id;
-    this.name = name;
-    this.artist = artist;
-    if (totalDuration != null) this.totalDuration = totalDuration;
-    this.album = album;
-    this.imageUrlLittle = imageUrlLittle;
-    this.imageUrlLarge = imageUrlLarge;
-    this.service = service;
-    this.addDate = addDate;
+    _id = id;
+    _name = name;
+    _artist = artist;
+    if (totalDuration != null) _totalDuration = totalDuration;
+    _album = album;
+    _imageUrlLittle = imageUrlLittle;
+    _imageUrlLarge = imageUrlLarge;
+    _service = service;
+    _addDate = addDate;
   }
 
+ ValueListenable<bool> get isPlaying => _isPlaying;
+
+  get id => _id;
+
+  get name => _name;
+  get artist => _artist;
+  get album => _album;
+  
+  get currentDuration => _currentDuration;
+  get totalDuration => _totalDuration;
+  
+  get imageUrlLittle => _imageUrlLittle;
+  get imageUrlLarge => _imageUrlLarge;
+  
+  get serviceName => _service.toString().split(".")[1];  
+
   bool setIsPlaying(bool isPlaying) {
-    this.isPlaying.value = isPlaying;
+    _isPlaying.value = isPlaying;
     notifyListeners();
-    return this.isPlaying.value;
+    if(isPlaying) _backPlayer(PLAYMODE_PLAY);
+    return _isPlaying.value;
   }
 
   void setId(String id) {
-    this.id = id;
+    _id = id;
   }
 
   @override
   String toString() {
-    return "{$name - $artist}";
+    return "{$_name - $_artist}";
   }
 
 
   /*  CONTROLS  */
 
   bool playPause() {
-    isPlaying.value ? isPlaying.value = false : isPlaying.value = true;
-    // TODO playPause
-    return isPlaying.value;
+    _isPlaying.value ? _isPlaying.value = false : _isPlaying.value = true;
+    if(_isPlaying.value) _backPlayer(PLAYMODE_RESUME);
+    else _backPlayer(PLAYMODE_PAUSE);
+    return _isPlaying.value;
+  }
+
+  void _backPlayer(String playMode) {
+    PlatformsController ctrl = PlatformsLister.platforms[_service];
+    print(_id);
+    switch(playMode) {
+      case PLAYMODE_PLAY : ctrl.play(_id); break;
+      case PLAYMODE_RESUME: ctrl.resume(); break;
+      case PLAYMODE_PAUSE: ctrl.pause(); break;
+    }
   }
 
   void seekTo(Duration duration) {
-    currentDuration = duration;
+    _currentDuration = duration;
     // TODO seekTo
   }
 

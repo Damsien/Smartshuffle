@@ -98,4 +98,13 @@ abstract class PlatformsController {
   Playlist mergePlaylist(Playlist toMergeTo, Playlist toMerge);
 
   void renamePlaylist(Playlist playlist, String name);
+
+
+  /*  SDK CONTROLS  */
+
+  play(String uri);
+  resume();
+  pause();
+
+
 }
