@@ -108,4 +108,14 @@ class PlatformYoutubeController extends PlatformsController {
     throw UnimplementedError();
   }
 
+  @override
+  // TODO: implement stream
+  Stream get stream => throw UnimplementedError();
+
+  @override
+  seekTo(Duration duration) {
+    // TODO: implement seekTo
+    throw UnimplementedError();
+  }
+
 }

@@ -143,9 +143,11 @@ class API {
       String id = null;
       //* Le format d'image est 64x64
       String imageUrlLittle = null;
-      //* Le format d'image est 
+      //* Le format d'image est 640x640
       String imageUrlLarge = null;
       String addDate = null;
+
+      Duration duration = null;
       try {
         id = items[i]['track']['id'];
         name = items[i]['track']['name'];
@@ -153,6 +155,7 @@ class API {
         artist = _getAllArtist(items[i]['track']['album']['artists']);
         imageUrlLittle = items[i]['track']['album']['images'][2]['url'];
         imageUrlLarge = items[i]['track']['album']['images'][0]['url'];
+        duration = Duration(milliseconds: items[i]['track']['duration_ms']);
       } catch (e) {
         imageUrlLittle = "https://source.unsplash.com/random";
       }
@@ -163,6 +166,7 @@ class API {
             service: ServicesLister.SPOTIFY,
             imageUrlLittle: imageUrlLittle,
             imageUrlLarge: imageUrlLarge,
+            totalDuration: duration,
             artist: artist));
       }
     }

@@ -314,7 +314,7 @@ class TabsView {
                             child: Card(
                                 child: ListTile(
                                   title: ValueListenableBuilder(
-                                    valueListenable: tracks[index].isPlaying,
+                                    valueListenable: tracks[index].isSelected,
                                     builder: (_, value, __) {
                                       return Text(
                                         tracks.elementAt(index).name,
@@ -389,7 +389,7 @@ class TabsView {
           child: Card(
               child: ListTile(
                 title: ValueListenableBuilder(
-                  valueListenable: tracks[index].isPlaying,
+                  valueListenable: tracks[index].isSelected,
                   builder: (_, value, __) {
                     return Text(
                       tracks.elementAt(index).name,

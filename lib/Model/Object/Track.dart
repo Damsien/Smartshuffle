@@ -1,14 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 
-class Track with ChangeNotifier {
+class Track {
   String _id;
   String _name;
   String _artist;
   String _album;
-  Duration _currentDuration = Duration(seconds: 0);
+  ValueNotifier<Duration> _currentDuration = ValueNotifier<Duration>(Duration(seconds: 0));
   Duration _totalDuration = Duration(minutes: 3);
   ServicesLister _service;
   String _imageUrlLittle;
@@ -20,13 +22,16 @@ class Track with ChangeNotifier {
   static const String PLAYMODE_PAUSE = "pause";
 
   ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
+  ValueNotifier<bool> _isSelected = ValueNotifier<bool>(false);
+
+  StreamSubscription streamSub;
 
   Track(
       {@required String name,
       @required String artist,
       @required ServicesLister service,
       @required id,
-      Duration totalDuration,
+      @required Duration totalDuration,
       String album,
       String imageUrlLittle,
       String imageUrlLarge,
@@ -40,9 +45,11 @@ class Track with ChangeNotifier {
     _imageUrlLarge = imageUrlLarge;
     _service = service;
     _addDate = addDate;
+
   }
 
- ValueListenable<bool> get isPlaying => _isPlaying;
+  ValueListenable<bool> get isSelected => _isSelected;
+  ValueListenable<bool> get isPlaying => _isPlaying;
 
   get id => _id;
 
@@ -50,18 +57,35 @@ class Track with ChangeNotifier {
   get artist => _artist;
   get album => _album;
   
+  void setCurrentDuration(Duration duration) => _currentDuration.value = duration;
   get currentDuration => _currentDuration;
   get totalDuration => _totalDuration;
   
   get imageUrlLittle => _imageUrlLittle;
   get imageUrlLarge => _imageUrlLarge;
   
-  get serviceName => _service.toString().split(".")[1];  
+  String get serviceName => _service.toString().split(".")[1];  
+  Stream get serviceStream => PlatformsLister.platforms[_service].stream;
+
+
+  bool setIsSelected(bool isSelected) {
+    _isSelected.value = isSelected;
+    if(isSelected) {
+      streamSub = serviceStream.listen((event) {
+        _isPlaying.value = !event.isPaused;
+        _isPlaying.notifyListeners();
+      });
+    } else {
+      streamSub?.cancel();
+    }
+    return _isSelected.value;
+  }
 
   bool setIsPlaying(bool isPlaying) {
     _isPlaying.value = isPlaying;
-    notifyListeners();
     if(isPlaying) _backPlayer(PLAYMODE_PLAY);
+    setIsSelected(isPlaying);
+    _isPlaying.notifyListeners();
     return _isPlaying.value;
   }
 
@@ -86,7 +110,6 @@ class Track with ChangeNotifier {
 
   void _backPlayer(String playMode) {
     PlatformsController ctrl = PlatformsLister.platforms[_service];
-    print(_id);
     switch(playMode) {
       case PLAYMODE_PLAY : ctrl.play(_id); break;
       case PLAYMODE_RESUME: ctrl.resume(); break;
@@ -94,9 +117,12 @@ class Track with ChangeNotifier {
     }
   }
 
-  void seekTo(Duration duration) {
-    _currentDuration = duration;
-    // TODO seekTo
+  void seekTo(Duration duration, bool influence) {
+    _currentDuration.value = duration;
+    if(influence) {
+      PlatformsController ctrl = PlatformsLister.platforms[_service];
+      ctrl.seekTo(duration);
+    }
   }
 
 }

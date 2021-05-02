@@ -121,4 +121,14 @@ class PlatformDefaultController extends PlatformsController {
     throw UnimplementedError();
   }
 
+  @override
+  // TODO: implement stream
+  Stream get stream => Stream.empty();
+
+  @override
+  seekTo(Duration duration) {
+    // TODO: implement seekTo
+    throw UnimplementedError();
+  }
+
 }

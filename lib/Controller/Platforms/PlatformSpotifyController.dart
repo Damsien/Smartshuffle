@@ -146,4 +146,12 @@ class PlatformSpotifyController extends PlatformsController {
     SpotifySdk.resume();
   }
 
+  @override
+  Stream get stream => SpotifySdk.subscribePlayerState();
+
+  @override
+  seekTo(Duration duration) async {
+    await SpotifySdk.seekTo(positionedMilliseconds: duration.inMilliseconds);
+  }
+
 }

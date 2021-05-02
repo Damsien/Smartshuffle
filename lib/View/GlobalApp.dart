@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
+import 'package:spotify_sdk/models/player_state.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:drag_and_drop_lists/drag_and_drop_lists.dart';
@@ -52,12 +54,12 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   Map<ServicesLister, PlatformsController> userPlatforms =
       new Map<ServicesLister, PlatformsController>();
   ValueNotifier<Track> selectedTrack = ValueNotifier<Track>(Track(
-      service: null,
+      service: ServicesLister.DEFAULT,
       artist: '',
       name: '',
       id: null,
       imageUrlLittle: '',
-      imageUrlLarge: ''));
+      imageUrlLarge: '',));
   Playlist selectedPlaylist = Playlist(
     ownerId: '',
     service: null,
@@ -69,6 +71,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   bool _isShuffle = true;
   bool _isRepeatOnce = false;
   bool _isRepeatAlways = false;
+
+  Timer _timer;
 
   bool _blockAnimation = false;
 
@@ -167,8 +171,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       
 
       if (track != null) {
-        track.setIsPlaying(true);
         this.selectedTrack.value = track;
+        this.selectedTrack.value.setIsPlaying(true);
 
         if(queueCreate) {
 
@@ -236,7 +240,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   void seekAllTrackToZero() {
     for(MapEntry me in GlobalQueue.queue.value) {
       Track tr = me.key;
-      tr.seekTo(Duration(seconds: 0));
+      tr.seekTo(Duration(seconds: 0), false);
     }
   }
 
@@ -316,13 +320,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
 
 
-    if(this.selectedTrack.value.currentDuration >= this.selectedTrack.value.totalDuration) {
+    if(this.selectedTrack.value.currentDuration.value >= this.selectedTrack.value.totalDuration) {
         seekAllTrackToZero();
         if(_isRepeatOnce) {
-          this.selectedTrack.value.seekTo(Duration(seconds: 0));
+          this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
           _isRepeatOnce = false;
         } else if(_isRepeatAlways) {
-          this.selectedTrack.value.seekTo(Duration(seconds: 0));
+          this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
         } else if(_songsTabCtrl.page.toInt() < GlobalQueue.queue.value.length-1) {
           _songsTabCtrl.jumpToPage(GlobalQueue.queue.value.length+1);
         } else {
@@ -463,211 +467,224 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                 child: Stack(
                   key: ValueKey('FrontPLayer'),
                   children: [
-                    ExtentsPageView.extents(
-                      extents: 3,
-                      physics: _panelCtrl.panelPosition < 1 && _panelCtrl.panelPosition > 0.01 ? NeverScrollableScrollPhysics() : PageScrollPhysics(),
-                      //itemCount: GlobalQueue.queue.value.length,
-                      onPageChanged: (index) {
-                        if(index >= GlobalQueue.queue.value.length) {
-                          _blockAnimation = true;
-                          _songsTabCtrl.jumpToPage(index % GlobalQueue.queue.value.length);
-                          _tabIndex = _songsTabCtrl.page.toInt();
-                          moveToNextTrack();
-                        }
-                      },
-                      controller: _songsTabCtrl,
-                      itemBuilder: (buildContext, index) {
+                    ValueListenableBuilder(
+                      valueListenable: GlobalQueue.queue,
+                      builder: (_, List<MapEntry<Track, bool>> queue ,__) {
 
-                        int realIndex = index % GlobalQueue.queue.value.length;
-
-                        ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
-                        return VisibilityDetector(
-                          key: ValueKey("VisibilityDetector:PanelPlayer:Tracks:$realIndex"),
-                          onVisibilityChanged: (VisibilityInfo visInfos) {
-                            if(visInfos.visibleFraction > 0.2)
-                              isImageVisible.value = true;
-                            else
-                              isImageVisible.value = false;
+                        this.selectedTrack.value = queue[GlobalQueue.currentQueueIndex].key;
+                        
+                        return ExtentsPageView.extents(
+                          extents: 3, 
+                          physics: _panelCtrl.panelPosition < 1 && _panelCtrl.panelPosition > 0.01 ? NeverScrollableScrollPhysics() : PageScrollPhysics(),
+                          //itemCount: GlobalQueue.queue.value.length,
+                          onPageChanged: (index) {
+                            if(index >= GlobalQueue.queue.value.length) {
+                              _blockAnimation = true;
+                              _songsTabCtrl.jumpToPage(index % GlobalQueue.queue.value.length);
+                              _tabIndex = _songsTabCtrl.page.toInt();
+                              moveToNextTrack();
+                            }
                           },
-                          child: ValueListenableBuilder(
-                            valueListenable: GlobalQueue.queue,
-                            builder: (_, List<MapEntry<Track, bool>> queue ,__) {
+                          controller: _songsTabCtrl,
+                          itemBuilder: (buildContext, index) {
 
-                              Track trackUp = queue[realIndex].key;
+                                int realIndex = index % GlobalQueue.queue.value.length;
 
-                            return Stack(
-                                children: [
-                                  Stack(
+                                Track trackUp = queue[realIndex].key;
+                                _timer?.cancel();
+                                _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+                                  _timer = timer;
+                                  if(trackUp.currentDuration.value < trackUp.totalDuration) {
+                                    trackUp.currentDuration.value = Duration(seconds: trackUp.currentDuration.value.inSeconds+1);
+                                    trackUp.currentDuration.notifyListeners();
+                                  } else {
+                                    _timer.cancel();
+                                  }
+                                });
+
+                                return Stack(
                                     children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: NetworkImage(trackUp.imageUrlLittle),
-                                            fit: BoxFit.cover,
+                                      Stack(
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: NetworkImage(trackUp.imageUrlLittle),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                          ClipRect(
+                                            child: BackdropFilter(
+                                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                                child: Container(
+                                                  color: Colors.black.withOpacity(0.55),
+                                                )
+                                            ),
+                                          )
+                                        ],
                                       ),
-                                      ClipRect(
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                            child: Container(
-                                              color: Colors.black.withOpacity(0.55),
+                                      Positioned(
+                                        top: (_screenHeight * 0.77),
+                                        right: (_screenWidth / 2) - _screenWidth * 0.45,
+                                        child: Opacity(
+                                          opacity: _elementsOpacity,
+                                          child: InkWell(
+                                            child: Text(trackUp.totalDuration.toString().split(':')[1] +
+                                                ":" + trackUp.totalDuration.toString().split(':')[2].split(".")[0]
                                             )
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                  Positioned(
-                                    top: (_screenHeight * 0.77),
-                                    right: (_screenWidth / 2) - _screenWidth * 0.45,
-                                    child: Opacity(
-                                      opacity: _elementsOpacity,
-                                      child: InkWell(
-                                        child: Text(trackUp.totalDuration.toString().split(':')[1] +
-                                            ":" + trackUp.totalDuration.toString().split(':')[2].split(".")[0]
+                                          )
                                         )
-                                      )
-                                    )
-                                  ),
-                                  Positioned(
-                                    top: (_screenHeight * 0.77),
-                                    left: (_screenWidth / 2) - _screenWidth * 0.45,
-                                    child: Opacity(
-                                      opacity: _elementsOpacity,
-                                      child: InkWell(
-                                        child: Text(trackUp.currentDuration.toString().split(':')[1] +
-                                          ":" + trackUp.currentDuration.toString().split(':')[2].split(".")[0]
-                                        )
-                                      )
-                                    )
-                                  ),
-                                  Positioned(
-                                    top: (_screenHeight * 0.75),
-                                    left: _screenWidth / 2 - ((_screenWidth - (_screenWidth / 4)) / 2),
-                                    child: Opacity(
-                                      opacity: _elementsOpacity,
-                                      child: Container(
-                                        width: _screenWidth - (_screenWidth / 4),
-                                        child: Slider.adaptive(
-                                          value: () {
-                                            trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds >= 0
-                                            && trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds <= 1
-                                              ? _currentSliderValue = trackUp.currentDuration.inSeconds / trackUp.totalDuration.inSeconds
-                                              : _currentSliderValue = 0.0;
-                                              return _currentSliderValue;
-                                          }.call(),
-                                          onChanged: (double value) {
-                                            trackUp.seekTo(Duration(seconds: (value * trackUp.totalDuration.inSeconds).toInt()));
-                                          },
-                                          min: 0,
-                                          max: 1,
-                                          activeColor: Colors.cyanAccent,
-                                        )
-                                      )
-                                    )
-                                  ),
-                                  Positioned(
-                                    width: _imageSize,
-                                    height: _imageSize,
-                                    left: (_screenWidth / 2 - (_imageSize / 2) - _sideMarge),
-                                    top: (_screenHeight / 4) * _ratio,
-                                    child: ValueListenableBuilder(
-                                      valueListenable: isImageVisible,
-                                      builder: (BuildContext context, bool value, Widget child) {
-                                        return Container(
+                                      ),
+                                      ValueListenableBuilder(
+                                        valueListenable: trackUp.currentDuration,
+                                        builder: (BuildContext context, Duration duration, __) {
+                                          print(duration);
+                                          return Stack(
+                                            children: [
+                                              Positioned(
+                                                top: (_screenHeight * 0.77),
+                                                left: (_screenWidth / 2) - _screenWidth * 0.45,
+                                                child: Opacity(
+                                                  opacity: _elementsOpacity,
+                                                  child: InkWell(
+                                                    child: Text(duration.toString().split(':')[1] +
+                                                      ":" + duration.toString().split(':')[2].split(".")[0]
+                                                    )
+                                                  )
+                                                )
+                                              ),
+                                              Positioned(
+                                                top: (_screenHeight * 0.75),
+                                                left: _screenWidth / 2 - ((_screenWidth - (_screenWidth / 4)) / 2),
+                                                child: Opacity(
+                                                  opacity: _elementsOpacity,
+                                                  child: Container(
+                                                    width: _screenWidth - (_screenWidth / 4),
+                                                    child: Slider.adaptive(
+                                                      value: () {
+                                                        duration.inSeconds / trackUp.totalDuration.inSeconds >= 0
+                                                        && duration.inSeconds / trackUp.totalDuration.inSeconds <= 1
+                                                          ? _currentSliderValue = duration.inSeconds / trackUp.totalDuration.inSeconds
+                                                          : _currentSliderValue = 0.0;
+                                                          return _currentSliderValue;
+                                                      }.call(),
+                                                      onChanged: (double value) {},
+                                                      onChangeEnd: (double value) {
+                                                        trackUp.seekTo(Duration(seconds: (value * trackUp.totalDuration.inSeconds).toInt()), true);
+                                                      },
+                                                      min: 0,
+                                                      max: 1,
+                                                      activeColor: Colors.cyanAccent,
+                                                    )
+                                                  )
+                                                )
+                                              )
+                                            ]
+                                          );
+                                        }
+                                      ),
+                                      Positioned(
+                                        width: _imageSize,
+                                        height: _imageSize,
+                                        left: (_screenWidth / 2 - (_imageSize / 2) - _sideMarge),
+                                        top: (_screenHeight / 4) * _ratio,
+                                        child: Container(
                                           decoration: BoxDecoration(
                                               image: DecorationImage(
                                               fit: BoxFit.cover,
                                               image: NetworkImage(trackUp.imageUrlLarge),
                                             )
                                           ),
-                                        );
-                                      }
-                                    )
-                                  ),
-                                  Positioned(
-                                    left: _screenWidth * 0.2 * (1 - _ratio),
-                                    top: (_screenHeight * 0.60) * _ratio + (_sideMarge*0.06),
-                                    child: Row(
-                                      children: [
-                                        Column(
-                                          children: [
-                                            Container(
-                                              margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
-                                              width: _screenWidth - (_screenWidth * 0.1 * 4),
-                                              child: Text(
-                                                trackUp.name,
-                                                textAlign: TextAlign.left,
-                                                style: TextStyle(fontSize: _textSize + (5 * _ratio)),
-                                              )
-                                            ),
-                                            Container(
-                                              margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
-                                              width: _screenWidth - (_screenWidth * 0.1 * 4),
-                                              child: Text(
-                                                trackUp.artist,
-                                                textAlign: TextAlign.left,
-                                                style: TextStyle(
-                                                  fontSize: _textSize,
-                                                  fontWeight: FontWeight.w200),
-                                              )
-                                            )
-                                          ],
-                                        ),
-                                        IgnorePointer(
-                                          ignoring: (_elementsOpacity == 1 ? false : true),
-                                          child: Opacity(
-                                            opacity: _elementsOpacity,
-                                            child: InkWell(
-                                                onTap: () {
-                                                  TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, trackUp);
-                                                },
-                                                child: Icon(
-                                                Icons.add,
-                                                size: _playButtonSize - 10,
-                                              )
-                                            )
-                                          )
                                         )
-                                      ]
-                                    )
-                                  ),
-                                  Opacity(
-                                    opacity: 1 - _ratio,
-                                    child: Container(
-                                      constraints: BoxConstraints(
-                                        maxWidth: trackUp.currentDuration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
-                                        minWidth: trackUp.currentDuration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds
                                       ),
-                                      color: Colors.white,
-                                      width: trackUp.currentDuration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
-                                      height: 2,
-                                    ),
-                                  )
-                                ],
+                                      Positioned(
+                                        left: _screenWidth * 0.2 * (1 - _ratio),
+                                        top: (_screenHeight * 0.60) * _ratio + (_sideMarge*0.06),
+                                        child: Row(
+                                          children: [
+                                            Column(
+                                              children: [
+                                                Container(
+                                                  margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                                  width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                                  child: Text(
+                                                    trackUp.name,
+                                                    textAlign: TextAlign.left,
+                                                    style: TextStyle(fontSize: _textSize + (5 * _ratio)),
+                                                  )
+                                                ),
+                                                Container(
+                                                  margin: EdgeInsets.only(left: _screenWidth * 0.15 * _ratio),
+                                                  width: _screenWidth - (_screenWidth * 0.1 * 4),
+                                                  child: Text(
+                                                    trackUp.artist,
+                                                    textAlign: TextAlign.left,
+                                                    style: TextStyle(
+                                                      fontSize: _textSize,
+                                                      fontWeight: FontWeight.w200),
+                                                  )
+                                                )
+                                              ],
+                                            ),
+                                            IgnorePointer(
+                                              ignoring: (_elementsOpacity == 1 ? false : true),
+                                              child: Opacity(
+                                                opacity: _elementsOpacity,
+                                                child: InkWell(
+                                                    onTap: () {
+                                                      TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, trackUp);
+                                                    },
+                                                    child: Icon(
+                                                    Icons.add,
+                                                    size: _playButtonSize - 10,
+                                                  )
+                                                )
+                                              )
+                                            )
+                                          ]
+                                        )
+                                      ),
+                                      Opacity(
+                                        opacity: 1 - _ratio,
+                                        child: Container(
+                                          constraints: BoxConstraints(
+                                            maxWidth: trackUp.currentDuration.value.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
+                                            minWidth: trackUp.currentDuration.value.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds
+                                          ),
+                                          color: Colors.white,
+                                          width: trackUp.currentDuration.value.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
+                                          height: 2,
+                                        ),
+                                      )
+                                    ]
+                                  );
+                                },
                               );
-                            }
+                      }
+                    ),
+                    ValueListenableBuilder(
+                      valueListenable: this.selectedTrack.value.isPlaying,
+                      builder: (BuildContext context, bool isPlaying, Widget child) {
+                        return Positioned(
+                          top: (_screenHeight * 0.80) * _ratio + (_sideMarge*0.07),
+                          right: ((_screenWidth / 2) - (_playButtonSize / 2) - _sideMarge),
+                          child: InkWell(
+                            onTap: () {
+                              if(this.selectedTrack.value.playPause()) {
+                                _playButtonIcon = "play";
+                                _timer.cancel();
+                              } else {
+                                _playButtonIcon = "pause";
+                              }
+                            },
+                            child: Icon(
+                              !this.selectedTrack.value.isPlaying.value ? Icons.play_arrow : Icons.pause,
+                              size: _playButtonSize,
+                            )
                           )
                         );
-                      },
-                    ),
-                    Positioned(
-                      top: (_screenHeight * 0.80) * _ratio + (_sideMarge*0.07),
-                      right: ((_screenWidth / 2) - (_playButtonSize / 2) - _sideMarge),
-                      child: InkWell(
-                        onTap: () {
-                          this.selectedTrack.value.playPause() == true ? _playButtonIcon = "play" : _playButtonIcon = "pause";
-                        },
-                        child: ValueListenableBuilder(
-                          valueListenable: GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.isPlaying,
-                          builder: (buildContext, bool isPlaying, _) {
-                            return Icon(
-                              isPlaying ? Icons.play_arrow : Icons.pause,
-                              size: _playButtonSize,
-                            );
-                          }
-                        )
-                      )
+                      }
                     ),
                     Positioned(
                       top: (_screenHeight * 0.8),
@@ -700,8 +717,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                         opacity: _elementsOpacity,
                         child: InkWell(
                             onTap: () {
-                              if(this.selectedTrack.value.currentDuration.inSeconds >= 1) {
-                                this.selectedTrack.value.seekTo(Duration(seconds: 0));
+                              if(this.selectedTrack.value.currentDuration.value.inSeconds >= 1) {
+                                this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
                               } else if(_songsTabCtrl.page.toInt() > 0) {
                                 _songsTabCtrl.animateToPage(_songsTabCtrl.page.toInt()-1, duration: Duration(milliseconds: 500), curve: Curves.ease);
                               }

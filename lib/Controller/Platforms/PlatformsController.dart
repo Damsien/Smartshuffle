@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
@@ -105,6 +107,10 @@ abstract class PlatformsController {
   play(String uri);
   resume();
   pause();
+  seekTo(Duration duration);
 
+  /*  STREAM  */
+
+  Stream get stream;
 
 }
