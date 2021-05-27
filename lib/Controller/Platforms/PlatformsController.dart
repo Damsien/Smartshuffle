@@ -5,7 +5,7 @@ import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:smartshuffle/View/ViewGetter/ViewGetter.dart';
+import 'package:smartshuffle/View/ViewGetter/Profiles/ProfileView.dart';
 
 abstract class PlatformsController {
   Map<String, State> states = new Map<String, State>();
@@ -49,8 +49,8 @@ abstract class PlatformsController {
 
   /*  VIEWS   */
 
-  Widget getView({@required ServicesLister service, @required ViewType view}) {
-    return ViewGetter.getView(service: service, view: view);
+  Widget getView({@required ServicesLister service, @required ProfileViewType view}) {
+    return ProfileView.getView(service: service, view: view);
   }
 
   /*  INFORMATIONS  */

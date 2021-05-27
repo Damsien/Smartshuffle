@@ -34,7 +34,7 @@ class TestHtml {
       
       //Get the right id
       var newId = urlToId(platform, id);
-      var getResponse = await http.get("https://www.yt-download.org/api/button/mp3/" + newId);
+      var getResponse = await http.get(Uri.https("yt-download.org", "/api/button/mp3/" + newId));
       
       //Manage html document to get the right final mp3 url
       var globalDoc = parse(getResponse.body);

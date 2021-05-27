@@ -1,29 +1,29 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class PlatformsConnection {
   static getView(ServicesLister service) {
     if (service == ServicesLister.YOUTUBE)
-      return PlatformsConnection.youtubeButton();
+      return PlatformsConnection._genericButton(PlatformsLister.platforms[ServicesLister.YOUTUBE],
+       "Connecter Youtube", AssetImage("assets/logo/youtube_logo.png"), Colors.red[500], Colors.red[200]);
     else if (service == ServicesLister.SPOTIFY)
-      return PlatformsConnection.spotifyButton();
+      return PlatformsConnection._genericButton(PlatformsLister.platforms[ServicesLister.SPOTIFY],
+       "Connecter Spotify", AssetImage("assets/logo/spotify_logo.png"), Colors.green[800], Colors.green[200]);
     else
       return Container();
   }
 
-  //Platforms buttons
+  //Platform button
 
-  static Widget spotifyButton() {
-    var ctrl = PlatformsLister.platforms[ServicesLister.SPOTIFY];
-    String buttonText = "Connecter Spotify";
-
+  static Widget _genericButton(PlatformsController ctrl, String buttonText, ImageProvider image, Color color1, Color color2) {
     return ClipRRect(
         borderRadius: BorderRadius.circular(50),
         child: Container(
-            color: Colors.green[800],
+            color: color1,
             child: OutlineButton(
-              splashColor: Colors.green[200],
+              splashColor: color2,
               onPressed: () => ctrl.connect(),
               highlightElevation: 0,
               child: Padding(
@@ -33,7 +33,7 @@ class PlatformsConnection {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Image(
-                        image: AssetImage("assets/logo/spotify_logo.png"),
+                        image: image,
                         height: 30.0),
                     Padding(
                       padding: const EdgeInsets.only(left: 10),
@@ -48,43 +48,10 @@ class PlatformsConnection {
                   ],
                 ),
               ),
-            )));
+            )
+          )
+        );
   }
 
-  static Widget youtubeButton() {
-    var ctrl = PlatformsLister.platforms[ServicesLister.YOUTUBE];
-    String buttonText = "Connecter Youtube";
 
-    return ClipRRect(
-        borderRadius: BorderRadius.circular(50),
-        child: Container(
-            color: Colors.red[500],
-            child: OutlineButton(
-              splashColor: Colors.red[200],
-              onPressed: () => ctrl.connect(),
-              highlightElevation: 0,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Image(
-                        image: AssetImage("assets/logo/youtube_logo.png"),
-                        height: 30.0),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Text(
-                        buttonText,
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            )));
-  }
 }

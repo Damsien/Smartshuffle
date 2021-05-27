@@ -103,13 +103,13 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
     setState(() {
       this.initialTabIndex.value = _tabController.index;
-      if(value != "")
+      if(value != '')
         this.notResearch[_tabController.index] = false;
       else
         this.notResearch[_tabController.index] = true;
     });
 
-    if(value != "") {
+    if(value != '') {
       List<Track> temp = new List<Track>();
       for(Track track in tracks) {
         if(track.name.contains(value) || track.name.toLowerCase().contains(value)
@@ -119,7 +119,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       }
       setState(() {
         this.researchList.clear();
-        this.researchList = TabsView.getInstance(this).tracksListGenerator(temp, ctrl, playlist, this.setPlaying);
+        this.researchList = TabsView(this).tracksListGenerator(temp, ctrl, playlist, this.setPlaying);
       });
     }
   }
@@ -225,7 +225,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
           body: TabBarView(
             controller: this._tabController,
             children: () {
-              List<Widget> allTabs = TabsView.getInstance(this).playlistsCreator(this.userPlatforms, this.distribution, onReorderPlaylists, openPlaylist);
+              List<Widget> allTabs = TabsView(this).playlistsCreator(this.userPlatforms, this.distribution, onReorderPlaylists, openPlaylist);
               
               for(int i=0; i<allTabs.length; i++) {
                 setState(() {
@@ -246,7 +246,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
               for(int i=0; i<this.distribution.length; i++) {
                 if(this.distribution[i] == TabsView.TracksView) {
                   setState(() {
-                    this.tabsView[i] = TabsView.getInstance(this).tracksCreator(i, this.tracksList[i].key, this.tracksList[i].value, researchList, this.notResearch[i], setResearch, onReorderTracks, returnToPlaylist, setPlaying);
+                    this.tabsView[i] = TabsView(this).tracksCreator(i, this.tracksList[i].key, this.tracksList[i].value, researchList, this.notResearch[i], setResearch, onReorderTracks, returnToPlaylist, setPlaying);
                   });
                 }
               }

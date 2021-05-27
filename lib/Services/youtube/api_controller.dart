@@ -41,7 +41,7 @@ class API {
 
       if (nextPageToken != null) {
         response = await get(
-            APIPath.getPlaylistsList() + "&pageToken=" + nextPageToken,
+            Uri.http(APIPath.getPlaylistsList().host, APIPath.getPlaylistsList().path, APIPath.getPlaylistsList().data.parameters..update("pageToken", (value) => nextPageToken)),
             headers: _prepareHeader());
         json = jsonDecode(response.body);
       }
@@ -65,7 +65,7 @@ class API {
 
       if (nextPageToken != null) {
         response = await get(
-            APIPath.getPlaylistSongs(playlist) + "&pageToken=" + nextPageToken,
+            Uri.http(APIPath.getPlaylistsList().host, APIPath.getPlaylistsList().path, APIPath.getPlaylistsList().data.parameters..update("pageToken", (value) => nextPageToken)),
             headers: _prepareHeader());
         json = jsonDecode(response.body);
       }

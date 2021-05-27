@@ -2,7 +2,11 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
 import 'package:spotify_sdk/models/player_state.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -84,9 +88,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         PlatformsLister.platforms[ServicesLister.DEFAULT];
     for (int i = 0; i < 10; i++) {
       ctrl.addPlaylist(
-          name: ctrl.platform.name + " n°$i",
+          name: ctrl.platform.name + ' n°$i',
           imageUrl: 'https://source.unsplash.com/random',
-          ownerId: "",
+          ownerId: '',
           ownerName: 'Damien');
     }
     for (int i = 0; i < 10; i++) {
@@ -94,8 +98,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         ctrl.addTrackToPlaylist(
             i,
             Track(
-                name: "Track n°$j",
-                artist: "Artist n°$i",
+                name: 'Track n°$j',
+                artist: 'Artist n°$i',
                 totalDuration: Duration(
                     minutes: Random().nextInt(4),
                     seconds: Random().nextInt(59)),
@@ -177,14 +181,14 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         if(queueCreate) {
 
           if(_isShuffle) {
-            GlobalQueue.generateNonPermanentQueue(playlist, true, selectedTrack: track);
+            GlobalQueue().generateNonPermanentQueue(playlist, true, selectedTrack: track);
             _blockAnimation = true;
             if(_songsTabCtrl.hasClients) {
               _songsTabCtrl.jumpToPage(0);
               _tabIndex = _songsTabCtrl.page.toInt();
             }
           } else {
-            GlobalQueue.generateNonPermanentQueue(playlist, false, selectedTrack: track);
+            GlobalQueue().generateNonPermanentQueue(playlist, false, selectedTrack: track);
             _blockAnimation = true;
             _songsTabCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
             _tabIndex = _songsTabCtrl.page.toInt();
@@ -202,7 +206,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         if(queueCreate) {
 
           if(_isShuffle) {
-            GlobalQueue.generateNonPermanentQueue(playlist, true);
+            GlobalQueue().generateNonPermanentQueue(playlist, true);
             _blockAnimation = true;
             if(_songsTabCtrl.hasClients) {
               _songsTabCtrl.jumpToPage(0);
@@ -211,7 +215,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
             this.selectedTrack.value.setIsPlaying(true);
           } else {
-            GlobalQueue.generateNonPermanentQueue(playlist, false);
+            GlobalQueue().generateNonPermanentQueue(playlist, false);
             _blockAnimation = true;
             if(_songsTabCtrl.hasClients) {
               _songsTabCtrl.jumpToPage(0);
@@ -258,7 +262,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
     
     if(GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].value) {
-      GlobalQueue.moveFromPermanentToNoPermanent(lastIndex);
+      GlobalQueue().moveFromPermanentToNoPermanent(lastIndex);
     }
 
     _isRepeatOnce = false;
@@ -277,7 +281,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
     _isRepeatOnce = false;
     _isRepeatAlways = false;
-    GlobalQueue.reBuildQueue();
+    GlobalQueue().reBuildQueue();
     setPlaying(previousTrack, false);
   }
 
@@ -369,7 +373,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   double _playButtonSize;
   double _textSize;
   double _elementsOpacity;
-  String _playButtonIcon = "play";
+  String _playButtonIcon = 'play';
   double _currentSliderValue;
 
   constantBuilder() {
@@ -531,7 +535,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                           opacity: _elementsOpacity,
                                           child: InkWell(
                                             child: Text(trackUp.totalDuration.toString().split(':')[1] +
-                                                ":" + trackUp.totalDuration.toString().split(':')[2].split(".")[0]
+                                                ':' + trackUp.totalDuration.toString().split(':')[2].split('.')[0]
                                             )
                                           )
                                         )
@@ -549,7 +553,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                   opacity: _elementsOpacity,
                                                   child: InkWell(
                                                     child: Text(duration.toString().split(':')[1] +
-                                                      ":" + duration.toString().split(':')[2].split(".")[0]
+                                                      ':' + duration.toString().split(':')[2].split('.')[0]
                                                     )
                                                   )
                                                 )
@@ -633,7 +637,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                 opacity: _elementsOpacity,
                                                 child: InkWell(
                                                     onTap: () {
-                                                      TabsView.getInstance(this).addToPlaylist(this.selectedPlatform, trackUp);
+                                                      TabsView(this).addToPlaylist(this.selectedPlatform, trackUp);
                                                     },
                                                     child: Icon(
                                                     Icons.add,
@@ -672,10 +676,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                           child: InkWell(
                             onTap: () {
                               if(this.selectedTrack.value.playPause()) {
-                                _playButtonIcon = "play";
+                                _playButtonIcon = 'play';
                                 _timer.cancel();
                               } else {
-                                _playButtonIcon = "pause";
+                                _playButtonIcon = 'pause';
                               }
                             },
                             child: Icon(
@@ -880,21 +884,21 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                   int oldItemIndex = int.parse(i1.child.key.toString().split(':')[2]);
                                                   int newItemIndex = int.parse(i2.child.key.toString().split(':')[2]);
                                                   if(allList.length == 1) {
-                                                    GlobalQueue.reorder(oldItemIndex, 1, newItemIndex, 1);
+                                                    GlobalQueue().reorder(oldItemIndex, 1, newItemIndex, 1);
                                                   } else {
                                                     String oldList = i1.child.key.toString().split(':')[1];
                                                     String newList = i2.child.key.toString().split(':')[1];
                                                     switch(oldList) {
                                                       case 'PermanentQueue': {
                                                         switch(newList) {
-                                                          case 'PermanentQueue': GlobalQueue.reorder(oldItemIndex, 0, newItemIndex, 0); break;
-                                                          case 'NoPermanentQueue': GlobalQueue.reorder(oldItemIndex, 0, newItemIndex, 1); break;
+                                                          case 'PermanentQueue': GlobalQueue().reorder(oldItemIndex, 0, newItemIndex, 0); break;
+                                                          case 'NoPermanentQueue': GlobalQueue().reorder(oldItemIndex, 0, newItemIndex, 1); break;
                                                         }
                                                       } break;
                                                       case 'NoPermanentQueue': {
                                                         switch(newList) {
-                                                          case 'PermanentQueue': GlobalQueue.reorder(oldItemIndex, 1, newItemIndex, 0); break;
-                                                          case 'NoPermanentQueue': GlobalQueue.reorder(oldItemIndex, 1, newItemIndex, 1); break;
+                                                          case 'PermanentQueue': GlobalQueue().reorder(oldItemIndex, 1, newItemIndex, 0); break;
+                                                          case 'NoPermanentQueue': GlobalQueue().reorder(oldItemIndex, 1, newItemIndex, 1); break;
                                                         }
                                                       } break;
                                                     }
@@ -1142,22 +1146,32 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   items: <BottomNavigationBarItem>[
                     BottomNavigationBarItem(
                         icon: Icon(Icons.library_music),
-                        label: 'Bibliotèque',
+                        label: "Bibliotèque",
                         backgroundColor: Colors.black),
                     BottomNavigationBarItem(
                         icon: Icon(Icons.search),
-                        label: 'Search',
+                        label: "Search",
                         backgroundColor: Colors.black),
                     BottomNavigationBarItem(
                         icon: Icon(Icons.account_circle),
-                        label: 'Profile',
+                        label: "Profile",
                         backgroundColor: Colors.black),
                   ],
                   currentIndex: this.selectedIndex,
                   onTap: this.onItemTapped,
                 )
             )
-        )
+        ),
+      localizationsDelegates: [
+        AppLocalizations.delegate, // Add this line
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('fr', ''),
+        const Locale('en', ''),
+      ],
     );
   }
 }

@@ -87,7 +87,7 @@ class PlatformDefaultController extends PlatformsController {
         id: this.platform.playlists.value.length.toString(),
         service: ServicesLister.DEFAULT,
         imageUrl: imageUrl,
-        uri: playlistUri,
+        uri: (playlistUri != null ? Uri.parse(playlistUri) : Uri.http("", "")),
         tracks: tracks));
   }
 

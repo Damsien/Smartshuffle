@@ -46,7 +46,7 @@ class API {
       _playlistList(list, json);
 
       if (json['next'] != null) {
-        response = await get(next, headers: _prepareHeader());
+        response = await get(Uri.parse(next), headers: _prepareHeader());
         json = jsonDecode(response.body);
       }
     } while (next != null);
@@ -67,7 +67,7 @@ class API {
       _songsList(tracks, json);
 
       if (json['next'] != null) {
-        response = await get(next, headers: _prepareHeader());
+        response = await get(Uri.parse(next), headers: _prepareHeader());
         json = jsonDecode(response.body);
       }
     } while (next != null);
@@ -127,7 +127,7 @@ class API {
       list.add(Playlist(
           id: id,
           name: name,
-          uri: trackUri,
+          uri: Uri.parse(trackUri),
           ownerId: ownerId,
           ownerName: ownerName,
           imageUrl: imageUrl,

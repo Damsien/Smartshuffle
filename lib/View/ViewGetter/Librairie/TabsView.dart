@@ -1,7 +1,9 @@
 
+import 'package:flutter/services.dart';
+import 'package:smartshuffle/Controller/GlobalQueue.dart';
+import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:device_apps/device_apps.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -14,18 +16,19 @@ import 'package:smartshuffle/Model/Object/Track.dart';
 
 class TabsView {
 
-  static TabsView getInstance(State state) {
-    return TabsView(state);
-  }
-
   State state;
+  
+  static final TabsView _tabsView = TabsView._instance();
 
-  TabsView(State state) {
-    this.state = state;
+  factory TabsView(State state) {
+    _tabsView.state = state;
+    return _tabsView;
   }
 
-  static final String TracksView = "Tracks";
-  static final String PlaylistsView = "Playlists";
+  TabsView._instance();
+
+  static final String TracksView = 'Tracks';
+  static final String PlaylistsView = 'Playlists';
 
 
 
@@ -84,7 +87,7 @@ class TabsView {
                       header: Container(
                         width: WidgetsBinding.instance.window.physicalSize.width,
                         height: 165,
-                        margin: EdgeInsets.only(left: 30, right: 30, bottom: 10),
+                        margin: EdgeInsets.only(left: 15, right: 15, bottom: 10),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -125,71 +128,45 @@ class TabsView {
                         playlists.length,
                         (index) {
 
-                          ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
-
                           return Container(
                             key: ValueKey('ReorderableListView:Playlists:$index'),
-                            margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
+                            margin: EdgeInsets.only(bottom: 5),
+                            //color: (index % 2 == 0 ? Colors.grey[800] : Colors.grey[850]),
                             child: InkWell(
-                              child: VisibilityDetector(
-                                key: ValueKey("VisibilityDetector:PlaylistsList:$index"),
-                                onVisibilityChanged: (VisibilityInfo visInfos) {
-                                  if(visInfos.visibleFraction > 0.2)
-                                    isImageVisible.value = true;
-                                  else
-                                    isImageVisible.value = false;
-                                },
-                                child: Card(
-                                  child: Row(
-                                    children: [
-                                      Flexible(
-                                        flex: 5,
-                                        child: ListTile(
-                                          title: Text(playlists.elementAt(index).name),
-                                          leading: FractionallySizedBox(
-                                            heightFactor: 0.8,
-                                            child: AspectRatio(
-                                              aspectRatio: 1,
-                                              child: ValueListenableBuilder(
-                                                builder: (BuildContext context, bool value, Widget child) {
-                                                  if(value) {
-                                                    return Visibility(
-                                                      visible: value,
-                                                      child: Container(
-                                                        decoration: new BoxDecoration(
-                                                          image: new DecorationImage(
-                                                            fit: BoxFit.fitHeight,
-                                                            alignment: FractionalOffset.center,
-                                                            image: NetworkImage(playlists.elementAt(index).imageUrl),
-                                                          )
-                                                        ),
-                                                      ),
-                                                    );
-                                                  } else {
-                                                    return Container(
-                                                      child: Icon(Icons.audiotrack)
-                                                    );
-                                                  }
-                                                },
-                                                valueListenable: isImageVisible,
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    flex: 5,
+                                    child: ListTile(
+                                      title: Text(playlists.elementAt(index).name),
+                                      leading: FractionallySizedBox(
+                                        heightFactor: 1,
+                                        child: AspectRatio(
+                                          aspectRatio: 1,
+                                          child: Container(
+                                            decoration: new BoxDecoration(
+                                              image: new DecorationImage(
+                                                fit: BoxFit.cover,
+                                                alignment: FractionalOffset.center,
+                                                image: NetworkImage(playlists.elementAt(index).imageUrl),
                                               )
-                                            )
+                                            ),
                                           ),
-                                          subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" tracks"),
-                                          onLongPress: () => playlistOption(ctrl, playlists.elementAt(index), index),
-                                          onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
                                         )
                                       ),
-                                      Flexible(
-                                        flex: 1,
-                                        child: Container(
-                                          margin: EdgeInsets.only(left:20, right: 20),
-                                          child: Icon(Icons.drag_handle)
-                                        )
-                                      )
-                                    ]
+                                      subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" tracks"),
+                                      onLongPress: () => playlistOption(ctrl, playlists.elementAt(index), index),
+                                      onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
+                                    )
+                                  ),
+                                  Flexible(
+                                    flex: 1,
+                                    child: Container(
+                                      margin: EdgeInsets.only(left: 20, right: 20),
+                                      child: Icon(Icons.drag_handle)
+                                    )
                                   )
-                                )
+                                ]
                               )
                             )
                           );
@@ -287,7 +264,7 @@ class TabsView {
                       return Container(
                           key: ValueKey('ListView:Tracks:$index'),
                           margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
-                          child: InkWell(
+                          child: GestureDetector(
                             onTap: () {
                               setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
                             },
@@ -297,8 +274,8 @@ class TabsView {
                               ScaffoldMessenger.of(this.state.context).showSnackBar(
                                 SnackBar(
                                   action: SnackBarAction(
-                                    label: 'Annuler',
-                                    onPressed: () {},
+                                    label: "Annuler",
+                                    onPressed: () => GlobalQueue().removeLastPermanent()
                                   ),
                                   duration: Duration(seconds: 1),
                                   content: Text("$trackName ajouté à la file d'attente"),
@@ -310,7 +287,7 @@ class TabsView {
                                 gravity: ToastGravity.BOTTOM,
                               );*/
                             },
-                            onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
+                            onLongPressStart: (LongPressStartDetails detail) => trackMainOptions(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist), detail),
                             child: Card(
                                 child: ListTile(
                                   title: ValueListenableBuilder(
@@ -342,10 +319,7 @@ class TabsView {
                                   subtitle: Text(tracks.elementAt(index).artist),
                                   trailing: FractionallySizedBox(
                                     heightFactor: 1,
-                                    child: InkWell(
-                                      child: Icon(Icons.more_vert),
-                                      onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
-                                    )
+                                    child: trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
                                   ),
                                 )
                               )
@@ -357,12 +331,9 @@ class TabsView {
 
 
   Widget listTracksBuilder(BuildContext buildContext, int index, List<Track> tracks, PlatformsController ctrl, Playlist playlist, Function setPlaying) {
-    ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
-
     return Container(
         key: ValueKey('ListView:Tracks:$index'),
-        margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
-        child: InkWell(
+        child: GestureDetector(
           onTap: () {
             setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
           },
@@ -372,21 +343,16 @@ class TabsView {
             ScaffoldMessenger.of(this.state.context).showSnackBar(
               SnackBar(
                 action: SnackBarAction(
-                  label: 'Annuler',
-                  onPressed: () {},
+                  label: "Annuler",
+                  onPressed: () => GlobalQueue().removeLastPermanent(),
                 ),
                 duration: Duration(seconds: 1),
                 content: Text("$trackName ajouté à la file d'attente"),
               )
             );
-            /*Fluttertoast.showToast(
-              msg: "$trackName ajouté à la file d'attente",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-            );*/
           },
-          onLongPress: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
-          child: Card(
+          onLongPressStart: (LongPressStartDetails detail) => trackMainOptions(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist), detail),
+          child: Container(
               child: ListTile(
                 title: ValueListenableBuilder(
                   valueListenable: tracks[index].isSelected,
@@ -406,7 +372,7 @@ class TabsView {
                     child: Container(
                       decoration: new BoxDecoration(
                         image: new DecorationImage(
-                          fit: BoxFit.fitHeight,
+                          fit: BoxFit.cover,
                           alignment: FractionalOffset.center,
                           image: NetworkImage(tracks.elementAt(index).imageUrlLittle),
                         )
@@ -417,10 +383,7 @@ class TabsView {
                 subtitle: Text(tracks.elementAt(index).artist),
                 trailing: FractionallySizedBox(
                   heightFactor: 1,
-                  child: InkWell(
-                    child: Icon(Icons.more_vert),
-                    onTap: () => trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
-                  )
+                  child: trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
                 ),
               )
             )
@@ -461,7 +424,7 @@ class TabsView {
                           Container(
                             width: WidgetsBinding.instance.window.physicalSize.width,
                             height: 165,
-                            margin: EdgeInsets.only(left: 30, right: 30),
+                            margin: EdgeInsets.only(left: 10, right: 10),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -516,7 +479,7 @@ class TabsView {
                                       child: new Container(
                                         decoration: new BoxDecoration(
                                           image: new DecorationImage(
-                                            fit: BoxFit.fitHeight,
+                                            fit: BoxFit.cover,
                                             alignment: FractionalOffset.center,
                                             image: NetworkImage(playlist.imageUrl),
                                           )
@@ -530,14 +493,13 @@ class TabsView {
                           ),
                           Container(
                             width: WidgetsBinding.instance.window.physicalSize.width,
-                            margin: EdgeInsets.only(left: 10,right: 10),
                             child: ListTile(
                               subtitle: Container(
                                 height: 45,
                                 child: TextField(
                                   decoration: InputDecoration(
-                                    border: OutlineInputBorder(),
-                                    labelText: 'Rechercher..',
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(1))),
+                                    labelText: "Rechercher..",
                                     filled: true,
                                   ),
                                   onChanged: (val) {
@@ -550,45 +512,9 @@ class TabsView {
                                   icon: Icon(Icons.sort),
                                   tooltip: "Trier",
                                   itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                                    PopupMenuItem(
-                                      value: 'last_added',
-                                      child: Row(
-                                        children: [
-                                          Text('Ajouté récemment'),
-                                          (playlist.sortDirection['last_added'] != null ?
-                                            Icon(
-                                              (playlist.sortDirection['last_added'] ? Icons.arrow_upward : Icons.arrow_downward)
-                                            ) : Container(width: 0,height: 0,)
-                                          ),
-                                        ]
-                                      )
-                                    ),
-                                     PopupMenuItem(
-                                      value: 'title',
-                                      child: Row(
-                                        children: [
-                                          Text('Titre'),
-                                          (playlist.sortDirection['title'] != null ?
-                                            Icon(
-                                              (playlist.sortDirection['title'] ? Icons.arrow_upward : Icons.arrow_downward)
-                                            ) : Container(width: 0,height: 0,)
-                                          ),
-                                        ]
-                                      ),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'artist',
-                                      child: Row(
-                                        children: [
-                                          Text('Artiste'),
-                                          (playlist.sortDirection['artist'] != null ?
-                                            Icon(
-                                              (playlist.sortDirection['artist'] ? Icons.arrow_upward : Icons.arrow_downward)
-                                            ) : Container(width: 0,height: 0,)
-                                          ),
-                                        ]
-                                      ),
-                                    ),
+                                    SortPopupItemLastAdded(playlist).build(context),
+                                    SortPopupItemTitle(playlist).build(context),
+                                    SortPopupItemArtist(playlist).build(context)
                                   ],
                                   onSelected: (value) {
                                     this.state.setState(() {
@@ -599,56 +525,59 @@ class TabsView {
                               )
                             )
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Container(
-                                width: MediaQuery.of(context).size.width/2.5,
-                                margin: EdgeInsets.only(top: 5, bottom: 10),
-                                child: FlatButton(
-                                  onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: false),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Icon(Icons.play_arrow),
-                                      Text("Simple",
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          color: Colors.white,
+                          Container(
+                            margin: EdgeInsets.only(left: 17, right: 17),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  width: MediaQuery.of(context).size.width/2.5,
+                                  margin: EdgeInsets.only(top: 5, bottom: 10),
+                                  child: FlatButton(
+                                    onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: false),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Icon(Icons.play_arrow),
+                                        Text("Simple",
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            color: Colors.white,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  shape: ContinuousRectangleBorder(
-                                    borderRadius: BorderRadius.circular(0),
-                                    side: BorderSide(color: Colors.cyanAccent)
-                                  ),
-                                )
-                              ),
-                              Container(
-                                width: MediaQuery.of(context).size.width/2.5,
-                                margin: EdgeInsets.only(top: 5, bottom: 10),
-                                child: FlatButton(
-                                  onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: true),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Icon(Icons.shuffle),
-                                      Text("Aléatoire",
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          color: Colors.white,
+                                      ],
+                                    ),
+                                    shape: ContinuousRectangleBorder(
+                                      borderRadius: BorderRadius.circular(0),
+                                      side: BorderSide(color: Colors.cyanAccent)
+                                    ),
+                                  )
+                                ),
+                                Container(
+                                  width: MediaQuery.of(context).size.width/2.5,
+                                  margin: EdgeInsets.only(top: 5, bottom: 10),
+                                  child: FlatButton(
+                                    onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: true),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Icon(Icons.shuffle),
+                                        Text("Aléatoire",
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            color: Colors.white,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  shape: ContinuousRectangleBorder(
-                                    borderRadius: BorderRadius.circular(0),
-                                    side: BorderSide(color: Colors.cyanAccent)
-                                  ),
-                                )
-                              ),
-                            ],
+                                      ],
+                                    ),
+                                    shape: ContinuousRectangleBorder(
+                                      borderRadius: BorderRadius.circular(0),
+                                      side: BorderSide(color: Colors.cyanAccent)
+                                    ),
+                                  )
+                                ),
+                              ],
+                            ),
                           ),
                         ]
                       ),
@@ -680,7 +609,7 @@ class TabsView {
             ),
             onWillPop: () async {
               if(!notResearch) {
-                setResearch(null, null, "", null);
+                setResearch(null, null, '', null);
                 return false;
               } else {
                 returnToPlaylist(tabIndex);
@@ -715,74 +644,71 @@ class TabsView {
 
   /* CRUD TRACKS  */
 
-  trackMainDialog(PlatformsController ctrl, Track track, int index, {Function refresh}) {
-    String name = track.name;
-    showDialog(
-      context: this.state.context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text("$name", style: TextStyle(color: Colors.white)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  child: FlatButton(
-                    child: Text("Ajouter en file d'attente", style: TextStyle(color: Colors.white)),
-                    onPressed: () {
-                      Navigator.pop(dialogContext);
-                      ScaffoldMessenger.of(this.state.context).showSnackBar(
-                        SnackBar(
-                          action: SnackBarAction(
-                            label: 'Annuler',
-                            onPressed: () {},
-                          ),
-                          duration: Duration(seconds: 1),
-                          content: Text("$name ajouté à la file d'attente"),
-                        )
-                      );
-                      addToQueue(track);
-                    },
-                  ),
-                ),
-                Container(
-                  child: FlatButton(
-                    child: Text("Ajouter à une autre playlist", style: TextStyle(color: Colors.white)),
-                    onPressed: () {
-                      Navigator.pop(dialogContext);
-                      addToPlaylist(ctrl, track);
-                    },
-                  ),
-                ),
-                Container(
-                  child: FlatButton(
-                    child: Text("Supprimer de la playlist", style: TextStyle(color: Colors.white)),
-                    onPressed: () {
-                      Navigator.pop(dialogContext);
-                      removeFromPlaylist(ctrl, track, index, refresh: refresh);
-                    },
-                  ),
-                ),
-                Container(
-                  child: FlatButton(
-                    child: Text("Informations", style: TextStyle(color: Colors.white)),
-                    onPressed: () {
-                      Navigator.pop(dialogContext);
-                      trackInformations(ctrl, track);
-                    },
-                  ),
-                ),
-                Container(
-                  child: FlatButton(
-                    child: Text("Annuler", style: TextStyle(color: Colors.white)),
-                    onPressed: () => Navigator.pop(dialogContext),
-                  ),
-                ),
-              ],
+
+
+  void trackMainDialogOptions(String value, String name, PlatformsController ctrl, Track track, int index, Function refresh) {
+    switch(value) {
+      case PopupMenuConstants.TRACKSMAINDIALOG_ADDTOQUEUE: {
+        ScaffoldMessenger.of(this.state.context).showSnackBar(
+          SnackBar(
+            action: SnackBarAction(
+              label: "Annuler",
+              onPressed: () => GlobalQueue().removeLastPermanent()
             ),
-          ),
-          backgroundColor: Colors.grey[800],
+            duration: Duration(seconds: 1),
+            content: Text("$name ajouté à la file d'attente"),
+          )
         );
+        addToQueue(track);
+      } break;
+      case PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST: {
+        addToPlaylist(ctrl, track);
+      } break;
+      case PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST: {
+        removeFromPlaylist(ctrl, track, index, refresh: refresh);
+      } break;
+      case PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS: {
+        trackInformations(ctrl, track);
+      } break;
+    }
+  }
+
+
+  PopupMenuButton trackMainDialog(PlatformsController ctrl, Track track, int index, {Function refresh}) {
+    String name = track.name;
+
+    return PopupMenuButton(
+      icon: Icon(Icons.more_vert),
+      tooltip: "Options",
+      itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+        TracksPopupItemAddToQueue().build(context),
+        TracksPopupItemAddToAnotherPlaylist().build(context),
+        TracksPopupItemRemoveFromPlaylist().build(context),
+        TracksPopupItemInformations().build(context),
+      ],
+      onSelected: (value) {
+        trackMainDialogOptions(value, name, ctrl, track, index, refresh);
+      },
+    );
+  }
+
+  void trackMainOptions(PlatformsController ctrl, Track track, int index, LongPressStartDetails detail, {Function refresh}) async {
+    HapticFeedback.lightImpact();
+    String name = track.name;
+
+    await showMenu(
+        context: this.state.context,
+        position: RelativeRect.fromLTRB(detail.globalPosition.dx, detail.globalPosition.dy,
+         MediaQuery.of(this.state.context).size.width - detail.globalPosition.dx, MediaQuery.of(this.state.context).size.height - detail.globalPosition.dy),
+        items: [
+          TracksPopupItemAddToQueue().build(this.state.context),
+          TracksPopupItemAddToAnotherPlaylist().build(this.state.context),
+          TracksPopupItemRemoveFromPlaylist().build(this.state.context),
+          TracksPopupItemInformations().build(this.state.context),
+        ],
+        elevation: 8.0,
+      ).then((value){
+        trackMainDialogOptions(value, name, ctrl, track, index, refresh);
       }
     );
   }
@@ -795,7 +721,7 @@ class TabsView {
       context: this.state.context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text("$name", style: TextStyle(color: Colors.white)),
+          title: Text('$name', style: TextStyle(color: Colors.white)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -844,6 +770,7 @@ class TabsView {
       builder: (dialogContext) {
         return AlertDialog(
           title: Text("Choisissez une playlist", style: TextStyle(color: Colors.white)),
+          contentPadding: EdgeInsets.all(0),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -852,52 +779,22 @@ class TabsView {
                   ctrl.platform.playlists.value.length,
                   (index) {
 
-                    ValueNotifier<bool> isImageVisible = ValueNotifier<bool>(false);
-
                     if(ctrl.platform.playlists.value[index].ownerId == ctrl.getUserInformations()['ownerId']) {
-                      return Theme(
-                        data: ThemeData(
-                          brightness: Brightness.dark
-                        ),
-                        child: Container(
-                          child: VisibilityDetector(
-                            key: ValueKey("VisibilityDetector:ChoosingPlaylist:PlaylistsList:$index"),
-                            onVisibilityChanged: (VisibilityInfo visInfos) {
-                              if(visInfos.visibleFraction > 0.2)
-                                isImageVisible.value = true;
-                              else
-                                isImageVisible.value = false;
-                            },
-                            child: Card(
-                              child: ListTile(
+                      return ListTile(
                                 title: Text(ctrl.platform.playlists.value[index].name),
                                 leading: FractionallySizedBox(
                                   heightFactor: 0.8,
                                   child: AspectRatio(
                                     aspectRatio: 1,
-                                    child: ValueListenableBuilder(
-                                      builder: (BuildContext context, bool value, Widget child) {
-                                        if(value) {
-                                          return Visibility(
-                                            visible: value,
-                                            child: Container(
-                                              decoration: new BoxDecoration(
-                                                image: new DecorationImage(
-                                                  fit: BoxFit.fitHeight,
-                                                  alignment: FractionalOffset.center,
-                                                  image: NetworkImage(ctrl.platform.playlists.value[index].imageUrl),
-                                                )
-                                              ),
-                                            ),
-                                          );
-                                        } else {
-                                          return Container(
-                                            child: Icon(Icons.audiotrack)
-                                          );
-                                        }
-                                      },
-                                      valueListenable: isImageVisible,
-                                    )
+                                    child: Container(
+                                      decoration: new BoxDecoration(
+                                        image: new DecorationImage(
+                                          fit: BoxFit.cover,
+                                          alignment: FractionalOffset.center,
+                                          image: NetworkImage(ctrl.platform.playlists.value[index].imageUrl),
+                                        )
+                                      ),
+                                    ),
                                   )
                                 ),
                                 subtitle: Text(ctrl.platform.playlists.value[index].getTracks().length.toString() + " tracks"),
@@ -931,10 +828,6 @@ class TabsView {
                                     );
                                   }
                                 },
-                              )
-                            )
-                          )
-                        )
                       );
                     }
                     return Container();
@@ -952,7 +845,7 @@ class TabsView {
               }.call()
             )
           ),
-          backgroundColor: Colors.black,
+          backgroundColor: Colors.grey[900],
         );
       }
     );
@@ -961,7 +854,7 @@ class TabsView {
 
   addToQueue(Track track) {
     this.state.setState(() {
-      GlobalQueue.addToPermanentQueue(track);
+      GlobalQueue().addToPermanentQueue(track);
     });
   }
 
@@ -986,10 +879,10 @@ class TabsView {
                 int trackIndex = ctrl.platform.playlists.value[playlistIndex].getTracks().indexOf(track);
                 this.state.setState(() {
                   ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
-                  if(refresh != null) refresh(null, null, "", null, null);
+                  if(refresh != null) refresh(null, null, '', null, null);
                 });
               },
-            )
+            ),
           ],
           backgroundColor: Colors.grey[800],
         );
@@ -1006,18 +899,44 @@ class TabsView {
     String album;
     if(track.album != null) album = track.album;
     else album = "Aucun";
-    String service = track.serviceName.toString().split(".")[1];
+    String service = track.serviceName.toString();
     showDialog(
       context: this.state.context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Container(
-            width: 200,
-            height: 200,
-            child: Image(image: NetworkImage(track.imageUrlLarge))
-          ),
-          content: Text(
-            "Nom: $name\n$artist_string: $artist\nAlbum: $album\nService: $service", style: TextStyle(color: Colors.white)
+          contentPadding: EdgeInsets.all(0),
+          content: Wrap(
+            children: [
+              Column(
+                children: [
+                  Container(
+                    width: MediaQuery.of(dialogContext).size.width,
+                    height: MediaQuery.of(dialogContext).size.width*0.7,
+                    child: Image(image: NetworkImage(track.imageUrlLarge), fit: BoxFit.cover)
+                  ),
+                  Container(
+                    width: MediaQuery.of(dialogContext).size.width,
+                    padding: EdgeInsets.all(10),
+                    child: Text("Titre: $name", style: TextStyle(fontSize: 25))
+                  ),
+                  Container(
+                    width: MediaQuery.of(dialogContext).size.width,
+                    padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
+                    child: Text("$artist_string: $artist", style: TextStyle(fontSize: 17))
+                  ),
+                  Container(
+                    width: MediaQuery.of(dialogContext).size.width,
+                    padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
+                    child: Text("Album: $album", style: TextStyle(fontSize: 17))
+                  ),
+                  Container(
+                    width: MediaQuery.of(dialogContext).size.width,
+                    padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
+                    child: Text("Service: $service", style: TextStyle(fontSize: 17))
+                  ),
+                ]
+              )
+            ]
           ),
           actions: [
             FlatButton(
@@ -1025,7 +944,6 @@ class TabsView {
               onPressed: () => Navigator.pop(dialogContext),
             ),
           ],
-          backgroundColor: Colors.grey[800],
         );
       }
     );
@@ -1054,7 +972,7 @@ class TabsView {
                   decoration: InputDecoration(
                     labelStyle: TextStyle(color: Colors.grey),
                     border: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-                    labelText: 'Nom de la playlist'
+                    labelText: "Nom de la playlist"
                   ), 
                   onChanged: (String val) {
                     value = val;
@@ -1077,7 +995,7 @@ class TabsView {
                   ctrl.addPlaylist(name: value, ownerId: ctrl.getPlatformInformations()['ownerId']);
                 });
               },
-            )
+            ),
           ],
           backgroundColor: Colors.grey[800],
         );
@@ -1141,10 +1059,6 @@ class TabsView {
           ),
           actions: [
             FlatButton(
-              child: Text("Annuler", style: TextStyle(color: Colors.white)),
-              onPressed: () => Navigator.pop(dialogContext),
-            ),
-            FlatButton(
               child: Text("Valider", style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -1152,7 +1066,11 @@ class TabsView {
                   playlist.rename(value);
                 });
               },
-            )
+            ),
+            FlatButton(
+              child: Text("Annuler", style: TextStyle(color: Colors.white)),
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
           ],
           backgroundColor: Colors.grey[800],
         );
@@ -1296,7 +1214,7 @@ class TabsView {
                   },
                 ),
               ),
-              (ctrl.platform.name != "SmartShuffle" ? 
+              (ctrl.platform.name != 'SmartShuffle' ? 
               Container(
                 child: FlatButton(
                   child: Text("Cloner la playlist", style: TextStyle(color: Colors.white)),
@@ -1307,7 +1225,7 @@ class TabsView {
                 ),
               ) : Container()
               ),
-              (ctrl.platform.name != "SmartShuffle" ? 
+              (ctrl.platform.name != 'SmartShuffle' ? 
               Container(
                 child: FlatButton(
                   child: Text("Fusionner la playlist", style: TextStyle(color: Colors.white)),

@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 
 class Playlist {
   String id;
   String name;
-  String uri;
+  Uri uri;
   String ownerId;
   String ownerName;
   String imageUrl;
@@ -23,7 +24,7 @@ class Playlist {
       @required ServicesLister service,
       @required String ownerId,
       String imageUrl,
-      String uri,
+      Uri uri,
       String ownerName,
       List<MapEntry<Track, DateTime>> tracks}) {
     this.name = name;
@@ -101,7 +102,8 @@ class Playlist {
   }
 
   List<Track> sort(String value) {
-    if (value == 'last_added') {
+    
+    if (value == PopupMenuConstants.SORTMODE_LASTADDED) {
       if(this.sortDirection[value] == null || !this.sortDirection[value]) {
         tracks.sort((a, b) {
           int _a = int.parse(a.value.year.toString() +
@@ -133,7 +135,7 @@ class Playlist {
       }
     }
 
-    if (value == 'title') {
+    if (value == PopupMenuConstants.SORTMODE_TITLE) {
       if(this.sortDirection[value] == null || !this.sortDirection[value]) {
         tracks.sort((a, b) {
           String _a = a.key.name;
@@ -159,7 +161,7 @@ class Playlist {
       }
     }
 
-    if (value == 'artist') {
+    if (value == PopupMenuConstants.SORTMODE_ARTIST) {
       if(this.sortDirection[value] == null || !this.sortDirection[value]) {
         tracks.sort((a, b) {
           String _a = a.key.artist;
