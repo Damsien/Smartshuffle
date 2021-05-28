@@ -647,7 +647,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                 opacity: _elementsOpacity,
                                                 child: InkWell(
                                                     onTap: () {
-                                                      TabsView(this).addToPlaylist(this.selectedPlatform, trackUp);
+                                                      TabsView(this).addToPlaylistDialog(this.selectedPlatform, trackUp);
                                                     },
                                                     child: Icon(
                                                     Icons.add,
@@ -1103,7 +1103,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                             ),
 
 
-                                          Text(AppLocalizations.of(context).globalWIP),
+                                          Center(
+                                            child: Text(AppLocalizations.of(context).globalWIP),
+                                          )                                          
                                         ],
                                       ),
                                     )

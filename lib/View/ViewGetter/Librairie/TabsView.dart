@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/services.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
+import 'package:smartshuffle/View/ViewGetter/Librairie/TabsDialog.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:device_apps/device_apps.dart';
@@ -664,13 +665,13 @@ class TabsView {
         addToQueue(track);
       } break;
       case PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST: {
-        addToPlaylist(ctrl, track);
+        addToPlaylistDialog(ctrl, track);
       } break;
       case PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST: {
-        removeFromPlaylist(ctrl, track, index, refresh: refresh);
+        removeFromPlaylistDialog(ctrl, track, index, refresh: refresh);
       } break;
       case PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS: {
-        trackInformations(ctrl, track);
+        trackInformationsDialog(ctrl, track);
       } break;
     }
   }
@@ -716,237 +717,60 @@ class TabsView {
   }
 
 
-  addToPlaylist(PlatformsController ctrl, Track track) {
-    String name = track.name;
-    String ctrlName = ctrl.platform.name;
+  void addToPlaylistDialog(PlatformsController ctrl, Track track) {
     showDialog(
       context: this.state.context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text('$name', style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                child: FlatButton(
-                  child: Text(AppLocalizations.of(this.state.context).tabsViewAddToService+" SmartShuffle", style: TextStyle(color: Colors.white)),
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                    choosePlaylistToAddTrack(PlatformsLister.platforms[ServicesLister.DEFAULT], track);
-                  },
-                ),
-              ),
-              () {
-                if(ctrl.platform.name != PlatformsLister.platforms[ServicesLister.DEFAULT].platform.name) {
-                  return Container(
-                    child: FlatButton(
-                      child: Text(AppLocalizations.of(this.state.context).tabsViewAddToService+" $ctrlName", style: TextStyle(color: Colors.white)),
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                        choosePlaylistToAddTrack(ctrl, track);
-                      },
-                    ),
-                  );
-                }
-                return Container();
-              }.call(),
-              Container(
-                child: FlatButton(
-                  child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
-                  onPressed: () => Navigator.pop(dialogContext),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.grey[800],
-        );
+        return TrackAddToPlaylistDialog(ctrl, track, choosePlaylistToAddTrack, dialogContext);
       }
     );
   }
 
 
-  choosePlaylistToAddTrack(PlatformsController ctrl, Track track) {
+  void addToPlaylist(PlatformsController ctrl, int index, Track track) {
+    this.state.setState(() {
+      ctrl.addTrackToPlaylist(index, track, true);
+    });
+  }
+  void choosePlaylistToAddTrack(PlatformsController ctrl, Track track) {
     List<Widget> allCards;
     showDialog(
       context: this.state.context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).tabsViewChooseAPlaylist, style: TextStyle(color: Colors.white)),
-          contentPadding: EdgeInsets.all(0),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: () {
-                allCards = List.generate(
-                  ctrl.platform.playlists.value.length,
-                  (index) {
-
-                    if(ctrl.platform.playlists.value[index].ownerId == ctrl.getUserInformations()['ownerId']) {
-                      return ListTile(
-                                title: Text(ctrl.platform.playlists.value[index].name),
-                                leading: FractionallySizedBox(
-                                  heightFactor: 0.8,
-                                  child: AspectRatio(
-                                    aspectRatio: 1,
-                                    child: Container(
-                                      decoration: new BoxDecoration(
-                                        image: new DecorationImage(
-                                          fit: BoxFit.cover,
-                                          alignment: FractionalOffset.center,
-                                          image: NetworkImage(ctrl.platform.playlists.value[index].imageUrl),
-                                        )
-                                      ),
-                                    ),
-                                  )
-                                ),
-                                subtitle: Text(ctrl.platform.playlists.value[index].getTracks().length.toString() + " "+AppLocalizations.of(this.state.context).globalTracks),
-                                onTap: () {
-                                  Navigator.pop(dialogContext);
-                                  String id = ctrl.addTrackToPlaylist(index, track, false);
-                                  if(id == null) {
-                                    showDialog(
-                                      context: this.state.context,
-                                      builder: (dialogContext) {
-                                        return AlertDialog(
-                                          title: Text(AppLocalizations.of(this.state.context).tabsViewTrackAlreadyExists, style: TextStyle(color: Colors.white)),
-                                          actions: [
-                                            FlatButton(
-                                              child: Text(AppLocalizations.of(this.state.context).no, style: TextStyle(color: Colors.white)),
-                                              onPressed: () => Navigator.pop(dialogContext),
-                                            ),
-                                            FlatButton(
-                                              child: Text(AppLocalizations.of(this.state.context).yes, style: TextStyle(color: Colors.white)),
-                                              onPressed: () {
-                                                Navigator.pop(dialogContext);
-                                                this.state.setState(() {
-                                                  ctrl.addTrackToPlaylist(index, track, true);
-                                                });
-                                              },
-                                            )
-                                          ],
-                                          backgroundColor: Colors.grey[800],
-                                        );
-                                      }
-                                    );
-                                  }
-                                },
-                      );
-                    }
-                    return Container();
-                  }
-                );
-                allCards.add(
-                  Container(
-                    child: FlatButton(
-                      child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
-                      onPressed: () => Navigator.pop(dialogContext),
-                    ),
-                  ),
-                );
-                return allCards;
-              }.call()
-            )
-          ),
-          backgroundColor: Colors.grey[900],
-        );
+        return TrackChoosePlaylistDialog(ctrl, allCards, track, addToPlaylist, dialogContext);
       }
     );
   }
 
 
-  addToQueue(Track track) {
+  void addToQueue(Track track) {
     this.state.setState(() {
       GlobalQueue().addToPermanentQueue(track);
     });
   }
 
 
-  removeFromPlaylist(PlatformsController ctrl, Track track, int playlistIndex, {Function refresh}) {
-    String name = track.name;
-    String playlistName = ctrl.platform.playlists.value[playlistIndex].name;
+  void removeFromPlaylist(PlatformsController ctrl, int playlistIndex, int trackIndex, Function refresh) {
+    this.state.setState(() {
+      ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
+      if(refresh != null) refresh(null, null, '', null, null);
+    });
+  }
+  void removeFromPlaylistDialog(PlatformsController ctrl, Track track, int playlistIndex, {Function refresh}) {
     showDialog(
       context: this.state.context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).tabsViewAlreadyExists+" $name "+AppLocalizations.of(this.state.context).from+" $playlistName ?", style: TextStyle(color: Colors.white)),
-          actions: [
-            FlatButton(
-              child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
-              onPressed: () => Navigator.pop(dialogContext),
-            ),
-            FlatButton(
-              child: Text(AppLocalizations.of(this.state.context).confirm, style: TextStyle(color: Colors.white)),
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                int trackIndex = ctrl.platform.playlists.value[playlistIndex].getTracks().indexOf(track);
-                this.state.setState(() {
-                  ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
-                  if(refresh != null) refresh(null, null, '', null, null);
-                });
-              },
-            ),
-          ],
-          backgroundColor: Colors.grey[800],
-        );
+        return TrackRemoveFromPlaylistDialog(ctrl, track, playlistIndex, refresh, removeFromPlaylist, dialogContext);
       }
     );
   }
 
 
-  trackInformations(PlatformsController ctrl, Track track) {
-    String name = track.name;
-    String artist = track.artist;
-    String artist_string = AppLocalizations.of(this.state.context).globalArtist;
-    if(artist.contains(',')) artist_string = AppLocalizations.of(this.state.context).globalArtists;
-    String album;
-    if(track.album != null) album = track.album;
-    else album = AppLocalizations.of(this.state.context).nothing;
-    String service = track.serviceName.toString();
+  void trackInformationsDialog(PlatformsController ctrl, Track track) {
     showDialog(
       context: this.state.context,
       builder: (dialogContext) {
-        return AlertDialog(
-          contentPadding: EdgeInsets.all(0),
-          content: Wrap(
-            children: [
-              Column(
-                children: [
-                  Container(
-                    width: MediaQuery.of(dialogContext).size.width,
-                    height: MediaQuery.of(dialogContext).size.width*0.7,
-                    child: Image(image: NetworkImage(track.imageUrlLarge), fit: BoxFit.cover)
-                  ),
-                  Container(
-                    width: MediaQuery.of(dialogContext).size.width,
-                    padding: EdgeInsets.all(10),
-                    child: Text(AppLocalizations.of(this.state.context).popupItemTitle+": $name", style: TextStyle(fontSize: 25))
-                  ),
-                  Container(
-                    width: MediaQuery.of(dialogContext).size.width,
-                    padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text("$artist_string: $artist", style: TextStyle(fontSize: 17))
-                  ),
-                  Container(
-                    width: MediaQuery.of(dialogContext).size.width,
-                    padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text(AppLocalizations.of(this.state.context).globalAlbum+": $album", style: TextStyle(fontSize: 17))
-                  ),
-                  Container(
-                    width: MediaQuery.of(dialogContext).size.width,
-                    padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text(AppLocalizations.of(this.state.context).globalService+": $service", style: TextStyle(fontSize: 17))
-                  ),
-                ]
-              )
-            ]
-          ),
-          actions: [
-            FlatButton(
-              child: Text(AppLocalizations.of(this.state.context).ok, style: TextStyle(color: Colors.white)),
-              onPressed: () => Navigator.pop(dialogContext),
-            ),
-          ],
-        );
+        return TrackInformationDialog(ctrl, track, dialogContext);
       }
     );
   }

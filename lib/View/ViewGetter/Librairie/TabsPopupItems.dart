@@ -15,6 +15,11 @@ class PopupMenuConstants {
   static const String TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST = 'TRACKSMAINDIALOG:add_to_another_playlist';
   static const String TRACKSMAINDIALOG_REMOVEFROMPLAYLIST = 'TRACKSMAINDIALOG:remove_from_playlist';
   static const String TRACKSMAINDIALOG_INFORMATIONS = 'TRACKSMAINDIALOG:informations';
+
+  static const String PLAYLISTSMAINDIALOG_RENAME = "PLAYLISTSMAINDIALOG:rename";
+  static const String PLAYLISTSMAINDIALOG_CLONE = "PLAYLISTSMAINDIALOG:clone";
+  static const String PLAYLISTSMAINDIALOG_MERGE = "PLAYLISTSMAINDIALOG:merge";
+  static const String PLAYLISTSMAINDIALOG_DELETE = "PLAYLISTSMAINDIALOG:delete";
 }
 
 
@@ -154,3 +159,8 @@ class TracksPopupItemInformations extends StatelessWidget {
   }
 
 }
+
+
+
+/*  PLAYLISTS MAIN DIALOG OPTIONS  */
+
