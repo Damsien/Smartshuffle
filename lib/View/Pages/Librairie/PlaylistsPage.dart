@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
@@ -88,10 +91,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text("Êtes-vous sûr de vouloir quitter l'application ?", style: TextStyle(color: Colors.white)),
+          title: Text(AppLocalizations.of(context).globalQuit, style: TextStyle(color: Colors.white)),
           actions: [
-            FlatButton(child: Text("Non", style: TextStyle(color: Colors.white)), onPressed: () => Navigator.pop(dialogContext)),
-            FlatButton(child: Text("Oui", style: TextStyle(color: Colors.white)), onPressed: () => exit(0)),
+            FlatButton(child: Text(AppLocalizations.of(context).no, style: TextStyle(color: Colors.white)), onPressed: () => Navigator.pop(dialogContext)),
+            FlatButton(child: Text(AppLocalizations.of(context).yes, style: TextStyle(color: Colors.white)), onPressed: () => exit(0)),
           ],
           backgroundColor: Colors.grey[800],
         );
@@ -214,12 +217,22 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: [
+        AppLocalizations.delegate, // Add this line
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('fr', ''),
+        const Locale('en', ''),
+      ],
       home: Container(
         key: this.tabKey,
         child: Scaffold(
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
-            title: Text("Bibliotèque"),
+            title: Text(AppLocalizations.of(context).globalTitleLibrairie),
             bottom: tabBar()
           ),
           body: TabBarView(

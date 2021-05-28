@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformDefaultController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformSpotifyController.dart';

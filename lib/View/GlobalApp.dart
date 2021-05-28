@@ -35,6 +35,16 @@ class GlobalAppMain extends StatelessWidget {
     return MaterialApp(
       title: 'Global',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: [
+        AppLocalizations.delegate, // Add this line
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('fr', ''),
+        const Locale('en', ''),
+      ],
       home: new _GlobalApp(
           title:
               'Playlist'), //Ouverture de la page agenda lors de l'ouverture de l'app
@@ -858,8 +868,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                       toolbarHeight: 50,
                                       bottom: TabBar(
                                         tabs: [
-                                          Tab(text: "Queue"),
-                                          Tab(text: "Lyrics"),
+                                          Tab(text: AppLocalizations.of(context).globalAppTracksQueue),
+                                          Tab(text: AppLocalizations.of(context).globalAppTrackLyrics),
                                         ],
                                       ),
                                     ),
@@ -1057,7 +1067,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                     header: Container(
                                                       margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
                                                       child: Text(
-                                                        "Prochain dans la file d'attente",
+                                                        AppLocalizations.of(context).globalAppTracksNextInQueue,
                                                         textAlign: TextAlign.left,
                                                         style: TextStyle(
                                                           fontSize: 20
@@ -1072,7 +1082,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                     header: Container(
                                                       margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
                                                       child: Text(
-                                                        "Prochaine depuis " + this.selectedPlaylist.name,
+                                                        AppLocalizations.of(context).globalAppPlaylistNextFrom + this.selectedPlaylist.name,
                                                         textAlign: TextAlign.center,
                                                         style: TextStyle(
                                                           fontSize: 20
@@ -1093,7 +1103,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                             ),
 
 
-                                          Text("Work in progress"),
+                                          Text(AppLocalizations.of(context).globalWIP),
                                         ],
                                       ),
                                     )
@@ -1146,15 +1156,15 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   items: <BottomNavigationBarItem>[
                     BottomNavigationBarItem(
                         icon: Icon(Icons.library_music),
-                        label: "Bibliotèque",
+                        label: AppLocalizations.of(context).globalTitleLibrairie,
                         backgroundColor: Colors.black),
                     BottomNavigationBarItem(
                         icon: Icon(Icons.search),
-                        label: "Search",
+                        label: AppLocalizations.of(context).globalTitleSearch,
                         backgroundColor: Colors.black),
                     BottomNavigationBarItem(
                         icon: Icon(Icons.account_circle),
-                        label: "Profile",
+                        label: AppLocalizations.of(context).globalTitleProfile,
                         backgroundColor: Colors.black),
                   ],
                   currentIndex: this.selectedIndex,

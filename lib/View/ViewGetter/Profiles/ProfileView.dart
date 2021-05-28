@@ -11,8 +11,8 @@ enum ProfileViewType {
 
 class ProfileView {
 
-  static getView({@required ServicesLister service, @required ProfileViewType view}) {
-    if(view == ProfileViewType.PlatformConnection) return PlatformsConnection.getView(service);
+  static getView({@required ServicesLister service, @required ProfileViewType view, Map parameters}) {
+    if(view == ProfileViewType.PlatformConnection) return PlatformsConnection.getView(service, parameters['buttonString']);
     else if(view == ProfileViewType.PlatformInformation) return PlatformsInformation.getView(service);
   }
 

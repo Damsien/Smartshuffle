@@ -8,8 +8,7 @@ class PlatformsInformation {
 
 
   static getView(ServicesLister service) {
-    if(service == ServicesLister.YOUTUBE) return PlatformsInformation._genericInformations(PlatformsLister.platforms[ServicesLister.YOUTUBE], "Youtube");
-    else if(service == ServicesLister.SPOTIFY) return PlatformsInformation._genericInformations(PlatformsLister.platforms[ServicesLister.SPOTIFY], "Spotify");
+    if(service != null && service != ServicesLister.DEFAULT) return PlatformsInformation._genericInformations(PlatformsLister.platforms[service], PlatformsLister.platforms[service].platform.name);
     else return Container();
   }
 

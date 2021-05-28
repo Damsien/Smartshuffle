@@ -7,15 +7,17 @@ import 'package:smartshuffle/Services/youtube/api_controller.dart'
     as ytController;
 
 class PlatformYoutubeController extends PlatformsController {
-  PlatformYoutubeController(Platform platform) : super(platform);
+  PlatformYoutubeController(Platform platform) : super(platform) {
+    platform.platformInformations['logo'] = 'assets/logo/youtube_logo.png';
+    platform.platformInformations['icon'] =
+        'assets/logo/icons/youtube_icon.png';
+    platform.platformInformations['main_color'] = Colors.red[500];
+    platform.platformInformations['secondary_color'] = Colors.red[200];
+  }
 
   ytController.API yt = new ytController.API();
 
   getPlatformInformations() {
-    platform.platformInformations['logo'] = 'assets/logo/youtube_logo.png';
-    platform.platformInformations['icon'] =
-        'assets/logo/icons/youtube_icon.png';
-    platform.platformInformations['color'] = Colors.red[500];
     return platform.platformInformations;
   }
 

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 
 
 class PopupMenuConstants {
-  static const String SORTMODE_LASTADDED = 'SORTMODE:last_added';
-  static const String SORTMODE_TITLE = 'SORTMODE:title';
-  static const String SORTMODE_ARTIST = 'SORTMODE:artist';
+  static const String SORTMODE_LASTADDED = 'last_added';
+  static const String SORTMODE_TITLE = 'title';
+  static const String SORTMODE_ARTIST = 'artist';
 
   static const String TRACKSMAINDIALOG_ADDTOQUEUE = 'TRACKSMAINDIALOG:add_to_queue';
   static const String TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST = 'TRACKSMAINDIALOG:add_to_another_playlist';
@@ -29,7 +32,7 @@ class SortPopupItemLastAdded extends StatelessWidget {
       value: PopupMenuConstants.SORTMODE_LASTADDED,
       child: Row(
         children: [
-          Text("Ajouté récemment"),
+          Text(AppLocalizations.of(context).popupItemAddedRecently),
           (playlist.sortDirection['last_added'] != null ?
             Icon(
               (playlist.sortDirection['last_added'] ? Icons.arrow_upward : Icons.arrow_downward)
@@ -54,7 +57,7 @@ class SortPopupItemTitle extends StatelessWidget {
       value: PopupMenuConstants.SORTMODE_TITLE,
       child: Row(
         children: [
-          Text("Titre"),
+          Text(AppLocalizations.of(context).popupItemTitle),
           (playlist.sortDirection['title'] != null ?
             Icon(
               (playlist.sortDirection['title'] ? Icons.arrow_upward : Icons.arrow_downward)
@@ -79,7 +82,7 @@ class SortPopupItemArtist extends StatelessWidget {
       value: PopupMenuConstants.SORTMODE_ARTIST,
       child: Row(
         children: [
-          Text("Artiste"),
+          Text(AppLocalizations.of(context).globalArtist),
           (playlist.sortDirection['artist'] != null ?
             Icon(
               (playlist.sortDirection['artist'] ? Icons.arrow_upward : Icons.arrow_downward)
@@ -104,7 +107,7 @@ class TracksPopupItemAddToQueue extends StatelessWidget {
   PopupMenuItem build(BuildContext context) {
     return PopupMenuItem(
       value: PopupMenuConstants.TRACKSMAINDIALOG_ADDTOQUEUE,
-      child: Text("Ajouter en file d'attente")
+      child: Text(AppLocalizations.of(context).popupItemAddToQueue)
     );
   }
 
@@ -118,7 +121,7 @@ class TracksPopupItemAddToAnotherPlaylist extends StatelessWidget {
   PopupMenuItem build(BuildContext context) {
     return PopupMenuItem(
       value: PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST,
-      child: Text("Ajouter à une autre playlist")
+      child: Text(AppLocalizations.of(context).popupItemAddToAnotherPlaylist)
     );
   }
 
@@ -132,7 +135,7 @@ class TracksPopupItemRemoveFromPlaylist extends StatelessWidget {
   PopupMenuItem build(BuildContext context) {
     return PopupMenuItem(
       value: PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST,
-      child: Text("Retirer de la playlist")
+      child: Text(AppLocalizations.of(context).popupItemRemoveFromPlaylist)
     );
   }
 
@@ -146,7 +149,7 @@ class TracksPopupItemInformations extends StatelessWidget {
   PopupMenuItem build(BuildContext context) {
     return PopupMenuItem(
       value: PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS,
-      child: Text("Informations")
+      child: Text(AppLocalizations.of(context).globalInformations)
     );
   }
 

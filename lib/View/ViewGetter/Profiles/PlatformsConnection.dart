@@ -4,13 +4,11 @@ import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class PlatformsConnection {
-  static getView(ServicesLister service) {
-    if (service == ServicesLister.YOUTUBE)
-      return PlatformsConnection._genericButton(PlatformsLister.platforms[ServicesLister.YOUTUBE],
-       "Connecter Youtube", AssetImage("assets/logo/youtube_logo.png"), Colors.red[500], Colors.red[200]);
-    else if (service == ServicesLister.SPOTIFY)
-      return PlatformsConnection._genericButton(PlatformsLister.platforms[ServicesLister.SPOTIFY],
-       "Connecter Spotify", AssetImage("assets/logo/spotify_logo.png"), Colors.green[800], Colors.green[200]);
+  static getView(ServicesLister service, String buttonString) {
+    if (service != null && service != ServicesLister.DEFAULT)
+      return PlatformsConnection._genericButton(PlatformsLister.platforms[service],
+       buttonString, AssetImage(PlatformsLister.platforms[service].platform.platformInformations['logo']),
+       PlatformsLister.platforms[service].platform.platformInformations['main_color'], PlatformsLister.platforms[service].platform.platformInformations['secondary_color']);
     else
       return Container();
   }

@@ -49,8 +49,8 @@ abstract class PlatformsController {
 
   /*  VIEWS   */
 
-  Widget getView({@required ServicesLister service, @required ProfileViewType view}) {
-    return ProfileView.getView(service: service, view: view);
+  Widget getView({@required ServicesLister service, @required ProfileViewType view, Map parameters}) {
+    return ProfileView.getView(service: service, view: view, parameters: parameters);
   }
 
   /*  INFORMATIONS  */

@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/View/ViewGetter/Profiles/ProfileView.dart';
 
@@ -22,7 +28,8 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
   Widget getPlatforms(MapEntry plat) {
     Widget platform;
     if(plat.value.getUserInformations()['isConnected'] == false)
-      platform = plat.value.getView(service: plat.key, view: ProfileViewType.PlatformConnection);
+      platform = plat.value.getView(service: plat.key, view: ProfileViewType.PlatformConnection,
+       parameters: {'buttonString': AppLocalizations.of(context).globalConnect+" "+plat.value.platform.name});
     else
       platform = plat.value.getView(service: plat.key, view: ProfileViewType.PlatformInformation);
     return Container(
@@ -40,7 +47,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
         children: [
           Container(
             margin: EdgeInsets.only(left: 30, bottom: 30, top: 30),
-            child: Text("Connexion", style: TextStyle(fontSize: 35)),
+            child: Text(AppLocalizations.of(context).connexion, style: TextStyle(fontSize: 35)),
           ),
           for(MapEntry plat in PlatformsLister.platforms.entries) getPlatforms(plat)
         ],
@@ -64,9 +71,19 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: [
+        AppLocalizations.delegate, // Add this line
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('fr', ''),
+        const Locale('en', ''),
+      ],
       home: Scaffold(
         appBar: AppBar(
-          title: Text("Profil"),
+          title: Text(AppLocalizations.of(context).globalTitleProfile),
         ),
         body: Container(
           width: MediaQuery.of(context).size.width,

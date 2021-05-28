@@ -7,16 +7,18 @@ import 'package:smartshuffle/Services/spotify/api_controller.dart' as spotify;
 import 'package:spotify_sdk/spotify_sdk.dart';
 
 class PlatformSpotifyController extends PlatformsController {
-  PlatformSpotifyController(Platform platform) : super(platform);
+  PlatformSpotifyController(Platform platform) : super(platform) {
+    platform.platformInformations['logo'] = 'assets/logo/spotify_logo.png';
+    platform.platformInformations['icon'] =
+        'assets/logo/icons/spotify_icon.png';
+    platform.platformInformations['main_color'] = Colors.green[800];
+    platform.platformInformations['secondary_color'] = Colors.green[200];
+  }
 
   spotify.API spController = new spotify.API();
 
   @override
   getPlatformInformations() {
-    platform.platformInformations['logo'] = 'assets/logo/spotify_logo.png';
-    platform.platformInformations['icon'] =
-        'assets/logo/icons/spotify_icon.png';
-    platform.platformInformations['color'] = Colors.green[800];
     return platform.platformInformations;
   }
 
