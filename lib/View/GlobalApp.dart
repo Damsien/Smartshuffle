@@ -243,12 +243,44 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
       }
 
+      timerPlayer();
+      this.selectedTrack.value.isPlaying.addListener(() {
+        if(!this.selectedTrack.value.isPlaying.value) _timer.cancel();
+      });
+    
+
     //mainImageColorRetriever();
     
     if(_panelCtrl.isAttached && this.selectedTrack.value.id != null && !_panelCtrl.isPanelShown) {
       _panelCtrl.show();
     }
 
+  }
+
+  void timerPlayer() {
+    _timer?.cancel();
+    Timer.periodic(Duration(seconds: 1), (timer) {
+      _timer = timer;
+      if(this.selectedTrack.value.currentDuration.value.inSeconds < this.selectedTrack.value.totalDuration.inSeconds-2) {
+        this.selectedTrack.value.currentDuration.value = Duration(seconds: this.selectedTrack.value.currentDuration.value.inSeconds+1);
+      } else {
+        _timer.cancel();
+        
+        seekAllTrackToZero();
+        if(_isRepeatOnce) {
+          this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
+          _isRepeatOnce = false;
+        } else if(_isRepeatAlways) {
+          this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
+        } else if(_songsTabCtrl.page.toInt() < GlobalQueue.queue.value.length-1) {
+          _songsTabCtrl.jumpToPage(GlobalQueue.currentQueueIndex+1);
+        } else {
+          _blockAnimation = true;
+          _songsTabCtrl.jumpToPage(0);
+          moveToNextTrack();
+        }
+      }
+    });
   }
 
   void seekAllTrackToZero() {
@@ -314,10 +346,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
           if(!_blockAnimation) {
 
-            if(_songsTabCtrl.page.toInt() > _tabIndex) {
+            if(_songsTabCtrl.page > _tabIndex.toDouble()) {
               _tabIndex = _songsTabCtrl.page.toInt();
               moveToNextTrack();
-            } else if(_songsTabCtrl.page.toInt() < _tabIndex) {
+            } else if(_songsTabCtrl.page < _tabIndex.toDouble()-0.5) {
               _tabIndex = _songsTabCtrl.page.toInt();
               moveToPreviousTrack();
             }
@@ -331,23 +363,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       });
       _isTrackVisible.setAll(0, valuesIt);*/
 
-    }
-
-
-    if(this.selectedTrack.value.currentDuration.value >= this.selectedTrack.value.totalDuration) {
-        seekAllTrackToZero();
-        if(_isRepeatOnce) {
-          this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
-          _isRepeatOnce = false;
-        } else if(_isRepeatAlways) {
-          this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
-        } else if(_songsTabCtrl.page.toInt() < GlobalQueue.queue.value.length-1) {
-          _songsTabCtrl.jumpToPage(GlobalQueue.queue.value.length+1);
-        } else {
-          _blockAnimation = true;
-          _songsTabCtrl.jumpToPage(0);
-          moveToNextTrack();
-        }
     }
 
   }
@@ -492,11 +507,12 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                           physics: _panelCtrl.panelPosition < 1 && _panelCtrl.panelPosition > 0.01 ? NeverScrollableScrollPhysics() : PageScrollPhysics(),
                           //itemCount: GlobalQueue.queue.value.length,
                           onPageChanged: (index) {
+                            print(index);
                             if(index >= GlobalQueue.queue.value.length) {
                               _blockAnimation = true;
                               _songsTabCtrl.jumpToPage(index % GlobalQueue.queue.value.length);
                               _tabIndex = _songsTabCtrl.page.toInt();
-                              moveToNextTrack();
+                              //moveToNextTrack();
                             }
                           },
                           controller: _songsTabCtrl,
@@ -505,16 +521,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                 int realIndex = index % GlobalQueue.queue.value.length;
 
                                 Track trackUp = queue[realIndex].key;
-                                _timer?.cancel();
-                                _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-                                  _timer = timer;
-                                  if(trackUp.currentDuration.value < trackUp.totalDuration) {
-                                    trackUp.currentDuration.value = Duration(seconds: trackUp.currentDuration.value.inSeconds+1);
-                                    trackUp.currentDuration.notifyListeners();
-                                  } else {
-                                    _timer.cancel();
-                                  }
-                                });
 
                                 return Stack(
                                     children: [
@@ -553,7 +559,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                       ValueListenableBuilder(
                                         valueListenable: trackUp.currentDuration,
                                         builder: (BuildContext context, Duration duration, __) {
-                                          print(duration);
                                           return Stack(
                                             children: [
                                               Positioned(
@@ -660,16 +665,21 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                         )
                                       ),
                                       Opacity(
-                                        opacity: 1 - _ratio,
-                                        child: Container(
-                                          constraints: BoxConstraints(
-                                            maxWidth: trackUp.currentDuration.value.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
-                                            minWidth: trackUp.currentDuration.value.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds
-                                          ),
-                                          color: Colors.white,
-                                          width: trackUp.currentDuration.value.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
-                                          height: 2,
-                                        ),
+                                        opacity: 1 - _elementsOpacity,
+                                        child: ValueListenableBuilder(
+                                          valueListenable: trackUp.currentDuration,
+                                          builder: (BuildContext context, Duration duration, Widget child) {
+                                            return Container(
+                                              constraints: BoxConstraints(
+                                                maxWidth: duration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
+                                                minWidth: duration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds
+                                              ),
+                                              color: Colors.white,
+                                              width: duration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
+                                              height: 2,
+                                            );
+                                          }
+                                        )
                                       )
                                     ]
                                   );
