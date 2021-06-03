@@ -24,7 +24,7 @@ class Track {
   ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   ValueNotifier<bool> _isSelected = ValueNotifier<bool>(false);
 
-  StreamSubscription _streamSub;
+  StreamSubscription streamSub;
 
   Track(
       {@required String name,
@@ -59,7 +59,7 @@ class Track {
   
   void setCurrentDuration(Duration duration) => _currentDuration.value = duration;
   get currentDuration => _currentDuration;
-  Duration get totalDuration => _totalDuration;
+  get totalDuration => _totalDuration;
   
   get imageUrlLittle => _imageUrlLittle;
   get imageUrlLarge => _imageUrlLarge;
@@ -71,25 +71,14 @@ class Track {
   bool setIsSelected(bool isSelected) {
     _isSelected.value = isSelected;
     if(isSelected) {
-      _streamSub = streamListener();
+      streamSub = serviceStream.listen((event) {
+        _isPlaying.value = !event.isPaused;
+        _isPlaying.notifyListeners();
+      });
     } else {
-      _streamSub?.cancel();
+      streamSub?.cancel();
     }
     return _isSelected.value;
-  }
-
-  StreamSubscription streamListener() {
-    return serviceStream.listen((event) {
-
-      //  Play / Pause
-      _isPlaying.value = !event.isPaused;
-      _isPlaying.notifyListeners();
-
-      //  Seek to
-      _currentDuration.value = Duration(milliseconds: event.playbackPosition);
-      _currentDuration.notifyListeners();
-
-    });
   }
 
   bool setIsPlaying(bool isPlaying) {
