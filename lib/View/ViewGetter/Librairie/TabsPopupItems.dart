@@ -106,8 +106,6 @@ class SortPopupItemArtist extends StatelessWidget {
 
 class TracksPopupItemAddToQueue extends StatelessWidget {
 
-  TracksPopupItemAddToQueue();
-
   @override
   PopupMenuItem build(BuildContext context) {
     return PopupMenuItem(
@@ -119,8 +117,6 @@ class TracksPopupItemAddToQueue extends StatelessWidget {
 }
 
 class TracksPopupItemAddToAnotherPlaylist extends StatelessWidget {
-
-  TracksPopupItemAddToAnotherPlaylist();
 
   @override
   PopupMenuItem build(BuildContext context) {
@@ -134,8 +130,6 @@ class TracksPopupItemAddToAnotherPlaylist extends StatelessWidget {
 
 class TracksPopupItemRemoveFromPlaylist extends StatelessWidget {
 
-  TracksPopupItemRemoveFromPlaylist();
-
   @override
   PopupMenuItem build(BuildContext context) {
     return PopupMenuItem(
@@ -147,8 +141,6 @@ class TracksPopupItemRemoveFromPlaylist extends StatelessWidget {
 }
 
 class TracksPopupItemInformations extends StatelessWidget {
-
-  TracksPopupItemInformations();
 
   @override
   PopupMenuItem build(BuildContext context) {
@@ -164,3 +156,50 @@ class TracksPopupItemInformations extends StatelessWidget {
 
 /*  PLAYLISTS MAIN DIALOG OPTIONS  */
 
+class PlaylistsPopupItemRename extends StatelessWidget {
+
+  @override
+  PopupMenuItem build(BuildContext context) {
+    return PopupMenuItem(
+      value: PopupMenuConstants.PLAYLISTSMAINDIALOG_RENAME,
+      child: Text(AppLocalizations.of(context).globalRename)
+    );
+  }
+
+}
+
+class PlaylistsPopupItemClone extends StatelessWidget {
+
+  @override
+  PopupMenuItem build(BuildContext context) {
+    return PopupMenuItem(
+      value: PopupMenuConstants.PLAYLISTSMAINDIALOG_CLONE,
+      child: Text(AppLocalizations.of(context).tabsViewClonePlaylist)
+    );
+  }
+
+}
+
+class PlaylistsPopupItemMerge extends StatelessWidget {
+
+  @override
+  PopupMenuItem build(BuildContext context) {
+    return PopupMenuItem(
+      value: PopupMenuConstants.PLAYLISTSMAINDIALOG_MERGE,
+      child: Text(AppLocalizations.of(context).tabsViewMergePlaylist)
+    );
+  }
+
+}
+
+class PlaylistsPopupItemDelete extends StatelessWidget {
+
+  @override
+  PopupMenuItem build(BuildContext context) {
+    return PopupMenuItem(
+      value: PopupMenuConstants.PLAYLISTSMAINDIALOG_DELETE,
+      child: Text(AppLocalizations.of(context).delete)
+    );
+  }
+
+}

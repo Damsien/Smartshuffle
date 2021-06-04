@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -10,8 +9,9 @@ import 'package:smartshuffle/View/ViewGetter/Profiles/ProfileView.dart';
 class ProfilePage extends StatefulWidget {
 
   final String title;
+  final MaterialColor materialColor;
   
-  ProfilePage({Key key, this.title}) : super(key: key);
+  ProfilePage({Key key, this.title, this.materialColor}) : super(key: key);
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -61,7 +61,8 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
       key: this.key,
       theme: ThemeData(
         brightness: Brightness.dark,
-        primarySwatch: Colors.green,
+        primarySwatch: this.widget.materialColor,
+        accentColor: this.widget.materialColor.shade100,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       debugShowCheckedModeBanner: false,
@@ -117,7 +118,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                     )
                   ),
                   Text(AppLocalizations.of(context).profileTellUs, style: TextStyle(fontSize: 17)),
-                  FormSuggestion(),
+                  FormSuggestion(materialColor: this.widget.materialColor),
                   Padding(
                     padding: EdgeInsets.only(top: 30, bottom: 40),
                     child: Container(
@@ -125,23 +126,24 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                       color: Colors.white,
                     )
                   ),
-                  Center(
-                    child: MaterialButton(
-                      onPressed: () {
-                        showAboutDialog(
-                          context: context,
-                          applicationVersion: '1.0.0',
-                          applicationName: 'SmartShuffle'
-                        );
-                      },
-                      child: Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Icon(Icons.info),
-                          Text(AppLocalizations.of(context).globalMoreInfo, style: TextStyle(fontSize: 15))
-                        ],
-                      )
+                  InkWell(
+                    onTap: () {
+                      showAboutDialog(
+                        context: context,
+                        applicationVersion: '1.0.0',
+                        applicationName: 'SmartShuffle'
+                      );
+                    },
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Icon(Icons.info),
+                        Text(AppLocalizations.of(context).globalMoreInfo, style: TextStyle(fontSize: 15))
+                      ],
                     )
+                  ),
+                  SizedBox(
+                    height: 20,
                   )
                 ],
               )

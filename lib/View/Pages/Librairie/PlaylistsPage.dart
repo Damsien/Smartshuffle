@@ -18,8 +18,9 @@ import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 class PlaylistsPage extends StatefulWidget {
 
   final Function setPlaying;
+  final MaterialColor materialColor;
   
-  PlaylistsPage({Key key, this.setPlaying}) : super(key: key);
+  PlaylistsPage({Key key, this.setPlaying, this.materialColor}) : super(key: key);
 
   @override
   _PlaylistsPageState createState() => _PlaylistsPageState();
@@ -149,6 +150,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     }
     return TabBar(
       controller: this._tabController,
+      indicatorColor: this.widget.materialColor.shade300,
       tabs: elements,
     );
   }
@@ -213,8 +215,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     return MaterialApp(
       theme: ThemeData(
         brightness: Brightness.dark,
-        primarySwatch: Colors.green,
+        primarySwatch: this.widget.materialColor,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        accentColor: this.widget.materialColor.shade100
       ),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: [
@@ -233,12 +236,13 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
             title: Text(AppLocalizations.of(context).globalTitleLibrairie),
+            foregroundColor: this.widget.materialColor.shade300,
             bottom: tabBar()
           ),
           body: TabBarView(
             controller: this._tabController,
             children: () {
-              List<Widget> allTabs = TabsView(this).playlistsCreator(this.userPlatforms, this.distribution, onReorderPlaylists, openPlaylist);
+              List<Widget> allTabs = TabsView(this).playlistsCreator(this.userPlatforms, this.distribution, onReorderPlaylists, openPlaylist, this.widget.materialColor);
               
               for(int i=0; i<allTabs.length; i++) {
                 setState(() {
@@ -259,7 +263,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
               for(int i=0; i<this.distribution.length; i++) {
                 if(this.distribution[i] == TabsView.TracksView) {
                   setState(() {
-                    this.tabsView[i] = TabsView(this).tracksCreator(i, this.tracksList[i].key, this.tracksList[i].value, researchList, this.notResearch[i], setResearch, onReorderTracks, returnToPlaylist, setPlaying);
+                    this.tabsView[i] = TabsView(this).tracksCreator(i, this.tracksList[i].key, this.tracksList[i].value, researchList, this.notResearch[i], setResearch, onReorderTracks, returnToPlaylist, setPlaying, this.widget.materialColor);
                   });
                 }
               }

@@ -28,6 +28,11 @@ class ProfileView {
 
 
 class FormSuggestion extends StatefulWidget {
+
+  final MaterialColor materialColor;
+
+  FormSuggestion({Key key, this.materialColor}) : super(key: key);
+
   @override
   _FormSuggestionState createState() {
     return _FormSuggestionState();
@@ -150,8 +155,8 @@ class _FormSuggestionState extends State<FormSuggestion> {
             maxLines: 10,
           ),
           MaterialButton(
-            color: Colors.green,
-            shape: ContinuousRectangleBorder(),
+            color: this.widget.materialColor.shade700,
+            shape: ContinuousRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
             onPressed: () async => sendEmail(),
             child: Text(AppLocalizations.of(context).formSubmit,
               style: TextStyle(

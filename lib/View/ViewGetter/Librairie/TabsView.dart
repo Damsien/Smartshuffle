@@ -36,13 +36,13 @@ class TabsView {
 
 
 
-  List<Widget> playlistsCreator(Map<ServicesLister, PlatformsController> userPlatforms, List<String> distribution, Function onReorder, Function openPlaylist) {
+  List<Widget> playlistsCreator(Map<ServicesLister, PlatformsController> userPlatforms, List<String> distribution, Function onReorder, Function openPlaylist, MaterialColor materialColor) {
     List elements = new List<Widget>(userPlatforms.length);
 
     int i=0;
     for(MapEntry<ServicesLister, PlatformsController> elem in userPlatforms.entries) {
       if(distribution[i] != TabsView.TracksView)
-        elements[i] = generatePlaylist(i, elem, onReorder, openPlaylist);
+        elements[i] = generatePlaylist(i, elem, onReorder, openPlaylist, materialColor);
       i++;
     }
     return elements;
@@ -53,7 +53,7 @@ class TabsView {
 
 
 
-  Widget generatePlaylist(int tabIndex, MapEntry<ServicesLister, PlatformsController> elem, Function onReorder, Function openPlaylist) {
+  Widget generatePlaylist(int tabIndex, MapEntry<ServicesLister, PlatformsController> elem, Function onReorder, Function openPlaylist, MaterialColor materialColor) {
     PlatformsController ctrl = elem.value;
 
     return FutureBuilder<List<Playlist>>(
@@ -65,81 +65,79 @@ class TabsView {
 
           
           List<Playlist> realPlaylists = snapshot.data;
-          finalWidget = Theme(
+          finalWidget = Container(
             key: PageStorageKey('TabBarView:'+ctrl.platform.name+':Playlists'),
-            data: ThemeData(
-              brightness: Brightness.dark,
-            ),
-            child: Container(
-              color: Colors.black54,
-              child: RefreshIndicator(
-                key: UniqueKey(),
-                onRefresh: () async {
-                  List<Playlist> plays = await ctrl.getPlaylists(refreshing: true);
-                  this.state.setState(() {
-                    realPlaylists = plays;
-                  });
-                },
-                child: ValueListenableBuilder(
-                  valueListenable: ctrl.getPlaylistsUpdate(),
-                  builder: (_, List<Playlist> playlists, __) {
-                    return ReorderableListView(
-                      onReorder: (int oldIndex, int newIndex) {
-                        onReorder(ctrl, playlists, oldIndex, newIndex);
-                      },
-                      header: Container(
-                        width: WidgetsBinding.instance.window.physicalSize.width,
-                        height: 165,
-                        margin: EdgeInsets.only(left: 15, right: 15, bottom: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  margin: EdgeInsets.only(top: 30, bottom: 20),
-                                  child: Text(ctrl.getPlatformInformations()['name'], style: TextStyle(fontSize: 30))
-                                ),
-                                Container(
-                                  child: RaisedButton(
-                                    onPressed: () => createPlaylist(ctrl),
-                                    colorBrightness: Brightness.dark,
-                                    color: Colors.grey[800],
-                                    child: Wrap(
-                                      spacing: 8.0,
-                                      crossAxisAlignment: WrapCrossAlignment.center,
-                                      children: [
-                                        Icon(Icons.add), Text(AppLocalizations.of(this.state.context).tabsViewAddAPlaylist)
-                                      ]
-                                    )
+            color: Colors.black54,
+            child: RefreshIndicator(
+              key: UniqueKey(),
+              onRefresh: () async {
+                List<Playlist> plays = await ctrl.getPlaylists(refreshing: true);
+                this.state.setState(() {
+                  realPlaylists = plays;
+                });
+              },
+              child: ValueListenableBuilder(
+                valueListenable: ctrl.getPlaylistsUpdate(),
+                builder: (_, List<Playlist> playlists, __) {
+                  return ReorderableListView(
+                    onReorder: (int oldIndex, int newIndex) {
+                      onReorder(ctrl, playlists, oldIndex, newIndex);
+                    },
+                    header: Container(
+                      width: WidgetsBinding.instance.window.physicalSize.width,
+                      height: 165,
+                      margin: EdgeInsets.only(left: 15, right: 15, bottom: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(top: 30, bottom: 20),
+                                child: Text(ctrl.getPlatformInformations()['name'], style: TextStyle(fontSize: 30))
+                              ),
+                              Container(
+                                child: MaterialButton(
+                                  shape: ContinuousRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+                                  onPressed: () => createPlaylist(ctrl),
+                                  colorBrightness: Brightness.dark,
+                                  color: Colors.grey[800],
+                                  child: Wrap(
+                                    spacing: 8.0,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [
+                                      Icon(Icons.add), Text(AppLocalizations.of(this.state.context).tabsViewAddAPlaylist)
+                                    ]
                                   )
-                                ),
-                              ]
-                            ),
-                            InkWell(
-                              onTap: () => openApp(ctrl.platform),
-                              child: FractionallySizedBox(
-                                heightFactor: 0.5,
-                                child: Image(image: AssetImage(ctrl.platform.platformInformations['logo']))
-                              )
+                                )
+                              ),
+                            ]
+                          ),
+                          InkWell(
+                            onTap: () => openApp(ctrl.platform),
+                            child: FractionallySizedBox(
+                              heightFactor: 0.5,
+                              child: Image(image: AssetImage(ctrl.platform.platformInformations['logo']))
                             )
-                          ]
-                        )
-                      ),
-                      children: List.generate(
-                        playlists.length,
-                        (index) {
+                          )
+                        ]
+                      )
+                    ),
+                    children: List.generate(
+                      playlists.length,
+                      (index) {
 
-                          return Container(
-                            key: ValueKey('ReorderableListView:Playlists:$index'),
-                            margin: EdgeInsets.only(bottom: 5),
-                            //color: (index % 2 == 0 ? Colors.grey[800] : Colors.grey[850]),
-                            child: InkWell(
-                              child: Row(
-                                children: [
-                                  Flexible(
-                                    flex: 5,
+                        return Container(
+                          key: ValueKey('ReorderableListView:Playlists:$index'),
+                          margin: EdgeInsets.only(bottom: 5),
+                          //color: (index % 2 == 0 ? Colors.grey[800] : Colors.grey[850]),
+                          child: InkWell(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  flex: 5,
+                                  child: GestureDetector(
                                     child: ListTile(
                                       title: Text(playlists.elementAt(index).name),
                                       leading: FractionallySizedBox(
@@ -158,31 +156,31 @@ class TabsView {
                                         )
                                       ),
                                       subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" "+AppLocalizations.of(this.state.context).globalTracks),
-                                      onLongPress: () => playlistOption(ctrl, playlists.elementAt(index), index),
                                       onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
-                                    )
-                                  ),
-                                  Flexible(
-                                    flex: 1,
-                                    child: Container(
-                                      margin: EdgeInsets.only(left: 20, right: 20),
-                                      child: Icon(Icons.drag_handle)
-                                    )
+                                    ),
+                                    onLongPressStart: (LongPressStartDetails detail) => playlistMainOptions(ctrl, playlists[index], index, detail),
                                   )
-                                ]
-                              )
+                                ),
+                                Flexible(
+                                  flex: 1,
+                                  child: Container(
+                                    margin: EdgeInsets.only(left: 20, right: 20),
+                                    child: Icon(Icons.drag_handle)
+                                  )
+                                )
+                              ]
                             )
-                          );
-                        }
-                      )..add(
-                        Container(
-                          key: UniqueKey(),
-                          height: 80,
-                        )
+                          )
+                        );
+                      }
+                    )..add(
+                      Container(
+                        key: UniqueKey(),
+                        height: 80,
                       )
-                    );
-                  }
-                )
+                    )
+                  );
+                }
               )
             )
             
@@ -241,28 +239,6 @@ class TabsView {
     return List.generate(
                     tracks.length,
                     (index) {
-
-                      /*Dismissible(
-                          key: ValueKey('ReorderableListView:Tracks:Dismissible:$index'),
-                          /*dismissThresholds: {DismissDirection.startToEnd: double.infinity,
-                                              DismissDirection.endToStart: double.infinity},*/
-                          direction: dismissDirection,
-                          confirmDismiss: (confirm) async {
-                            addToQueue(tracks[index]);
-                            return false;
-                          },
-                          background: Card(
-                            child: Wrap(
-                              alignment: WrapAlignment.end,
-                              runAlignment: WrapAlignment.center,
-                              children:[
-                                Container(
-                                  margin: EdgeInsets.only(right: 10),
-                                  child: Icon(Icons.playlist_add, size: 30)
-                                )
-                              ]
-                            )
-                          ),*/
 
                       return Container(
                           key: ValueKey('ListView:Tracks:$index'),
@@ -395,7 +371,7 @@ class TabsView {
   }
 
 
-  Widget tracksCreator(int tabIndex, PlatformsController ctrl, Playlist playlist, List<Widget> researchList, bool notResearch, Function setResearch, Function onReorder, Function returnToPlaylist, Function setPlaying) {
+  Widget tracksCreator(int tabIndex, PlatformsController ctrl, Playlist playlist, List<Widget> researchList, bool notResearch, Function setResearch, Function onReorder, Function returnToPlaylist, Function setPlaying, MaterialColor materialColor) {
     
     return FutureBuilder<List<Track>>(
       future: ctrl.getTracks(playlist),
@@ -448,7 +424,7 @@ class TabsView {
                                           Container(
                                             width: MediaQuery.of(context).size.width/2,
                                             child: InkWell(
-                                              onTap: () => renamePlaylist(context, playlist),
+                                              onTap: () => renamePlaylist(playlist),
                                               child: Text(
                                                 playlist.name, 
                                                 style: ((300/playlist.name.length+5) > 30 ?
@@ -501,7 +477,7 @@ class TabsView {
                                 height: 45,
                                 child: TextField(
                                   decoration: InputDecoration(
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(1))),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
                                     labelText: AppLocalizations.of(this.state.context).search+"..",
                                     filled: true,
                                   ),
@@ -536,7 +512,7 @@ class TabsView {
                                 Container(
                                   width: MediaQuery.of(context).size.width/2.5,
                                   margin: EdgeInsets.only(top: 5, bottom: 10),
-                                  child: FlatButton(
+                                  child: MaterialButton(
                                     onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: false),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -551,15 +527,15 @@ class TabsView {
                                       ],
                                     ),
                                     shape: ContinuousRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0),
-                                      side: BorderSide(color: Colors.cyanAccent)
+                                      borderRadius: BorderRadius.circular(5),
+                                      side: BorderSide(color: materialColor.shade700)
                                     ),
                                   )
                                 ),
                                 Container(
                                   width: MediaQuery.of(context).size.width/2.5,
                                   margin: EdgeInsets.only(top: 5, bottom: 10),
-                                  child: FlatButton(
+                                  child: MaterialButton(
                                     onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: true),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -574,8 +550,8 @@ class TabsView {
                                       ],
                                     ),
                                     shape: ContinuousRectangleBorder(
-                                      borderRadius: BorderRadius.circular(0),
-                                      side: BorderSide(color: Colors.cyanAccent)
+                                      borderRadius: BorderRadius.circular(5),
+                                      side: BorderSide(color: materialColor.shade700)
                                     ),
                                   )
                                 ),
@@ -781,8 +757,47 @@ class TabsView {
 
   /*  CRUD PLAYLISTS  */
 
-  createPlaylist(PlatformsController ctrl) {
-    String value = AppLocalizations.of(this.state.context).globalPlaylist+" " + ctrl.platform.name + " n°" + ctrl.platform.playlists.value.length.toString();
+  void playlistMainOptions(PlatformsController ctrl, Playlist playlist, int index, LongPressStartDetails detail) async {
+    HapticFeedback.lightImpact();
+    String name = playlist.name;
+
+    List<PopupMenuEntry> items = [];
+    items.add(PlaylistsPopupItemRename().build(this.state.context));
+    if(ctrl.platform.name != 'SmartShuffle')  items.add(PlaylistsPopupItemClone().build(this.state.context));
+    if(ctrl.platform.name != 'SmartShuffle')  items.add(PlaylistsPopupItemMerge().build(this.state.context));
+    items.add(PlaylistsPopupItemDelete().build(this.state.context));
+
+    await showMenu(
+        context: this.state.context,
+        position: RelativeRect.fromLTRB(detail.globalPosition.dx, detail.globalPosition.dy,
+         MediaQuery.of(this.state.context).size.width - detail.globalPosition.dx, MediaQuery.of(this.state.context).size.height - detail.globalPosition.dy),
+        items: items,
+        elevation: 8.0,
+      ).then((value){
+        playlistMainDialogOptions(value, ctrl, name, playlist, index);
+      }
+    );
+  }
+
+  void playlistMainDialogOptions(String value, PlatformsController ctrl, String name, Playlist playlist, int index) {
+    switch(value) {
+      case PopupMenuConstants.PLAYLISTSMAINDIALOG_RENAME: {
+        renamePlaylist(playlist);
+      } break;
+      case PopupMenuConstants.PLAYLISTSMAINDIALOG_CLONE: {
+        clonePlaylist(ctrl, playlist);
+      } break;
+      case PopupMenuConstants.PLAYLISTSMAINDIALOG_MERGE: {
+        mergePlaylist(ctrl, playlist);
+      } break;
+      case PopupMenuConstants.PLAYLISTSMAINDIALOG_DELETE: {
+        removePlaylist(ctrl, playlist, index);
+      } break;
+    }
+  }
+
+  void createPlaylist(PlatformsController ctrl) {
+    String value = AppLocalizations.of(this.state.context).globalPlaylist + " " + ctrl.platform.name + " n°" + ctrl.platform.playlists.value.length.toString();
 
     showDialog(
       context: this.state.context,
@@ -809,11 +824,11 @@ class TabsView {
           ),
           contentTextStyle: TextStyle(color: Colors.white),
           actions: [
-            FlatButton(
+            MaterialButton(
               child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.pop(dialogContext),
             ),
-            FlatButton(
+            MaterialButton(
               child: Text(AppLocalizations.of(this.state.context).confirm, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -830,23 +845,22 @@ class TabsView {
   }
 
 
-  void removePlaylist(BuildContext context, PlatformsController ctrl, Playlist playlist, int index) {
-    Navigator.pop(context);
+  void removePlaylist(PlatformsController ctrl, Playlist playlist, int index) {
     String name = playlist.name;
 
     showDialog(
-      context: context,
+      context: this.state.context,
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(AppLocalizations.of(this.state.context).delete+" $name ?", style: TextStyle(color: Colors.white)),
           content: Text(AppLocalizations.of(this.state.context).tabsViewRemoveMessage),
           contentTextStyle: TextStyle(color: Colors.white),
           actions: [
-            FlatButton(
+            MaterialButton(
               child: Text(AppLocalizations.of(this.state.context).no, style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.pop(dialogContext),
             ),
-            FlatButton(
+            MaterialButton(
               child: Text(AppLocalizations.of(this.state.context).yes, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -862,12 +876,12 @@ class TabsView {
     );
   }
 
-  void renamePlaylist(BuildContext context, Playlist playlist) {
+  void renamePlaylist(Playlist playlist) {
     String name = playlist.name;
     String value = playlist.name;
 
     showDialog(
-      context: context,
+      context: this.state.context,
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(AppLocalizations.of(this.state.context).globalRename+" $name", style: TextStyle(color: Colors.white)),
@@ -884,7 +898,11 @@ class TabsView {
             },
           ),
           actions: [
-            FlatButton(
+            MaterialButton(
+              child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
+              onPressed: () => Navigator.pop(dialogContext),
+            ),
+            MaterialButton(
               child: Text(AppLocalizations.of(this.state.context).confirm, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -893,10 +911,6 @@ class TabsView {
                 });
               },
             ),
-            FlatButton(
-              child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
-              onPressed: () => Navigator.pop(dialogContext),
-            ),
           ],
           backgroundColor: Colors.grey[800],
         );
@@ -904,20 +918,20 @@ class TabsView {
     );
   }
 
-  clonePlaylist(BuildContext context, PlatformsController ctrl, Playlist playlist) {
+  void clonePlaylist(PlatformsController ctrl, Playlist playlist) {
     String name = playlist.name;
     
     showDialog(
-      context: context,
+      context: this.state.context,
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(AppLocalizations.of(this.state.context).globalClone+" $name "+ AppLocalizations.of(this.state.context).globalIn+ " SmartShuffle ?", style: TextStyle(color: Colors.white)),
           actions: [
-            FlatButton(
+            MaterialButton(
               child: Text(AppLocalizations.of(this.state.context).no, style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.pop(dialogContext),
             ),
-            FlatButton(
+            MaterialButton(
               child: Text(AppLocalizations.of(this.state.context).yes, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -927,7 +941,7 @@ class TabsView {
                 });
                 if(play == null) {
                   showDialog(
-                    context: context,
+                    context: this.state.context,
                     builder: (dialogContext) {
                       return AlertDialog(
                         title: Text("$name "+AppLocalizations.of(this.state.context).tabsViewAlreadyExists+" "+ AppLocalizations.of(this.state.context).globalIn+" SmartShuffle", style: TextStyle(color: Colors.white)),
@@ -951,13 +965,13 @@ class TabsView {
     );
   }
 
-  mergePlaylist(BuildContext context, PlatformsController ctrl, Playlist playlist) {
+  void mergePlaylist(PlatformsController ctrl, Playlist playlist) {
     String name = playlist.name;
     List<Widget> allCards;
     PlatformsController defaultCtrl = PlatformsLister.platforms[ServicesLister.DEFAULT];
     
     showDialog(
-      context: context,
+      context: this.state.context,
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(AppLocalizations.of(this.state.context).tabsViewChoosePlaylistToMerge+" $name", style: TextStyle(color: Colors.white)),
@@ -1005,7 +1019,7 @@ class TabsView {
                 );
                 allCards.add(
                   Container(
-                    child: FlatButton(
+                    child: MaterialButton(
                       child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
                       onPressed: () => Navigator.pop(dialogContext),
                     ),
@@ -1016,67 +1030,6 @@ class TabsView {
             )
           ),
           backgroundColor: Colors.black,
-        );
-      }
-    );
-  }
-
-  playlistOption(PlatformsController ctrl, Playlist playlist, int index) {
-    String name = playlist.name;
-    showDialog(
-      context: this.state.context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text("$name", style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                child: FlatButton(
-                  child: Text(AppLocalizations.of(this.state.context).globalRename, style: TextStyle(color: Colors.white)),
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                    renamePlaylist(dialogContext, playlist);
-                  },
-                ),
-              ),
-              (ctrl.platform.name != 'SmartShuffle' ? 
-              Container(
-                child: FlatButton(
-                  child: Text(AppLocalizations.of(this.state.context).tabsViewClonePlaylist, style: TextStyle(color: Colors.white)),
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                    clonePlaylist(dialogContext, ctrl, playlist);
-                  },
-                ),
-              ) : Container()
-              ),
-              (ctrl.platform.name != 'SmartShuffle' ? 
-              Container(
-                child: FlatButton(
-                  child: Text(AppLocalizations.of(this.state.context).tabsViewMergePlaylist, style: TextStyle(color: Colors.white)),
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                    mergePlaylist(dialogContext, ctrl, playlist);
-                  },
-                ),
-              ) : Container()
-              ),
-              Container(
-                child: FlatButton(
-                  child: Text(AppLocalizations.of(this.state.context).delete, style: TextStyle(color: Colors.white)),
-                  onPressed: () => removePlaylist(dialogContext, ctrl, playlist, index),
-                ),
-              ),
-              Container(
-                child: FlatButton(
-                  child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
-                  onPressed: () => Navigator.pop(dialogContext),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.grey[800],
         );
       }
     );

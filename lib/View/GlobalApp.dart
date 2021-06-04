@@ -93,6 +93,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   int selectedIndex;
   Widget currentPage;
 
+  MaterialColor materialColor;
+
   void fakers() {
     PlatformsController ctrl =
         PlatformsLister.platforms[ServicesLister.DEFAULT];
@@ -136,14 +138,29 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
   void initPage() {
-    Widget playlistsPage = new PlaylistsPage(setPlaying: setPlaying);
+
+    Map<int, Color> colorCodes = {
+      50: Colors.yellow[100],
+      100: Colors.yellow[200],
+      200: Colors.yellow[300],
+      300: Colors.yellow[400],
+      400: Colors.yellow[500],
+      500: Colors.yellow[600],
+      600: Colors.yellow[700],
+      700: Colors.yellow[800],
+      800: Colors.yellow[900]
+    };
+
+    this.materialColor = MaterialColor(0xFFFDD835, colorCodes);
+
+    Widget playlistsPage = new PlaylistsPage(setPlaying: setPlaying, materialColor: this.materialColor);
     Widget searchPage = new SearchPageMain();
-    Widget profilePage = new ProfilePage();
+    Widget profilePage = new ProfilePage(materialColor: this.materialColor);
     setState(() {
       this.pages = [playlistsPage, searchPage, profilePage];
       this.currentPage = this.pages[0];
       this.selectedIndex = 0;
-      this.pageController = PageController(initialPage: selectedIndex);
+      this.pageController = PageController(initialPage: selectedIndex) ;
     });
     for (MapEntry<ServicesLister, PlatformsController> elem
         in PlatformsLister.platforms.entries) {
@@ -1137,11 +1154,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     tabControllerBuilder();
     sizeBuilder();
 
-
     return MaterialApp(
         theme: ThemeData(
           brightness: Brightness.dark,
-          primarySwatch: Colors.yellow,
+          primarySwatch: this.materialColor,
+          accentColor: materialColor.shade100,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
         debugShowCheckedModeBanner: false,
@@ -1157,6 +1174,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             bottomNavigationBar: Container(
                 height: _botBarHeight,
                 child: BottomNavigationBar(
+                  selectedItemColor: this.materialColor.shade300,
                   items: <BottomNavigationBarItem>[
                     BottomNavigationBarItem(
                         icon: Icon(Icons.library_music),
