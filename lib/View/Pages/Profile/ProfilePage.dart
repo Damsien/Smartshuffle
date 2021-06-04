@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:smartshuffle/Controller/ServicesLister.dart';
@@ -34,7 +32,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
       platform = plat.value.getView(service: plat.key, view: ProfileViewType.PlatformInformation);
     return Container(
       alignment: Alignment.centerLeft,
-      margin: EdgeInsets.only(left: 30, bottom: 20),
+      margin: EdgeInsets.only(bottom: 20),
       child: platform
     );
   }
@@ -45,10 +43,6 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: EdgeInsets.only(left: 30, bottom: 30, top: 30),
-            child: Text(AppLocalizations.of(context).connexion, style: TextStyle(fontSize: 35)),
-          ),
           for(MapEntry plat in PlatformsLister.platforms.entries) getPlatforms(plat)
         ],
       )
@@ -82,6 +76,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
         const Locale('en', ''),
       ],
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: Text(AppLocalizations.of(context).globalTitleProfile),
         ),
@@ -90,11 +85,67 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           height: MediaQuery.of(context).size.height,
           color: Colors.black54,
           child: SingleChildScrollView(
-            child: Column(
-              children: [
-                getPlatformsCard()
-              ],
-            ) 
+            child: Padding(
+              padding: EdgeInsets.only(left: 30, right: 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(bottom: 10, top: 30),
+                    child: Text(AppLocalizations.of(context).connexion, style: TextStyle(fontSize: 35)),
+                  ),
+                  getPlatformsCard(),
+                  Padding(
+                    padding: EdgeInsets.only(top: 30, bottom: 40),
+                    child: Container(
+                      height: 1,
+                      color: Colors.white,
+                    )
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(bottom: 20),
+                    child: Text(AppLocalizations.of(context).profileFormTitle, style: TextStyle(fontSize: 35)),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 7),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(AppLocalizations.of(context).profileHaveSpottedBug, style: TextStyle(fontSize: 17)),
+                        Text(AppLocalizations.of(context).profileHaveSuggestion, style: TextStyle(fontSize: 17)),
+                      ],
+                    )
+                  ),
+                  Text(AppLocalizations.of(context).profileTellUs, style: TextStyle(fontSize: 17)),
+                  FormSuggestion(),
+                  Padding(
+                    padding: EdgeInsets.only(top: 30, bottom: 40),
+                    child: Container(
+                      height: 1,
+                      color: Colors.white,
+                    )
+                  ),
+                  Center(
+                    child: MaterialButton(
+                      onPressed: () {
+                        showAboutDialog(
+                          context: context,
+                          applicationVersion: '1.0.0',
+                          applicationName: 'SmartShuffle'
+                        );
+                      },
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Icon(Icons.info),
+                          Text(AppLocalizations.of(context).globalMoreInfo, style: TextStyle(fontSize: 15))
+                        ],
+                      )
+                    )
+                  )
+                ],
+              )
+            )
           )
         )
       )

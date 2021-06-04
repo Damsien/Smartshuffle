@@ -122,6 +122,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
   }
 
+
   @override
   void initState() {
     this.fakers();
@@ -129,6 +130,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+    //this.checkForUpdate();
     this.initPage();
     super.initState();
   }
