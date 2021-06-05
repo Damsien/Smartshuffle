@@ -5,12 +5,15 @@ import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 
 class Playlist {
+
+  static const String DEFAULT_IMAGE_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Solid_yellow.svg/512px-Solid_yellow.svg.png';
+
   String id;
   String name;
   Uri uri;
   String ownerId;
   String ownerName;
-  String imageUrl;
+  String imageUrl = DEFAULT_IMAGE_URL;
   ServicesLister service;
 
   List<MapEntry<Track, DateTime>> tracks =
@@ -30,7 +33,7 @@ class Playlist {
     this.name = name;
     this.ownerId = ownerId;
     this.id = id;
-    this.imageUrl = imageUrl;
+    if(imageUrl != null) this.imageUrl = imageUrl;
     this.uri = uri;
     this.ownerName = ownerName;
     this.service = service;
@@ -88,6 +91,14 @@ class Playlist {
       if (!exist) this.addTrack(track);
     }
     return allTracks;
+  }
+
+  NetworkImage _updateImage() {
+    if(this.imageUrl == Playlist.DEFAULT_IMAGE_URL) {
+      if(this.tracks.length >= 1) {
+        this.imageUrl = this.tracks[0].key.imageUrlLarge;
+      }
+    }
   }
 
   ServicesLister setService(ServicesLister service) {

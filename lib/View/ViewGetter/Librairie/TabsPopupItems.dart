@@ -15,6 +15,11 @@ class PopupMenuConstants {
   static const String TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST = 'TRACKSMAINDIALOG:add_to_another_playlist';
   static const String TRACKSMAINDIALOG_REMOVEFROMPLAYLIST = 'TRACKSMAINDIALOG:remove_from_playlist';
   static const String TRACKSMAINDIALOG_INFORMATIONS = 'TRACKSMAINDIALOG:informations';
+
+  static const String PLAYLISTSMAINDIALOG_RENAME = "PLAYLISTMAINDIALOG:rename";
+  static const String PLAYLISTSMAINDIALOG_CLONE = "PLAYLISTMAINDIALOG:clone";
+  static const String PLAYLISTSMAINDIALOG_MERGE = "PLAYLISTMAINDIALOG:merge";
+  static const String PLAYLISTSMAINDIALOG_DELETE = "PLAYLISTMAINDIALOG:delete";
 }
 
 
@@ -101,8 +106,6 @@ class SortPopupItemArtist extends StatelessWidget {
 
 class TracksPopupItemAddToQueue extends StatelessWidget {
 
-  TracksPopupItemAddToQueue();
-
   @override
   PopupMenuItem build(BuildContext context) {
     return PopupMenuItem(
@@ -114,8 +117,6 @@ class TracksPopupItemAddToQueue extends StatelessWidget {
 }
 
 class TracksPopupItemAddToAnotherPlaylist extends StatelessWidget {
-
-  TracksPopupItemAddToAnotherPlaylist();
 
   @override
   PopupMenuItem build(BuildContext context) {
@@ -129,8 +130,6 @@ class TracksPopupItemAddToAnotherPlaylist extends StatelessWidget {
 
 class TracksPopupItemRemoveFromPlaylist extends StatelessWidget {
 
-  TracksPopupItemRemoveFromPlaylist();
-
   @override
   PopupMenuItem build(BuildContext context) {
     return PopupMenuItem(
@@ -143,13 +142,63 @@ class TracksPopupItemRemoveFromPlaylist extends StatelessWidget {
 
 class TracksPopupItemInformations extends StatelessWidget {
 
-  TracksPopupItemInformations();
-
   @override
   PopupMenuItem build(BuildContext context) {
     return PopupMenuItem(
       value: PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS,
       child: Text(AppLocalizations.of(context).globalInformations)
+    );
+  }
+
+}
+
+
+
+/*  PLAYLISTS MAIN DIALOG OPTIONS  */
+
+class PlaylistsPopupItemRename extends StatelessWidget {
+
+  @override
+  PopupMenuItem build(BuildContext context) {
+    return PopupMenuItem(
+      value: PopupMenuConstants.PLAYLISTSMAINDIALOG_RENAME,
+      child: Text(AppLocalizations.of(context).globalRename)
+    );
+  }
+
+}
+
+class PlaylistsPopupItemClone extends StatelessWidget {
+
+  @override
+  PopupMenuItem build(BuildContext context) {
+    return PopupMenuItem(
+      value: PopupMenuConstants.PLAYLISTSMAINDIALOG_CLONE,
+      child: Text(AppLocalizations.of(context).tabsViewClonePlaylist)
+    );
+  }
+
+}
+
+class PlaylistsPopupItemMerge extends StatelessWidget {
+
+  @override
+  PopupMenuItem build(BuildContext context) {
+    return PopupMenuItem(
+      value: PopupMenuConstants.PLAYLISTSMAINDIALOG_MERGE,
+      child: Text(AppLocalizations.of(context).tabsViewMergePlaylist)
+    );
+  }
+
+}
+
+class PlaylistsPopupItemDelete extends StatelessWidget {
+
+  @override
+  PopupMenuItem build(BuildContext context) {
+    return PopupMenuItem(
+      value: PopupMenuConstants.PLAYLISTSMAINDIALOG_DELETE,
+      child: Text(AppLocalizations.of(context).delete)
     );
   }
 

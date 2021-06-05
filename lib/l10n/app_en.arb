@@ -27,6 +27,7 @@
     "globalClone": "Clone",
     "globalConnect": "Connect",
     "globalInformations": "Informations",
+    "globalMoreInfo": "More info",
 
     "globalArtist": "Artist",
     "globalArtists": "Artists",
@@ -63,5 +64,22 @@
     "popupItemTitle": "Title",
     "popupItemAddToQueue": "Add to queue",
     "popupItemAddToAnotherPlaylist": "Add to another playlist",
-    "popupItemRemoveFromPlaylist": "Remove from playlist"
+    "popupItemRemoveFromPlaylist": "Remove from playlist",
+
+    "formSuggestImprovement": "Suggestion for improvement",
+    "formBugTracking": "Bug Tracking",
+    "formMessageSent": "message sent !",
+    "formMessageNotSent": "Your message can't be sent !",
+    "formMessageNotSentNetwork": "Your message could not be sent due to the network",
+    "formEnterName": "Enter your name",
+    "formEnterEmail": "Enter your email",
+    "formEnterMessage": "Write your message",
+    "formEnterDescription": "Write your description",
+    "formPleaseEnterText": "Please enter some text",
+    "formPleaseEnterEmail": "Please enter a valid email adress",
+    "formSubmit": "Submit",
+    "profileHaveSpottedBug": "Spotted a bug ?",
+    "profileHaveSuggestion": "Do you have a suggestion for improvement ?",
+    "profileTellUs": "Let us know !",
+    "profileFormTitle": "Contact us"
 }
