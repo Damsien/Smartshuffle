@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 import 'api_path.dart';
@@ -15,6 +16,11 @@ class API {
   static final API _instance = API._internal();
   String _token;
   bool _isLoggedIn;
+  String _displayName;
+  String _email;
+
+  get displayName => _displayName;
+  get email => _email;
 
   factory API() {
     return _instance;
@@ -29,7 +35,7 @@ class API {
   Future<List<Playlist>> getPlaylistsList() async {
     Response response =
         await get(APIPath.getPlaylistsList(), headers: _prepareHeader());
-    Map json = jsonDecode(response.body);
+    Map json = jsonDecode(response.body.toString());
 
     String nextPageToken = json['nextPageToken'];
 
@@ -40,8 +46,14 @@ class API {
       _playlistList(list, json);
 
       if (nextPageToken != null) {
+        Map<String, String> parameters = Map<String, String>();
+        for(MapEntry<String, String> entry in APIPath.getPlaylistsList().queryParameters.entries) {
+          parameters[entry.key] = entry.value;
+        }
+        parameters["pageToken"] = nextPageToken;
         response = await get(
-            Uri.http(APIPath.getPlaylistsList().host, APIPath.getPlaylistsList().path, APIPath.getPlaylistsList().data.parameters..update("pageToken", (value) => nextPageToken)),
+            Uri.https(APIPath.getPlaylistsList().host, APIPath.getPlaylistsList().path,
+             parameters),
             headers: _prepareHeader());
         json = jsonDecode(response.body);
       }
@@ -64,8 +76,14 @@ class API {
       _songsList(tracks, json);
 
       if (nextPageToken != null) {
+        Map<String, String> parameters = Map<String, String>();
+        for(MapEntry<String, String> entry in APIPath.getPlaylistSongs(playlist).queryParameters.entries) {
+          parameters[entry.key] = entry.value;
+        }
+        parameters["pageToken"] = nextPageToken;
         response = await get(
-            Uri.http(APIPath.getPlaylistsList().host, APIPath.getPlaylistsList().path, APIPath.getPlaylistsList().data.parameters..update("pageToken", (value) => nextPageToken)),
+            Uri.https(APIPath.getPlaylistSongs(playlist).host, APIPath.getPlaylistSongs(playlist).path,
+             parameters),
             headers: _prepareHeader());
         json = jsonDecode(response.body);
       }
@@ -82,7 +100,11 @@ class API {
   }
 
   Future login() async {
-    String token = await APIAuth.login();
+    Map<String, GoogleSignInAccount> infos = await APIAuth.login();
+    String token = infos.entries.first.key;
+    GoogleSignInAccount user = infos.entries.first.value;
+    _displayName = user.displayName;
+    _email = user.email;
     if (token == null) {
       _isLoggedIn = false;
     } else {
@@ -101,7 +123,7 @@ class API {
       String id = items[i]['id'];
       String name = items[i]['snippet']['title'];
       String ownerId = items[i]['snippet']['channelId'];
-      String ownerName = items[i]['channelTitle'];
+      String ownerName = items[i]['snippet']['channelTitle'];
       //*Correspond à au format minimal 120x90
       String imageUrl = items[i]['snippet']['thumbnails']['default']['url'];
 

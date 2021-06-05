@@ -7,7 +7,6 @@ class APIAuth {
     'https://www.googleapis.com/auth/youtube',
     'https://www.googleapis.com/auth/youtube.force-ssl',
     'https://www.googleapis.com/auth/youtube.readonly',
-    'https://www.googleapis.com/auth/youtube.upload',
     'https://www.googleapis.com/auth/youtubepartner-channel-audit'
   ]);
   static bool _isSigningIn = false;
@@ -16,7 +15,7 @@ class APIAuth {
 
   bool get isSigningIn => _isSigningIn;
 
-  static Future<String> login() async {
+  static Future<Map<String, GoogleSignInAccount>> login() async {
     _isSigningIn = true;
 
     _user = await _googleSignIn.signIn();
@@ -38,7 +37,7 @@ class APIAuth {
         print(e);
       }
       _isSigningIn = false;
-      return _auth.accessToken;
+      return {_auth.accessToken: _user};
     }
   }
 

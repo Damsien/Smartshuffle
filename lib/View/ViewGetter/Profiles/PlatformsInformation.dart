@@ -15,7 +15,7 @@ class PlatformsInformation {
 
   static Widget _genericInformations(PlatformsController ctrl, String serviceName) {
     var name = ctrl.getUserInformations()['name'];
-    var account = ctrl.getUserInformations()['account'];
+    var account = ctrl.getUserInformations()['email'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -35,8 +35,16 @@ class PlatformsInformation {
                 ]
             ),
             SizedBox(height: 20),
-            Text("Nom : $name", style: TextStyle(fontSize: 20)),
-            Text("Compte : $account", style: TextStyle(fontSize: 20))
+            Container(
+              width: MediaQuery.of(ctrl.states['ProfilePage'].context).size.width*0.6,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Nom : $name", style: TextStyle(fontSize: 20)),
+                  Text("Compte : $account", style: TextStyle(fontSize: 20))
+                ],
+              )
+            )
           ],
         ),
         Container(
@@ -46,7 +54,8 @@ class PlatformsInformation {
             child: Container(
               width: 55,
               color: Colors.red,
-              child: OutlineButton(
+              child: MaterialButton(
+                height: 48,
                 splashColor: Colors.red[200],
                 highlightElevation: 0,
                 onPressed: () => ctrl.disconnect(),

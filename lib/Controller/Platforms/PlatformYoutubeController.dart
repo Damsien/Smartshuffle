@@ -45,6 +45,8 @@ class PlatformYoutubeController extends PlatformsController {
   connect() async {
     await yt.login();
     platform.userInformations['isConnected'] = yt.isLoggedIn;
+    platform.userInformations['name'] = yt.displayName;
+    platform.userInformations['email'] = yt.email;
     //platform.userInformations['isConnected'] = true;
     this.updateStates();
   }

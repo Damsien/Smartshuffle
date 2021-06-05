@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "700943721837",
-    "project_id": "ttkcorp-49e73",
-    "storage_bucket": "ttkcorp-49e73.appspot.com"
+    "project_number": "1024999602563",
+    "project_id": "dn-smartshuffle",
+    "storage_bucket": "dn-smartshuffle.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:700943721837:android:588980f1bcd4b5ac042664",
+        "mobilesdk_app_id": "1:1024999602563:android:f09f827d3b946bdf235eb6",
         "android_client_info": {
           "package_name": "com.tqtcorp.smartshuffle"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1024999602563-rk0gg7rabftmqtd8pgc7lfe4hk4vef6f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAmyq6Wy70t8wA2yWSGu19CYfwd-5pc-OA"
+          "current_key": "AIzaSyC77DNqqfc10M_2pv1jqmzS2vAOaajLwfQ"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1024999602563-rk0gg7rabftmqtd8pgc7lfe4hk4vef6f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
