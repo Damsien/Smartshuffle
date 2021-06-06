@@ -775,7 +775,7 @@ class TabsView {
                                     ),
                                   )
                                 ),
-                                subtitle: Text(ctrl.platform.playlists.value[index].getTracks().length.toString() + " "+AppLocalizations.of(this.state.context).globalTracks),
+                                subtitle: Text(ctrl.platform.playlists.value[index].getTracks.length.toString() + " "+AppLocalizations.of(this.state.context).globalTracks),
                                 onTap: () {
                                   Navigator.pop(dialogContext);
                                   String id = ctrl.addTrackToPlaylist(index, track, false);
@@ -854,7 +854,7 @@ class TabsView {
               child: Text(AppLocalizations.of(this.state.context).confirm, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
-                int trackIndex = ctrl.platform.playlists.value[playlistIndex].getTracks().indexOf(track);
+                int trackIndex = ctrl.platform.playlists.value[playlistIndex].getTracks.indexOf(track);
                 this.state.setState(() {
                   ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
                   if(refresh != null) refresh(null, null, '', null, null);
@@ -1181,7 +1181,7 @@ class TabsView {
                                 ),
                               )
                             ),
-                            subtitle: Text(defaultCtrl.platform.playlists.value[index].getTracks().length.toString() + " "+AppLocalizations.of(this.state.context).globalTracks),
+                            subtitle: Text(ctrl.platform.playlists.value[index].getTracks.length.toString() + " "+AppLocalizations.of(this.state.context).globalTracks),
                             onTap: () {
                               Navigator.pop(dialogContext);
                               //TODO Message de confirmation

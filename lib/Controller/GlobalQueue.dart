@@ -52,7 +52,7 @@ class GlobalQueue {
   }
 
   void _shuffleNoPermanentQueue(Playlist playlist, Track selectedTrack) {
-    List<Track> tracks = playlist.getTracks();
+    List<Track> tracks = playlist.getTracks;
     tracks.shuffle();
     if(selectedTrack != null) noPermanentQueue.value.insert(0, selectedTrack);
     for(Track tr in tracks) {
@@ -62,7 +62,7 @@ class GlobalQueue {
   }
 
   void _orderedNoPermanentQueue(Playlist playlist, Track selectedTrack) {
-    List<Track> tracks = playlist.getTracks();
+    List<Track> tracks = playlist.getTracks;
     for(Track tr in tracks) {
       addToNoPermanentQueue(tr);
     }

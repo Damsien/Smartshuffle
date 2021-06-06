@@ -8,6 +8,10 @@ class APIPath {
 
   static Uri getPlaylistSongs(Playlist playlist) {
     String id = playlist.id;
-    return Uri.https("www.googleapis.com", "/youtube/v3/playlistItems", {"part": "snippet", "playlistId": id});
+    return Uri.https("www.googleapis.com", "/youtube/v3/playlistItems", {"part": "snippet", "playlistId": id, "maxResults": "50"});
+  }
+
+  static Uri getVideoDuration(String videoId) {
+    return Uri.https("www.googleapis.com", "/youtube/v3/videos", {"part": "contentDetails", "id": videoId});
   }
 }

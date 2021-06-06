@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:googleapis/youtube/v3.dart' as YTB;
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 import 'api_path.dart';
@@ -14,6 +15,9 @@ import 'api_auth.dart';
 
 class API {
   static final API _instance = API._internal();
+  var _httpClient;
+  YTB.YouTubeApi _youtubeApi;
+
   String _token;
   bool _isLoggedIn;
   String _displayName;
@@ -33,29 +37,31 @@ class API {
   }
 
   Future<List<Playlist>> getPlaylistsList() async {
-    Response response =
-        await get(APIPath.getPlaylistsList(), headers: _prepareHeader());
-    Map json = jsonDecode(response.body.toString());
+    // Response response =
+    //     await get(APIPath.getPlaylistsList(), headers: _prepareHeader());
+    // Map json = jsonDecode(response);
 
-    String nextPageToken = json['nextPageToken'];
+    YTB.PlaylistListResponse response = await _youtubeApi.playlists.list(
+      ['snippet'],
+      maxResults: 50,
+      mine: true
+    );
+
+    String nextPageToken = response.nextPageToken;
 
     List<Playlist> list = new List();
 
     do {
-      nextPageToken = json['nextPageToken'];
-      _playlistList(list, json);
+      nextPageToken = response.nextPageToken;
+      _playlistList(list, response);
 
       if (nextPageToken != null) {
-        Map<String, String> parameters = Map<String, String>();
-        for(MapEntry<String, String> entry in APIPath.getPlaylistsList().queryParameters.entries) {
-          parameters[entry.key] = entry.value;
-        }
-        parameters["pageToken"] = nextPageToken;
-        response = await get(
-            Uri.https(APIPath.getPlaylistsList().host, APIPath.getPlaylistsList().path,
-             parameters),
-            headers: _prepareHeader());
-        json = jsonDecode(response.body);
+        response = await _youtubeApi.playlists.list(
+          ['snippet'],
+          maxResults: 50,
+          mine: true,
+          pageToken: nextPageToken
+        );
       }
     } while (nextPageToken != null);
 
@@ -63,29 +69,31 @@ class API {
   }
 
   Future<List<Track>> getPlaylistSongs(Playlist playlist) async {
-    Response response = await get(APIPath.getPlaylistSongs(playlist),
-        headers: _prepareHeader());
-    Map json = jsonDecode(response.body);
+    // Response response = await get(APIPath.getPlaylistSongs(playlist),
+    //     headers: _prepareHeader());
+    // Map json = jsonDecode(response.body);
 
-    String nextPageToken = json['nextPageToken'];
+    YTB.PlaylistItemListResponse response = await _youtubeApi.playlistItems.list(
+      ['snippet'],
+      playlistId: playlist.id,
+      maxResults: 50
+    );
+
+    String nextPageToken = response.nextPageToken;
 
     List<Track> tracks = new List();
 
     do {
-      nextPageToken = json['nextPageToken'];
-      _songsList(tracks, json);
+      nextPageToken = response.nextPageToken;
+      _songsList(tracks, response);
 
       if (nextPageToken != null) {
-        Map<String, String> parameters = Map<String, String>();
-        for(MapEntry<String, String> entry in APIPath.getPlaylistSongs(playlist).queryParameters.entries) {
-          parameters[entry.key] = entry.value;
-        }
-        parameters["pageToken"] = nextPageToken;
-        response = await get(
-            Uri.https(APIPath.getPlaylistSongs(playlist).host, APIPath.getPlaylistSongs(playlist).path,
-             parameters),
-            headers: _prepareHeader());
-        json = jsonDecode(response.body);
+        response = await _youtubeApi.playlistItems.list(
+          ['snippet'],
+          playlistId: playlist.id,
+          maxResults: 50,
+          pageToken: nextPageToken
+        );
       }
     } while (nextPageToken != null);
 
@@ -100,12 +108,14 @@ class API {
   }
 
   Future login() async {
-    Map<String, GoogleSignInAccount> infos = await APIAuth.login();
-    String token = infos.entries.first.key;
+    Map<dynamic, GoogleSignInAccount> infos = await APIAuth.login();
+    _httpClient = infos.entries.first.key;
+    _youtubeApi = YTB.YouTubeApi(_httpClient);
+    String token;
     GoogleSignInAccount user = infos.entries.first.value;
     _displayName = user.displayName;
     _email = user.email;
-    if (token == null) {
+    if (user == null) {
       _isLoggedIn = false;
     } else {
       _isLoggedIn = true;
@@ -117,40 +127,87 @@ class API {
     _isLoggedIn = await APIAuth.logout();
   }
 
-  void _playlistList(List<Playlist> list, Map json) {
-    List<dynamic> items = json['items'];
+  void _playlistList(List<Playlist> list, YTB.PlaylistListResponse playlists) {
+    List<YTB.Playlist> items = playlists.items;
     for (int i = 0; i < items.length; i++) {
-      String id = items[i]['id'];
-      String name = items[i]['snippet']['title'];
-      String ownerId = items[i]['snippet']['channelId'];
-      String ownerName = items[i]['snippet']['channelTitle'];
+      String id = items[i].id;
+      String name = items[i].snippet.title;
+      String ownerId = items[i].snippet.channelId;
+      String ownerName = items[i].snippet.channelTitle;
       //*Correspond à au format minimal 120x90
-      String imageUrl = items[i]['snippet']['thumbnails']['default']['url'];
+      String imageUrl = items[i].snippet.thumbnails.standard.url;
 
       list.add(Playlist(
           id: id,
           name: name,
-          service: ServicesLister.YOUTUBE,
+          uri: Uri.parse("youtube.com/playlist?list=$id"),
           ownerId: ownerId,
           ownerName: ownerName,
-          imageUrl: imageUrl));
+          imageUrl: imageUrl,
+          service: ServicesLister.YOUTUBE));
     }
   }
 
-  void _songsList(List<Track> list, Map json) {
-    List<dynamic> items = json['items'];
+  int _parseTime(String duration, String timeUnit) {
+    final timeMatch = RegExp(r"\d+" + timeUnit).firstMatch(duration);
+
+    if (timeMatch == null) {
+      return 0;
+    }
+    final timeString = timeMatch.group(0);
+    return int.parse(timeString.substring(0, timeString.length - 1));
+  }
+  Duration toDuration(String isoString) {
+  if (!RegExp(
+          r"^(-|\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$")
+      .hasMatch(isoString)) {
+    throw ArgumentError("String does not follow correct format");
+  }
+
+  final weeks = _parseTime(isoString, "W");
+  final days = _parseTime(isoString, "D");
+  final hours = _parseTime(isoString, "H");
+  final minutes = _parseTime(isoString, "M");
+  final seconds = _parseTime(isoString, "S");
+
+  return Duration(
+    days: days + (weeks * 7),
+    hours: hours,
+    minutes: minutes,
+    seconds: seconds,
+  );
+}
+
+  void _songsList(List<Track> list, YTB.PlaylistItemListResponse songs) async {
+    List<YTB.PlaylistItem> items = songs.items;
     for (int i = 0; i < items.length; i++) {
-      String name = items[i]['snippet']['title'];
-      String id = items[i]['id'];
-      String imageUrlLittle = items[i]['snippet']['thumbnails']['default']['url'];
-      String imageUrlLarge = items[i]['snippet']['thumbnails']['default']['url'];
+      String name = items[i].snippet.title;
+      String artist = items[i].snippet.videoOwnerChannelTitle;
+      if(artist.contains(' - Topic')) artist = artist.split(' - Topic')[0];
+
+      String id = items[i].snippet.resourceId.videoId;
+      String imageUrlLittle = items[i].snippet.thumbnails.high.url;
+      String imageUrlLarge;
+      try {
+        imageUrlLarge = items[i].snippet.thumbnails.maxres.url;
+      } catch(e) {
+        imageUrlLarge = 'https://source.unsplash.com/random';
+      }
+
+      YTB.VideoListResponse response = await _youtubeApi.videos.list(
+        ['contentDetails'],
+        id: [id]
+      );
+      Duration duration = toDuration(response.items[0].contentDetails.duration);
+
       list.add(Track(
           id: id,
           name: name,
-          service: ServicesLister.YOUTUBE,
+          artist: artist,
           imageUrlLittle: imageUrlLittle,
           imageUrlLarge: imageUrlLarge,
-          artist: 'unknow'));
+          totalDuration: duration,
+          service: ServicesLister.YOUTUBE,));
     }
   }
 }

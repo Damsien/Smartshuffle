@@ -163,11 +163,12 @@ class API {
         list.add(Track(
             id: id,
             name: name,
-            service: ServicesLister.SPOTIFY,
+            artist: artist,
+            addDate: DateTime.parse(addDate),
             imageUrlLittle: imageUrlLittle,
             imageUrlLarge: imageUrlLarge,
             totalDuration: duration,
-            artist: artist));
+            service: ServicesLister.SPOTIFY,));
       }
     }
   }

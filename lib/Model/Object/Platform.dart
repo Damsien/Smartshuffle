@@ -30,7 +30,7 @@ class Platform {
 
   String addTrackToPlaylistByIndex(int playlistIndex, Track track, bool force) {
     bool exist = false;
-    for(Track tr in playlists.value[playlistIndex].getTracks()) {
+    for(Track tr in playlists.value[playlistIndex].getTracks) {
       if(track.id == tr.id) exist = true;
     }
     if(!exist || force)

@@ -28,7 +28,28 @@ class PlatformYoutubeController extends PlatformsController {
 
   @override
   Future<List<Playlist>> getPlaylists({bool refreshing}) async {
-    return platform.setPlaylist(await yt.getPlaylistsList());
+    List<Playlist> finalPlaylists = List<Playlist>();
+    List<Playlist> playlists = await yt.getPlaylistsList();
+    for (Playlist play in platform.playlists.value) {
+      for (int i = 0; i < playlists.length; i++) {
+        if (play.id == playlists[i].id) {
+          finalPlaylists.add(playlists[i]);
+          playlists.removeAt(i);
+        }
+      }
+    }
+    for (Playlist play in playlists) {
+      play.setTracks(await yt.getPlaylistSongs(play));
+      finalPlaylists.add(play);
+    }
+    for (int i = 0; i < platform.playlists.value.length; i++) {
+      if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true)
+        finalPlaylists[i]
+            .setTracks(await yt.getPlaylistSongs(finalPlaylists[i]));
+      else
+        finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks);
+    }
+    return platform.setPlaylist(finalPlaylists);
   }
 
   @override
@@ -38,7 +59,26 @@ class PlatformYoutubeController extends PlatformsController {
 
   @override
   Future<List<Track>> getTracks(Playlist playlist) async {
-    return playlist.setTracks(await yt.getPlaylistSongs(playlist));
+    List<Track> finalTracks = List<Track>();
+
+    if (playlist.getTracks.length == 0) {
+      List<Track> tracks = await yt.getPlaylistSongs(playlist);
+      for (Track track in playlist.getTracks) {
+        for (int i = 0; i < tracks.length; i++) {
+          if (track.id == tracks[i].id) {
+            finalTracks.add(tracks[i]);
+            tracks.removeAt(i);
+          }
+        }
+      }
+      for (Track track in tracks) {
+        finalTracks.add(track);
+      }
+    } else {
+      finalTracks = playlist.getTracks;
+    }
+
+    return playlist.setTracks(finalTracks);
   }
 
   @override

@@ -44,7 +44,7 @@ class PlatformDefaultController extends PlatformsController {
   @override
   Future<List<Track>> getTracks(Playlist playlist) {
     Completer<List<Track>> completer = Completer<List<Track>>();
-    completer.complete(playlist.getTracks());
+    completer.complete(playlist.getTracks);
     return completer.future;
   }
 
@@ -99,7 +99,7 @@ class PlatformDefaultController extends PlatformsController {
 
   @override
   Playlist mergePlaylist(Playlist toMergeTo, Playlist toMerge) {
-    return toMergeTo..addTracks(toMerge.getTracks());
+    return toMergeTo..addTracks(toMerge.getTracks);
   }
 
   void renamePlaylist(Playlist playlist, String name) {}

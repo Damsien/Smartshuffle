@@ -8,18 +8,18 @@ class Playlist {
 
   static const String DEFAULT_IMAGE_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Solid_yellow.svg/512px-Solid_yellow.svg.png';
 
-  String id;
-  String name;
-  Uri uri;
-  String ownerId;
-  String ownerName;
-  String imageUrl = DEFAULT_IMAGE_URL;
-  ServicesLister service;
+  String _id;
+  String _name;
+  Uri _uri;
+  String _ownerId;
+  String _ownerName;
+  String _imageUrl = DEFAULT_IMAGE_URL;
+  ServicesLister _service;
 
-  List<MapEntry<Track, DateTime>> tracks =
+  List<MapEntry<Track, DateTime>> _tracks =
       new List<MapEntry<Track, DateTime>>();
 
-  Map<String, bool> sortDirection = {'title': null, 'last_added': null, 'artist': null};
+  Map<String, bool> _sortDirection = {'title': null, 'last_added': null, 'artist': null};
 
   Playlist(
       {@required String name,
@@ -30,15 +30,25 @@ class Playlist {
       Uri uri,
       String ownerName,
       List<MapEntry<Track, DateTime>> tracks}) {
-    this.name = name;
-    this.ownerId = ownerId;
-    this.id = id;
-    if(imageUrl != null) this.imageUrl = imageUrl;
-    this.uri = uri;
-    this.ownerName = ownerName;
-    this.service = service;
-    if (tracks != null) this.tracks = tracks;
+    _id = id;
+    _name = name;
+    _ownerId = ownerId;
+    if(imageUrl != null) _imageUrl = imageUrl;
+    _uri = uri;
+    _ownerName = ownerName;
+    _service = service;
+    if (tracks != null) _tracks = tracks;
   }
+
+  String get id => _id;
+  String get name => _name;
+  String get ownerId => _ownerId;
+  String get ownerName => _ownerName;
+  String get imageUrl => _imageUrl;
+  Map<String, bool> get sortDirection => _sortDirection;
+  Uri get uri => _uri;
+  ServicesLister  get service => _service;
+  List<MapEntry<Track, DateTime>> get tracks => _tracks;
 
   ///Les paramètres à comparer pour savoir si ils sont égales
   @override
@@ -57,16 +67,16 @@ class Playlist {
   }
 
   void setId(String id) {
-    this.id = id;
+    _id = id;
   }
 
   void rename(String name) {
-    this.name = name;
+    _name = name;
   }
 
-  List<Track> getTracks() {
+  List<Track> get getTracks {
     List<Track> finalTracks = new List<Track>();
-    for (MapEntry<Track, DateTime> track in tracks) {
+    for (MapEntry<Track, DateTime> track in _tracks) {
       finalTracks.add(track.key);
     }
     return finalTracks;
@@ -74,9 +84,9 @@ class Playlist {
 
   List<Track> setTracks(List<Track> tracks) {
     List<Track> allTracks = tracks;
-    this.tracks.clear();
+    _tracks.clear();
     for (Track track in allTracks) {
-      this.tracks.add(MapEntry(track, DateTime.now()));
+      _tracks.add(MapEntry(track, track.addedDate));
     }
     return allTracks;
   }
@@ -85,7 +95,7 @@ class Playlist {
     List<Track> allTracks = tracks;
     for (Track track in allTracks) {
       bool exist = false;
-      for (Track rTrack in getTracks()) {
+      for (Track rTrack in getTracks) {
         if (rTrack.id == track.id) exist = true;
       }
       if (!exist) this.addTrack(track);
@@ -94,28 +104,28 @@ class Playlist {
   }
 
   NetworkImage _updateImage() {
-    if(this.imageUrl == Playlist.DEFAULT_IMAGE_URL) {
-      if(this.tracks.length >= 1) {
-        this.imageUrl = this.tracks[0].key.imageUrlLarge;
+    if(_imageUrl == Playlist.DEFAULT_IMAGE_URL) {
+      if(_tracks.length >= 1) {
+        _imageUrl = _tracks[0].key.imageUrlLarge;
       }
     }
   }
 
   ServicesLister setService(ServicesLister service) {
-    this.service = service;
+    _service = service;
   }
 
   List<Track> reorder(int oldIndex, int newIndex) {
     MapEntry elem = tracks.removeAt(oldIndex);
     tracks.insert(newIndex, elem);
     //Save in system
-    return getTracks();
+    return getTracks;
   }
 
   List<Track> sort(String value) {
     
     if (value == PopupMenuConstants.SORTMODE_LASTADDED) {
-      if(this.sortDirection[value] == null || !this.sortDirection[value]) {
+      if(_sortDirection[value] == null || !_sortDirection[value]) {
         tracks.sort((a, b) {
           int _a = int.parse(a.value.year.toString() +
               a.value.month.toString() +
@@ -125,10 +135,10 @@ class Playlist {
               b.value.day.toString());
           return _a.compareTo(_b);
         });
-        for(String me in this.sortDirection.keys) {
-          this.sortDirection[me] = null;
+        for(String me in _sortDirection.keys) {
+          _sortDirection[me] = null;
         }
-        this.sortDirection[value] = true;
+        _sortDirection[value] = true;
       } else {
         tracks.sort((a, b) {
           int _a = int.parse(a.value.year.toString() +
@@ -139,25 +149,25 @@ class Playlist {
               b.value.day.toString());
           return _b.compareTo(_a);
         });
-        for(String me in this.sortDirection.keys) {
-          this.sortDirection[me] = null;
+        for(String me in _sortDirection.keys) {
+          _sortDirection[me] = null;
         }
-        this.sortDirection[value] = false;
+        _sortDirection[value] = false;
       }
     }
 
     if (value == PopupMenuConstants.SORTMODE_TITLE) {
-      if(this.sortDirection[value] == null || !this.sortDirection[value]) {
+      if(_sortDirection[value] == null || !_sortDirection[value]) {
         tracks.sort((a, b) {
           String _a = a.key.name;
           String _b = b.key.name;
 
           return _a.compareTo(_b);
         });
-        for(String me in this.sortDirection.keys) {
-          this.sortDirection[me] = null;
+        for(String me in _sortDirection.keys) {
+          _sortDirection[me] = null;
         }
-        this.sortDirection[value] = true;
+        _sortDirection[value] = true;
       } else {
         tracks.sort((a, b) {
           String _a = a.key.name;
@@ -165,25 +175,25 @@ class Playlist {
 
           return _b.compareTo(_a);
         });
-        for(String me in this.sortDirection.keys) {
-          this.sortDirection[me] = null;
+        for(String me in _sortDirection.keys) {
+          _sortDirection[me] = null;
         }
-        this.sortDirection[value] = false;
+        _sortDirection[value] = false;
       }
     }
 
     if (value == PopupMenuConstants.SORTMODE_ARTIST) {
-      if(this.sortDirection[value] == null || !this.sortDirection[value]) {
+      if(_sortDirection[value] == null || !_sortDirection[value]) {
         tracks.sort((a, b) {
           String _a = a.key.artist;
           String _b = b.key.artist;
 
           return _a.compareTo(_b);
         });
-        for(String me in this.sortDirection.keys) {
-          this.sortDirection[me] = null;
+        for(String me in _sortDirection.keys) {
+          _sortDirection[me] = null;
         }
-        this.sortDirection[value] = true;
+        _sortDirection[value] = true;
       } else {
         tracks.sort((a, b) {
           String _a = a.key.artist;
@@ -191,13 +201,13 @@ class Playlist {
 
           return _b.compareTo(_a);
         });
-        for(String me in this.sortDirection.keys) {
-          this.sortDirection[me] = null;
+        for(String me in _sortDirection.keys) {
+          _sortDirection[me] = null;
         }
-        this.sortDirection[value] = false;
+        _sortDirection[value] = false;
       }
     }
 
-    return getTracks();
+    return getTracks;
   }
 }

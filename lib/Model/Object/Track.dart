@@ -6,6 +6,9 @@ import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class Track {
+
+  static const String DEFAULT_IMAGE_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Solid_yellow.svg/512px-Solid_yellow.svg.png';
+
   String _id;
   String _name;
   String _artist;
@@ -13,9 +16,9 @@ class Track {
   ValueNotifier<Duration> _currentDuration = ValueNotifier<Duration>(Duration(seconds: 0));
   Duration _totalDuration = Duration(minutes: 3);
   ServicesLister _service;
-  String _imageUrlLittle;
-  String _imageUrlLarge;
-  String _addDate;
+  String _imageUrlLittle = DEFAULT_IMAGE_URL;
+  String _imageUrlLarge = DEFAULT_IMAGE_URL;
+  DateTime _addDate;
 
   static const String PLAYMODE_PLAY = "play";
   static const String PLAYMODE_RESUME = "resume";
@@ -33,19 +36,20 @@ class Track {
       @required id,
       @required Duration totalDuration,
       String album,
-      String imageUrlLittle,
-      String imageUrlLarge,
-      String addDate}) {
+      @required String imageUrlLittle,
+      @required String imageUrlLarge,
+      DateTime addDate}) {
+        
     _id = id;
     _name = name;
     _artist = artist;
-    if (totalDuration != null) _totalDuration = totalDuration;
     _album = album;
-    _imageUrlLittle = imageUrlLittle;
-    _imageUrlLarge = imageUrlLarge;
+    if (imageUrlLittle != null) _imageUrlLittle = imageUrlLittle;
+    if (imageUrlLarge != null) _imageUrlLarge = imageUrlLarge;
     _service = service;
-    _addDate = addDate;
-
+    if (addDate != null) _addDate = addDate;
+    else _addDate = DateTime.now();
+    if (totalDuration != null) _totalDuration = totalDuration;
   }
 
   ValueListenable<bool> get isSelected => _isSelected;
@@ -63,6 +67,8 @@ class Track {
   
   get imageUrlLittle => _imageUrlLittle;
   get imageUrlLarge => _imageUrlLarge;
+
+  DateTime get addedDate => _addDate;
   
   String get serviceName => _service.toString().split(".")[1];  
   Stream get serviceStream => PlatformsLister.platforms[_service].stream;
