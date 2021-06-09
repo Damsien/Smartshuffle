@@ -85,8 +85,8 @@ class API {
 
     do {
       nextPageToken = response.nextPageToken;
-      _songsList(tracks, response);
-
+      tracks.addAll(await _songsList(response));
+      
       if (nextPageToken != null) {
         response = await _youtubeApi.playlistItems.list(
           ['snippet'],
@@ -96,7 +96,7 @@ class API {
         );
       }
     } while (nextPageToken != null);
-
+    
     return tracks;
   }
 
@@ -178,7 +178,9 @@ class API {
   );
 }
 
-  void _songsList(List<Track> list, YTB.PlaylistItemListResponse songs) async {
+  Future<List<Track>> _songsList(YTB.PlaylistItemListResponse songs) async {
+    List<Track> list = [];
+
     List<YTB.PlaylistItem> items = songs.items;
     for (int i = 0; i < items.length; i++) {
       String name = items[i].snippet.title;
@@ -199,15 +201,18 @@ class API {
         id: [id]
       );
       Duration duration = toDuration(response.items[0].contentDetails.duration);
-
-      list.add(Track(
+      Track track = Track(
           id: id,
           name: name,
           artist: artist,
           imageUrlLittle: imageUrlLittle,
           imageUrlLarge: imageUrlLarge,
           totalDuration: duration,
-          service: ServicesLister.YOUTUBE,));
+          service: ServicesLister.YOUTUBE,);
+
+      list.add(track);
     }
+    
+    return list;
   }
 }

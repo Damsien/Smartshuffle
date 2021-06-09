@@ -66,7 +66,7 @@ class TabsView {
           List<Playlist> realPlaylists = snapshot.data;
           finalWidget = Container(
             key: PageStorageKey('TabBarView:'+ctrl.platform.name+':Playlists'),
-            color: Colors.black54,
+            color: Colors.grey[900],
             child: RefreshIndicator(
               key: UniqueKey(),
               onRefresh: () async {

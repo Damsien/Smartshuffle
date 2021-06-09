@@ -124,6 +124,9 @@ class GlobalQueue {
   }
 
   void reorder(int oldIndex, int oldList, int newIndex, int newList) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
     switch(oldList) {
       case 0: {
         switch(newList) {

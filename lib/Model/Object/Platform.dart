@@ -70,6 +70,9 @@ class Platform {
   }
 
   List<Playlist> reorder(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
     Playlist elem = playlists.value.removeAt(oldIndex);
     playlists.value.insert(newIndex, elem);
     playlists.notifyListeners();
