@@ -157,7 +157,7 @@ class API {
     final timeString = timeMatch.group(0);
     return int.parse(timeString.substring(0, timeString.length - 1));
   }
-  Duration toDuration(String isoString) {
+  Duration _toDuration(String isoString) {
   if (!RegExp(
           r"^(-|\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$")
       .hasMatch(isoString)) {
@@ -200,7 +200,7 @@ class API {
         ['contentDetails'],
         id: [id]
       );
-      Duration duration = toDuration(response.items[0].contentDetails.duration);
+      Duration duration = _toDuration(response.items[0].contentDetails.duration);
       Track track = Track(
           id: id,
           name: name,
