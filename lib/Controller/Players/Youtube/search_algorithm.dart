@@ -28,12 +28,12 @@ class SearchAlgorithm {
     print(query);
     YTB.SearchListResponse searchList = await _youtubeApi.search.list(
       ['snippet'],
-      maxResults: 10,
-      eventType: 'completed',
+      maxResults: 1,
+      // eventType: 'completed',
       // safeSearch: 'none',
       // order: 'viewCount',
       // topicId: '/m/04rlf',
-      type: ['video, channel, playlist'],
+      // type: ['video, channel, playlist'],
       q: query
     );
 

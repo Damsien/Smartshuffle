@@ -86,6 +86,8 @@ class PlatformSpotifyController extends PlatformsController {
   connect() async {
     await spController.login();
     platform.userInformations['isConnected'] = spController.isLoggedIn;
+    platform.userInformations['name'] = spController.displayName;
+    platform.userInformations['email'] = spController.email;
     this.updateStates();
   }
 

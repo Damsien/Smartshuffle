@@ -17,6 +17,12 @@ class API {
   static final API _instance = API._internal();
   String _token;
   bool _isLoggedIn;
+  
+  String _displayName;
+  String _email;
+
+  get displayName => _displayName;
+  get email => _email;
 
   factory API() {
     return _instance;
@@ -75,6 +81,15 @@ class API {
     return tracks;
   }
 
+  Future _getUserProfile() async {
+    Response response = await get(APIPath.getUserProfile(),
+        headers: _prepareHeader());
+    Map json = jsonDecode(response.body);
+
+    _displayName = json['display_name'];
+    _email = json['email'];
+  }
+
   ///
   ///Setter
   ///
@@ -93,6 +108,7 @@ class API {
     } else {
       _isLoggedIn = true;
       _token = token;
+      await _getUserProfile();
     }
     print(token);
   }
