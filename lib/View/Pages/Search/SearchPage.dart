@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:smartshuffle/Controller/Players/Youtube/search_algorithm.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class SearchPageMain extends StatelessWidget {
   @override
@@ -39,7 +41,13 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return Center(
+      child: MaterialButton(
+        onPressed: () {
+          SearchAlgorithm().search(artiste: 'Peking Duk', title: 'Stranger', service: ServicesLister.SPOTIFY);
+        },
+        child: Text('oui', style: TextStyle(color: Colors.red),),
+      )
     );
     
   }

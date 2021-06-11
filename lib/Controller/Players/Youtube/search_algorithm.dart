@@ -17,7 +17,7 @@ class SearchAlgorithm {
   }
 
   Future<YTB.YouTubeApi> login() async {
-    Map<dynamic, dynamic> infos = await APIAuth.login();
+    Map<dynamic, dynamic> infos = await APIAuth.loginWithoutAllScopes();
     var _httpClient = infos.entries.first.key;
     return YTB.YouTubeApi(_httpClient);
   }

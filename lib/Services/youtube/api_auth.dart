@@ -16,14 +16,19 @@ class APIAuth {
   ]);
   static bool _isSigningIn = false;
   static GoogleSignInAccount _user;
+  static var _httpClient;
   static GoogleSignInAuthentication _auth;
 
   bool get isSigningIn => _isSigningIn;
 
-  static Future<Map<dynamic, GoogleSignInAccount>> login() async {
+  static Future<Map<dynamic, GoogleSignInAccount>> login() {
+    return _loginWithAllScopes(_googleSignIn);
+  }
+
+  static Future<Map<dynamic, GoogleSignInAccount>> _loginWithAllScopes(GoogleSignIn googleSignIn) async {
     _isSigningIn = true;
 
-    _user = await _googleSignIn.signIn();
+    _user = await googleSignIn.signIn();
     if (_user == null) {
       _isSigningIn = false;
       return null;
@@ -43,9 +48,19 @@ class APIAuth {
       // }
       _isSigningIn = false;
 
-      var httpClient = await _googleSignIn.authenticatedClient();
+      _httpClient = await googleSignIn.authenticatedClient();
 
-      return {httpClient: _user};
+      return {_httpClient: _user};
+    }
+  }
+
+  static Future<Map<dynamic, GoogleSignInAccount>> loginWithoutAllScopes() async {
+    GoogleSignIn googleSignIn = GoogleSignIn(scopes: <String>[
+    ]);
+    if(_user == null) {
+      return _loginWithAllScopes(googleSignIn);
+    } else {
+      return login();
     }
   }
 
