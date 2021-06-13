@@ -38,7 +38,7 @@ class SearchAlgorithm {
     );
 
     List<YTB.SearchResult> asr = searchList.items;
-    //TODO Optimize research by finding music certified channel
+    //TODO Optimize research by finding music certified artist channel + have same duration and no clip
     YTB.SearchResult sr = asr[0];
     
     String name = sr.snippet.title;

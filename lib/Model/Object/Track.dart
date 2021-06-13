@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -27,7 +28,7 @@ class Track {
   ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   ValueNotifier<bool> _isSelected = ValueNotifier<bool>(false);
 
-  StreamSubscription streamSub;
+  File _file;
 
   Track(
       {@required String name,
@@ -55,35 +56,32 @@ class Track {
   ValueListenable<bool> get isSelected => _isSelected;
   ValueListenable<bool> get isPlaying => _isPlaying;
 
-  get id => _id;
+  String get id => _id;
 
-  get name => _name;
-  get artist => _artist;
-  get album => _album;
+  String get name => _name;
+  String get artist => _artist;
+  String get album => _album;
   
   void setCurrentDuration(Duration duration) => _currentDuration.value = duration;
-  get currentDuration => _currentDuration;
-  get totalDuration => _totalDuration;
+  ValueNotifier<Duration>  get currentDuration => _currentDuration;
+  Duration  get totalDuration => _totalDuration;
   
-  get imageUrlLittle => _imageUrlLittle;
-  get imageUrlLarge => _imageUrlLarge;
+  String get imageUrlLittle => _imageUrlLittle;
+  String get imageUrlLarge => _imageUrlLarge;
+
 
   DateTime get addedDate => _addDate;
   
+  ServicesLister get service => _service;
   String get serviceName => _service.toString().split(".")[1];  
-  Stream get serviceStream => PlatformsLister.platforms[_service].stream;
+  // Stream get serviceStream => _stream;
 
+  Future _loadFile() async {
+    _file = await PlatformsLister.platforms[_service].getFile(this);
+  }
 
   bool setIsSelected(bool isSelected) {
     _isSelected.value = isSelected;
-    if(isSelected) {
-      streamSub = serviceStream.listen((event) {
-        _isPlaying.value = !event.isPaused;
-        _isPlaying.notifyListeners();
-      });
-    } else {
-      streamSub?.cancel();
-    }
     return _isSelected.value;
   }
 
@@ -114,20 +112,35 @@ class Track {
     return _isPlaying.value;
   }
 
-  void _backPlayer(String playMode) {
+  bool resumeOnly() {
+    _isPlaying.value = true;
+    _isPlaying.notifyListeners();
+    return _isPlaying.value;
+  }
+
+  bool pauseOnly() {
+    _isPlaying.value = false;
+    _isPlaying.notifyListeners();
+    return _isPlaying.value;
+  }
+
+  void _backPlayer(String playMode) async {
     PlatformsController ctrl = PlatformsLister.platforms[_service];
     switch(playMode) {
-      case PLAYMODE_PLAY : ctrl.play(_id); break;
-      case PLAYMODE_RESUME: ctrl.resume(); break;
+      case PLAYMODE_PLAY : {
+        await _loadFile();
+        ctrl.play(_file, this);
+      } break;
+      case PLAYMODE_RESUME: ctrl.resume(_file); break;
       case PLAYMODE_PAUSE: ctrl.pause(); break;
     }
   }
 
-  void seekTo(Duration duration, bool influence) {
-    _currentDuration.value = duration;
+  void seekTo(Duration position, bool influence) {
+    _currentDuration.value = position;
     if(influence) {
       PlatformsController ctrl = PlatformsLister.platforms[_service];
-      ctrl.seekTo(duration);
+      ctrl.seekTo(position);
     }
   }
 

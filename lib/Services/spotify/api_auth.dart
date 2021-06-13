@@ -10,9 +10,9 @@ class APIAuth {
   static final storage = new FlutterSecureStorage();
 
   static Future<String> login() async {
-    await DotEnv().load('.env');
-    String clientId = DotEnv().env['SPOTIFY_ID'];
-    String redirectUri = DotEnv().env['SPOTIFY_URI'];
+    await load(fileName: '.env');
+    String clientId = env['SPOTIFY_ID'];
+    String redirectUri = env['SPOTIFY_URI'];
 
     String token = await SpotifySdk.getAuthenticationToken(
         clientId: clientId, redirectUrl: redirectUri, scope: _scopes);

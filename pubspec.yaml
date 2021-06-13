@@ -25,29 +25,33 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: ">=0.16.1"
+  intl: any
   spotify_sdk: any
-  audioplayer: any
+  just_audio: any
+  audio_service: any
+  audio_session: any
   http: any
-  html: ^0.14.0+4
-  device_apps: ^1.2.0
-  sliding_up_panel: ^1.0.2
+  html: any
+  path_provider: any
+  device_apps: any
+  sliding_up_panel: any
   #reorderables: ^0.4.1
-  drag_and_drop_lists: ^0.3.1
-  palette_generator: ^0.3.0
-  focus_detector: ^2.0.0
-  visibility_detector: ^0.2.0
+  drag_and_drop_lists: any
+  palette_generator: any
+  focus_detector: any
+  visibility_detector: any
+  youtube_explode_dart: any
 
     #google sign in
-  firebase_auth: ">=0.18.3"
-  google_sign_in: ^5.0.0
+  firebase_auth: any
+  google_sign_in: any
   #spotify sign in
-  flutter_dotenv: ^2.1.0
-  flutter_secure_storage: ^3.3.5
+  flutter_dotenv: any
+  flutter_secure_storage: any
 
-  equatable: ^1.2.5
+  equatable: any
 
-  mailer: ^5.0.0
+  mailer: any
 
 
   # The following adds the Cupertino Icons font to your application.

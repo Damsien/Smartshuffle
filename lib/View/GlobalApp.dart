@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/foundation.dart';
@@ -125,6 +127,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
 
+  Future _initAudioService() async {
+    await AudioService.connect();
+    final session = await AudioSession.instance;
+    await session.configure(AudioSessionConfiguration.music());
+  }
+
+
   @override
   void initState() {
     this.fakers();
@@ -133,8 +142,15 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       DeviceOrientation.portraitDown,
     ]);
     //this.checkForUpdate();
+    _initAudioService();
     this.initPage();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    AudioService.disconnect();
+    super.dispose();
   }
 
   void initPage() {
@@ -192,20 +208,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         this.userPlatforms[elem.key] = elem.value;
     }
 
-
-      for (PlatformsController ctrl in this.userPlatforms.values) {
-        for (Playlist play in ctrl.platform.playlists.value) {
-          for (MapEntry<Track, DateTime> tr in play.tracks) {
-            tr.key.setIsPlaying(false);
-          }
-        }
-      }
-
-      
-
       if (track != null) {
+        CurrentTrack().setTrackPlaying(track);
+
         this.selectedTrack.value = track;
-        this.selectedTrack.value.setIsPlaying(true);
 
         if(queueCreate) {
 
@@ -242,7 +248,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               _tabIndex = _songsTabCtrl.page.toInt();
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
-            this.selectedTrack.value.setIsPlaying(true);
+            CurrentTrack().setTrackPlaying(track);
           } else {
             GlobalQueue().generateNonPermanentQueue(playlist, false);
             _blockAnimation = true;
@@ -251,7 +257,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               _tabIndex = _songsTabCtrl.page.toInt();
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
-            this.selectedTrack.value.setIsPlaying(true);
+            CurrentTrack().setTrackPlaying(track);
           }
 
         } else {
@@ -572,7 +578,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                       ValueListenableBuilder(
                                         valueListenable: trackUp.currentDuration,
                                         builder: (BuildContext context, Duration duration, __) {
-                                          print(duration);
+                                          // print(duration);
                                           return Stack(
                                             children: [
                                               Positioned(
@@ -1161,14 +1167,16 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         ),
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-            body: Stack(children: [
-              PageView(
-                controller: this.pageController,
-                physics: NeverScrollableScrollPhysics(),
-                children: this.pages,
-              ),
-              buildPanel()
-            ]),
+            body: AudioServiceWidget(
+              child: Stack(children: [
+                PageView(
+                  controller: this.pageController,
+                  physics: NeverScrollableScrollPhysics(),
+                  children: this.pages,
+                ),
+                buildPanel()
+              ])
+            ),
             bottomNavigationBar: Container(
                 height: _botBarHeight,
                 child: BottomNavigationBar(

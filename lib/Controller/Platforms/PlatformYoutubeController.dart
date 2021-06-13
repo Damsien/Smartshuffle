@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
@@ -43,9 +45,11 @@ class PlatformYoutubeController extends PlatformsController {
       finalPlaylists.add(play);
     }
     for (int i = 0; i < platform.playlists.value.length; i++) {
-      if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true)
+      if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true) {
         finalPlaylists[i]
             .setTracks(await yt.getPlaylistSongs(finalPlaylists[i]));
+        setAllTracks();
+      }
       else
         finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks);
     }
@@ -135,31 +139,33 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
-  pause() {
-    // TODO: implement pause
+  Future<File> getFile(Track tr) {
+    // TODO: implement stream
     throw UnimplementedError();
   }
 
-  @override
-  play(String youtubeUri) {
-    // TODO: implement play
-    throw UnimplementedError();
-  }
+  // @override
+  // pause() {
+  //   // TODO: implement pause
+  //   throw UnimplementedError();
+  // }
 
-  @override
-  resume() {
-    // TODO: implement resume
-    throw UnimplementedError();
-  }
+  // @override
+  // play(String youtubeUri) {
+  //   // TODO: implement play
+  //   throw UnimplementedError();
+  // }
 
-  @override
-  // TODO: implement stream
-  Stream get stream => throw UnimplementedError();
+  // @override
+  // resume() {
+  //   // TODO: implement resume
+  //   throw UnimplementedError();
+  // }
 
-  @override
-  seekTo(Duration duration) {
-    // TODO: implement seekTo
-    throw UnimplementedError();
-  }
+  // @override
+  // seekTo(Duration duration) {
+  //   // TODO: implement seekTo
+  //   throw UnimplementedError();
+  // }
 
 }

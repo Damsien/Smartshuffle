@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
@@ -105,31 +106,33 @@ class PlatformDefaultController extends PlatformsController {
   void renamePlaylist(Playlist playlist, String name) {}
 
   @override
-  pause() {
-    // TODO: implement pause
+  Future<File> getFile(Track tr) {
+    // TODO: implement stream
     throw UnimplementedError();
   }
 
-  @override
-  play(String uri) {
-    // TODO: implement play
-    throw UnimplementedError();
-  }
+  // @override
+  // pause() {
+  //   // TODO: implement pause
+  //   throw UnimplementedError();
+  // }
 
-  @override
-  resume() {
-    // TODO: implement resume
-    throw UnimplementedError();
-  }
+  // @override
+  // play(String uri) {
+  //   // TODO: implement play
+  //   throw UnimplementedError();
+  // }
 
-  @override
-  // TODO: implement stream
-  Stream get stream => Stream.empty();
-
-  @override
-  seekTo(Duration duration) {
-    // TODO: implement seekTo
-    throw UnimplementedError();
-  }
+  // @override
+  // resume() {
+  //   // TODO: implement resume
+  //   throw UnimplementedError();
+  // }
+  
+  // @override
+  // seekTo(Duration duration) {
+  //   // TODO: implement seekTo
+  //   throw UnimplementedError();
+  // }
 
 }

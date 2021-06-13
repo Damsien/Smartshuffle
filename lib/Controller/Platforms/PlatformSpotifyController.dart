@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -44,9 +47,11 @@ class PlatformSpotifyController extends PlatformsController {
       finalPlaylists.add(play);
     }
     for (int i = 0; i < platform.playlists.value.length; i++) {
-      if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true)
+      if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true) {
         finalPlaylists[i]
             .setTracks(await spController.getPlaylistSongs(finalPlaylists[i]));
+        setAllTracks();
+      }
       else
         finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks);
     }
@@ -136,26 +141,26 @@ class PlatformSpotifyController extends PlatformsController {
   }
 
   @override
-  pause() {
-    SpotifySdk.pause();
-  }
+  Future<File> getFile(Track tr) async => await YoutubeRetriever().streamByName(tr);
 
-  @override
-  play(String spotifyId) {
-    SpotifySdk.play(spotifyUri: 'spotify:track:$spotifyId');
-  }
+  // @override
+  // pause() {
+  //   SpotifySdk.pause();
+  // }
 
-  @override
-  resume() {
-    SpotifySdk.resume();
-  }
+  // @override
+  // play(String spotifyId) {
+  //   SpotifySdk.play(spotifyUri: 'spotify:track:$spotifyId');
+  // }
 
-  @override
-  Stream get stream => SpotifySdk.subscribePlayerState();
+  // @override
+  // resume() {
+  //   SpotifySdk.resume();
+  // }
 
-  @override
-  seekTo(Duration duration) async {
-    await SpotifySdk.seekTo(positionedMilliseconds: duration.inMilliseconds);
-  }
+  // @override
+  // seekTo(Duration duration) async {
+  //   await SpotifySdk.seekTo(positionedMilliseconds: duration.inMilliseconds);
+  // }
 
 }

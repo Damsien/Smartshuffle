@@ -3,7 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/services.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
-import 'package:smartshuffle/Controller/Players/Youtube/search_algorithm.dart';
+import 'package:smartshuffle/Controller/Players/Youtube/SearchAlgorithm.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:device_apps/device_apps.dart';
@@ -67,7 +67,7 @@ class TabsView {
           List<Playlist> realPlaylists = snapshot.data;
           finalWidget = Container(
             key: PageStorageKey('TabBarView:'+ctrl.platform.name+':Playlists'),
-            color: Colors.grey[900],
+            color: Colors.black54,
             child: RefreshIndicator(
               key: UniqueKey(),
               onRefresh: () async {
@@ -873,7 +873,6 @@ class TabsView {
   trackInformations(PlatformsController ctrl, Track track) {
     String name = track.name;
     String artist = track.artist;
-    SearchAlgorithm().search(artiste: artist, title: name, service: ServicesLister.SPOTIFY).then((Track value) => print(value.name));
     String artist_string = AppLocalizations.of(this.state.context).globalArtist;
     if(artist.contains(',')) artist_string = AppLocalizations.of(this.state.context).globalArtists;
     String album;
