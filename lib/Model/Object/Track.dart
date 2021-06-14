@@ -40,7 +40,7 @@ class Track {
       @required String imageUrlLittle,
       @required String imageUrlLarge,
       DateTime addDate}) {
-        
+        if(id == '-1') print('build');
     _id = id;
     _name = name;
     _artist = artist;
@@ -86,6 +86,7 @@ class Track {
   }
 
   bool setIsPlaying(bool isPlaying) {
+    print('isp');
     _isPlaying.value = isPlaying;
     if(isPlaying) _backPlayer(PLAYMODE_PLAY);
     setIsSelected(isPlaying);
@@ -106,6 +107,7 @@ class Track {
   /*  CONTROLS  */
 
   bool playPause() {
+    print("frerf");
     _isPlaying.value ? _isPlaying.value = false : _isPlaying.value = true;
     if(_isPlaying.value) _backPlayer(PLAYMODE_RESUME);
     else _backPlayer(PLAYMODE_PAUSE);
@@ -115,6 +117,7 @@ class Track {
   bool resumeOnly() {
     _isPlaying.value = true;
     _isPlaying.notifyListeners();
+    print(_isPlaying);
     return _isPlaying.value;
   }
 

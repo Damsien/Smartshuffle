@@ -22,7 +22,7 @@ class SearchAlgorithm {
     return YTB.YouTubeApi(_httpClient);
   }
 
-  Future<Track> search({@required String artiste, @required String title, ServicesLister service}) async {
+  Future<Track> search({@required String artiste, @required String title}) async {
     _youtubeApi = await login();
     String query = '$artiste $title';
     print(query);
@@ -67,7 +67,7 @@ class SearchAlgorithm {
       imageUrlLittle: imageUrlLittle,
       imageUrlLarge: imageUrlLarge,
       totalDuration: duration,
-      service: service
+      service: ServicesLister.YOUTUBE
     );
 
     return track;

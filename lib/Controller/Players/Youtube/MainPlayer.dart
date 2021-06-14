@@ -5,13 +5,39 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart' as SM;
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/SearchAlgorithm.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:path_provider/path_provider.dart';
 
 class AudioPlayerTask extends BackgroundAudioTask {
+
+  Map<MapEntry<String, Track>, bool> _allTracks = Map<MapEntry<String, Track>, bool>();
+
+  void setAllTracksPlatform(PlatformsController ctrl) {
+    for (SM.Playlist play in ctrl.platform.playlists.value) {
+      for (MapEntry<Track, DateTime> tr in play.tracks) {
+        _allTracks[MapEntry('${tr.key.serviceName}/${tr.key.id}', tr.key)] = false;
+      }
+    }
+  }
+
+  void setTrackPlaying(Track track) {
+    print('here');
+    if(_allTracks.containsValue(true)) {
+      Track track = _allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value;
+      track.setIsPlaying(false);
+    }
+    track.setIsPlaying(true);
+    _allTracks[MapEntry('${track.serviceName}/${track.id}', track)] = true;
+    print('currenttrack');
+    print(_allTracks[_allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value]);
+  }
+
+
   final AudioPlayer _player = AudioPlayer();
 
   @override
@@ -66,38 +92,47 @@ class AudioPlayerTask extends BackgroundAudioTask {
       playing: false,
       processingState: AudioProcessingState.stopped
     );
-    CurrentTrack().currentTrack.setIsPlaying(false);
+    Track track = _allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value;
+    track.setIsPlaying(false);
     await _player.stop();
     return super.onStop();
   }
 
   @override
   Future<void> onPause() async {
+    print('onPause');
+    print(AudioServiceBackground.mediaItem.title);
     AudioServiceBackground.setState(
       playing: true,
       processingState: AudioProcessingState.ready
     );
     await _player.pause();
-    print(CurrentTrack().currentTrack);
-    CurrentTrack().currentTrack.pauseOnly();
+    Track track = _allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value;
+    print('heeere');
+    track.pauseOnly();
+    print('heeere2');
+    print(track);
+    print('heeere3');
     return super.onPause();
   }
 
   @override
   Future<void> onPlay() async {
+    print('onPlay');
     AudioServiceBackground.setState(
       playing: true,
       processingState: AudioProcessingState.ready
     );
     await _player.play();
-    print(CurrentTrack().currentTrack);
-    CurrentTrack().currentTrack.resumeOnly();
+    Track track = _allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value;
+    track.resumeOnly();
+    print(track);
     return super.onPlay();
   }
 
   @override
   Future<void> onSeekTo(Duration position) async {
-    CurrentTrack().currentTrack.seekTo(position, false);
+    // _currentTrack.seekTo(position, false);
     await _player.seek(position);
     return super.onSeekTo(position);
   }
@@ -123,7 +158,7 @@ class YoutubeRetriever {
   }
 
   Future<File> streamByName(Track track) async {
-    Track tr = await SearchAlgorithm().search(artiste: track.artist, title: track.name, service: track.service);
+    Track tr = await SearchAlgorithm().search(artiste: track.artist, title: track.name);
     return await streamById(tr.id);
   }
 

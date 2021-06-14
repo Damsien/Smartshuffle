@@ -1,54 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-
-
-class CurrentTrack {
-  
-  CurrentTrack._singleton();
-
-  static final CurrentTrack _instance = CurrentTrack._singleton();
-
-  static Track _currentTrack;
-  static Map<String, Track> _allTracks = Map<String, Track>();
-
-  factory CurrentTrack() {
-    return _instance;
-  }
-
-  // void setAllTracks(Map<ServicesLister, PlatformsController> userPlatforms) {
-  //   for (PlatformsController ctrl in userPlatforms.values) {
-  //     for (Playlist play in ctrl.platform.playlists.value) {
-  //       for (MapEntry<Track, DateTime> tr in play.tracks) {
-  //         _allTracks['${tr.key.serviceName}/${tr.key.id}'] = tr.key;
-  //       }
-  //     }
-  //   }
-  // }
-
-  void setAllTracksPlatform(PlatformsController ctrl) {
-    for (Playlist play in ctrl.platform.playlists.value) {
-      for (MapEntry<Track, DateTime> tr in play.tracks) {
-        _allTracks['${tr.key.serviceName}/${tr.key.id}'] = tr.key;
-      }
-    }
-  }
-
-  void setTrackPlaying(Track track) {
-    if(_currentTrack != null) {
-      _currentTrack.setIsPlaying(false);
-    }
-    track.setIsPlaying(true);
-    _currentTrack = track;
-    print('currenttrack');
-    print(_currentTrack);
-  }
-
-  Track get currentTrack => _currentTrack;
-  
-}
 
 class GlobalQueue {
   

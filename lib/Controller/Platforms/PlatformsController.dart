@@ -68,7 +68,7 @@ abstract class PlatformsController {
 
   @protected
   void setAllTracks() {
-    CurrentTrack().setAllTracksPlatform(this);
+    AudioPlayerTask().setAllTracksPlatform(this);
   }
 
   Future<List<Playlist>> getPlaylists({bool refreshing});
@@ -127,7 +127,8 @@ abstract class PlatformsController {
   }
 
   play(File file, Track track) async {
-    await AudioService.stop();
+    print('play');
+    // await AudioService.stop();
     await AudioService.start(
      backgroundTaskEntrypoint: _entrypoint,
      androidNotificationColor: int.parse(_colorToHexString(await _getImagePalette(NetworkImage(track.imageUrlLarge)))),

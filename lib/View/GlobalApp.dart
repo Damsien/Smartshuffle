@@ -9,6 +9,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
+import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
 import 'package:spotify_sdk/models/player_state.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -209,7 +210,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
 
       if (track != null) {
-        CurrentTrack().setTrackPlaying(track);
+        AudioPlayerTask().setTrackPlaying(track);
 
         this.selectedTrack.value = track;
 
@@ -248,7 +249,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               _tabIndex = _songsTabCtrl.page.toInt();
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
-            CurrentTrack().setTrackPlaying(track);
+            AudioPlayerTask().setTrackPlaying(track);
           } else {
             GlobalQueue().generateNonPermanentQueue(playlist, false);
             _blockAnimation = true;
@@ -257,7 +258,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               _tabIndex = _songsTabCtrl.page.toInt();
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
-            CurrentTrack().setTrackPlaying(track);
+            AudioPlayerTask().setTrackPlaying(track);
           }
 
         } else {
@@ -705,6 +706,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                     ValueListenableBuilder(
                       valueListenable: this.selectedTrack.value.isPlaying,
                       builder: (BuildContext context, bool isPlaying, Widget child) {
+                        print(this.selectedTrack.value.isPlaying);
                         return Positioned(
                           top: (_screenHeight * 0.80) * _ratio + (_sideMarge*0.07),
                           right: ((_screenWidth / 2) - (_playButtonSize / 2) - _sideMarge),
