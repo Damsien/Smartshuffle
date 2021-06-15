@@ -15,26 +15,30 @@ import 'package:path_provider/path_provider.dart';
 
 class AudioPlayerTask extends BackgroundAudioTask {
 
-  Map<MapEntry<String, Track>, bool> _allTracks = Map<MapEntry<String, Track>, bool>();
+  Map<String, MapEntry<Track, bool>> _allTracks = Map<String, MapEntry<Track, bool>>();
 
   void setAllTracksPlatform(PlatformsController ctrl) {
     for (SM.Playlist play in ctrl.platform.playlists.value) {
       for (MapEntry<Track, DateTime> tr in play.tracks) {
-        _allTracks[MapEntry('${tr.key.serviceName}/${tr.key.id}', tr.key)] = false;
+        _allTracks['${tr.key.serviceName}/${tr.key.id}'] = MapEntry(tr.key, false);
       }
     }
   }
 
   void setTrackPlaying(Track track) {
     print('here');
-    if(_allTracks.containsValue(true)) {
-      Track track = _allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value;
-      track.setIsPlaying(false);
+    if(AudioServiceBackground.mediaItem != null &&
+      _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
+        .key.isPlaying.value)
+    {
+      _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
+        .key.setIsPlaying(false);
     }
     track.setIsPlaying(true);
-    _allTracks[MapEntry('${track.serviceName}/${track.id}', track)] = true;
+    print('${track.serviceName}/${track.id}');
+    _allTracks['${track.serviceName}/${track.id}'] = MapEntry(track, true);
     print('currenttrack');
-    print(_allTracks[_allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value]);
+    print(_allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}'].key);
   }
 
 
@@ -47,7 +51,11 @@ class AudioPlayerTask extends BackgroundAudioTask {
         album: params['track_artist'],
         title: params['track_title'],
         artUri: Uri.parse(params['track_image']),
-        duration: Duration(seconds: params['track_duration_seconds'])
+        duration: Duration(seconds: params['track_duration_seconds']),
+        extras: {
+          'track_id': params['track_id'],
+          'track_service_name': params['track_service_name']
+        }
       );
     // Tell the UI and media notification what we're playing.
     AudioServiceBackground.setMediaItem(mediaItem);
@@ -92,8 +100,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
       playing: false,
       processingState: AudioProcessingState.stopped
     );
-    Track track = _allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value;
-    track.setIsPlaying(false);
+    _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
+      .key.setIsPlaying(false);
     await _player.stop();
     return super.onStop();
   }
@@ -107,12 +115,11 @@ class AudioPlayerTask extends BackgroundAudioTask {
       processingState: AudioProcessingState.ready
     );
     await _player.pause();
-    Track track = _allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value;
-    print('heeere');
-    track.pauseOnly();
-    print('heeere2');
-    print(track);
-    print('heeere3');
+    print(_allTracks.length);
+    print('${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}');
+    print(_allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']);
+    _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
+      .key.pauseOnly();
     return super.onPause();
   }
 
@@ -124,9 +131,9 @@ class AudioPlayerTask extends BackgroundAudioTask {
       processingState: AudioProcessingState.ready
     );
     await _player.play();
-    Track track = _allTracks.keys.firstWhere((k) => _allTracks[k] == true, orElse: () => null).value;
-    track.resumeOnly();
-    print(track);
+    _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
+      .key.resumeOnly();
+    print(_allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}'].key);
     return super.onPlay();
   }
 

@@ -138,6 +138,8 @@ abstract class PlatformsController {
       'track_artist': track.artist,
       'track_image': track.imageUrlLarge,
       'track_duration_seconds': track.totalDuration.inSeconds,
+      'track_id': track.id,
+      'track_service_name': track.serviceName
      });
   }
 
