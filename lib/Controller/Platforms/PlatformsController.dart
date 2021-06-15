@@ -89,18 +89,23 @@ abstract class PlatformsController {
     AudioService.playbackStateStream.listen(
       (data) {
         print('[Eventt] ${data.playing}');
-        print(' ${data.actions.first}');
         
         if(data.playing == true && !track.isPlaying.value) track.resumeOnly();
         else if(data.playing == false && track.isPlaying.value) track.pauseOnly();
-        track.setCurrentDuration(data.currentPosition);
       },
       onError: (err) {
-        print('[Eventt] err');
+        print('[Eventt] $err');
       },
       cancelOnError: false,
-      onDone: () {
-        print('[Eventt] done');
+    );
+    AudioService.queueStream.listen(
+      (data) {
+        
+      }
+    );
+    AudioService.positionStream.listen(
+      (data) {
+        track.seekTo(data, false);
       }
     );
   }
@@ -156,7 +161,7 @@ abstract class PlatformsController {
 
   play(File file, Track track) async {
     print('play');
-    // await AudioService.stop();
+    await AudioService.stop();
     await AudioService.start(
      backgroundTaskEntrypoint: _entrypoint,
      androidNotificationColor: int.parse(_colorToHexString(await _getImagePalette(NetworkImage(track.imageUrlLarge)))),

@@ -158,7 +158,7 @@ class YoutubeRetriever {
   }
 
   Future<File> streamByName(Track track) async {
-    Track tr = await SearchAlgorithm().search(artiste: track.artist, title: track.name);
+    Track tr = await SearchAlgorithm().search(tArtist: track.artist, tTitle: track.name, tDuration: track.totalDuration);
     return await streamById(tr.id);
   }
 

@@ -44,7 +44,6 @@ class _SearchPageState extends State<SearchPage> {
     return Center(
       child: MaterialButton(
         onPressed: () {
-          SearchAlgorithm().search(artiste: 'Peking Duk', title: 'Stranger');
         },
         child: Text('oui', style: TextStyle(color: Colors.red),),
       )

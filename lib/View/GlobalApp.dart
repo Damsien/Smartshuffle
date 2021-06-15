@@ -273,6 +273,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     
     if(_panelCtrl.isAttached && this.selectedTrack.value.id != null && !_panelCtrl.isPanelShown) {
       _panelCtrl.show();
+      AudioService.notificationClickEventStream.listen(
+        (data) {
+          if(data) {
+            _panelCtrl.show();
+          }
+        }
+      );
     }
 
   }

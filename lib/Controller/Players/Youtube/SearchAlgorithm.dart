@@ -22,59 +22,6 @@ class SearchAlgorithm {
     return YTB.YouTubeApi(_httpClient);
   }
 
-  Future<Track> search({@required String artiste, @required String title}) async {
-    _youtubeApi = await login();
-    String query = '$artiste $title';
-    print(query);
-    YTB.SearchListResponse searchList = await _youtubeApi.search.list(
-      ['snippet'],
-      maxResults: 1,
-      // eventType: 'completed',
-      // safeSearch: 'none',
-      // order: 'viewCount',
-      // topicId: '/m/04rlf',
-      // type: ['video, channel, playlist'],
-      q: query
-    );
-
-    List<YTB.SearchResult> asr = searchList.items;
-    //TODO Optimize research by finding music certified artist channel + have same duration and no clip
-    YTB.SearchResult sr = asr[0];
-    
-    String name = sr.snippet.title;
-    String artist = sr.snippet.channelTitle;
-    if(artist.contains(' - Topic')) artist = artist.split(' - Topic')[0];
-
-    String id = sr.id.videoId;
-    String imageUrlLittle = sr.snippet.thumbnails.high.url;
-    String imageUrlLarge;
-    try {
-      imageUrlLarge = sr.snippet.thumbnails.maxres.url;
-    } catch(e) {
-      imageUrlLarge = 'https://source.unsplash.com/random';
-    }
-
-    YTB.VideoListResponse response = await _youtubeApi.videos.list(
-      ['contentDetails'],
-      id: [id]
-    );
-    Duration duration = _toDuration(response.items[0].contentDetails.duration);
-
-    Track track = Track(
-      id: id,
-      name: name,
-      artist: artist,
-      imageUrlLittle: imageUrlLittle,
-      imageUrlLarge: imageUrlLarge,
-      totalDuration: duration,
-      service: ServicesLister.YOUTUBE
-    );
-
-    return track;
-
-  }
-
-
   int _parseTime(String duration, String timeUnit) {
     final timeMatch = RegExp(r"\d+" + timeUnit).firstMatch(duration);
 
@@ -103,6 +50,85 @@ class SearchAlgorithm {
       minutes: minutes,
       seconds: seconds,
     );
+  }
+
+  Future<Track> search({@required String tArtist, @required String tTitle, @required Duration tDuration}) async {
+    _youtubeApi = await login();
+    String query = '$tArtist - Topic $tTitle';
+    print(query);
+    YTB.SearchListResponse searchList = await _youtubeApi.search.list(
+      ['snippet'],
+      maxResults: 10,
+      // eventType: 'completed',
+      // safeSearch: 'none',
+      // order: 'viewCount',
+      // topicId: '/m/04rlf',
+      // type: ['video, channel, playlist'],
+      q: query
+    );
+
+    List<YTB.SearchResult> asr = searchList.items;
+    YTB.SearchResult rsr = asr[1];
+    
+    Duration lastSrDuration;
+    Duration srDuration;
+    for(YTB.SearchResult sr in asr) {
+      YTB.VideoListResponse response = await _youtubeApi.videos.list(
+        ['contentDetails'],
+        id: [sr.id.videoId]
+      );
+      srDuration = _toDuration(response.items[0].contentDetails.duration);
+
+      if(srDuration.compareTo(tDuration) == 0)
+      {
+        rsr = sr;
+        break;
+      }
+
+      if(lastSrDuration != null)
+      {
+        if(srDuration.inSeconds > tDuration.inSeconds && srDuration.inSeconds < lastSrDuration.inSeconds) {
+          rsr = sr;
+        }
+        if(srDuration.inSeconds < tDuration.inSeconds && srDuration.inSeconds > lastSrDuration.inSeconds) {
+          rsr = sr;
+        }
+      }
+
+      lastSrDuration = _toDuration(response.items[0].contentDetails.duration);
+    }
+    
+    String name = rsr.snippet.title;
+    String artist = rsr.snippet.channelTitle;
+    if(artist.contains(' - Topic')) artist = artist.split(' - Topic')[0];
+
+    String id = rsr.id.videoId;
+    String imageUrlLittle = rsr.snippet.thumbnails.high.url;
+    String imageUrlLarge;
+    try {
+      imageUrlLarge = rsr.snippet.thumbnails.maxres.url;
+    } catch(e) {
+      imageUrlLarge = 'https://source.unsplash.com/random';
+    }
+
+    YTB.VideoListResponse response = await _youtubeApi.videos.list(
+      ['contentDetails'],
+      id: [id]
+    );
+    Duration duration = _toDuration(response.items[0].contentDetails.duration);
+
+    Track track = Track(
+      id: id,
+      name: name,
+      artist: artist,
+      imageUrlLittle: imageUrlLittle,
+      imageUrlLarge: imageUrlLarge,
+      totalDuration: duration,
+      service: ServicesLister.YOUTUBE
+    );
+
+    return track;
+
   }
 
 

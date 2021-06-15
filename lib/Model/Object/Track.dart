@@ -40,7 +40,6 @@ class Track {
       @required String imageUrlLittle,
       @required String imageUrlLarge,
       DateTime addDate}) {
-        if(id == '-1') print('build');
     _id = id;
     _name = name;
     _artist = artist;
