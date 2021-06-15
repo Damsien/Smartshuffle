@@ -137,6 +137,7 @@ class Track {
       case PLAYMODE_RESUME: ctrl.resume(_file); break;
       case PLAYMODE_PAUSE: ctrl.pause(); break;
     }
+    ctrl.mediaPlayerListener(this);
   }
 
   void seekTo(Duration position, bool influence) {

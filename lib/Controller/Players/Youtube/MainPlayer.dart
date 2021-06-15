@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart' as SM;
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
@@ -15,30 +16,25 @@ import 'package:path_provider/path_provider.dart';
 
 class AudioPlayerTask extends BackgroundAudioTask {
 
-  Map<String, MapEntry<Track, bool>> _allTracks = Map<String, MapEntry<Track, bool>>();
-
-  void setAllTracksPlatform(PlatformsController ctrl) {
-    for (SM.Playlist play in ctrl.platform.playlists.value) {
-      for (MapEntry<Track, DateTime> tr in play.tracks) {
-        _allTracks['${tr.key.serviceName}/${tr.key.id}'] = MapEntry(tr.key, false);
-      }
-    }
-  }
+  // void setAllTracksPlatform(PlatformsController ctrl) {
+  //   for (SM.Playlist play in ctrl.platform.playlists.value) {
+  //     for (MapEntry<Track, DateTime> tr in play.tracks) {
+  //       _allTracks['${tr.key.serviceName}/${tr.key.id}'] = MapEntry(tr.key, false);
+  //     }
+  //   }
+  // }
 
   void setTrackPlaying(Track track) {
-    print('here');
-    if(AudioServiceBackground.mediaItem != null &&
-      _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
-        .key.isPlaying.value)
+    if(AudioServiceBackground.mediaItem != null)
     {
-      _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
-        .key.setIsPlaying(false);
+      ServicesLister service = PlatformsLister.nameToService(AudioServiceBackground.mediaItem.extras["track_service_name"]);
+      if(PlatformsLister.platforms[service].allTracks['${AudioServiceBackground.mediaItem.extras["track_id"]}'].isPlaying.value) {
+        PlatformsLister.platforms[service].allTracks['${AudioServiceBackground.mediaItem.extras["track_id"]}'].setIsPlaying(false);
+      }
     }
     track.setIsPlaying(true);
-    print('${track.serviceName}/${track.id}');
-    _allTracks['${track.serviceName}/${track.id}'] = MapEntry(track, true);
-    print('currenttrack');
-    print(_allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}'].key);
+    print('[Isolate] currenttrack');
+    print('[Isolate] ${track.serviceName}/${track.id}');
   }
 
 
@@ -54,7 +50,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
         duration: Duration(seconds: params['track_duration_seconds']),
         extras: {
           'track_id': params['track_id'],
-          'track_service_name': params['track_service_name']
+          'track_service_name': params['track_service_name'],
         }
       );
     // Tell the UI and media notification what we're playing.
@@ -89,7 +85,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
     // Play when ready.
     _player.play();
     // Start loading something (will play when ready).
-    await _player.setUrl(mediaItem.id);
+    await _player.setFilePath(mediaItem.id);
     return super.onStart(params);
   }
 
@@ -100,40 +96,37 @@ class AudioPlayerTask extends BackgroundAudioTask {
       playing: false,
       processingState: AudioProcessingState.stopped
     );
-    _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
-      .key.setIsPlaying(false);
+    AudioServiceBackground.mediaItem.extras['track'].setIsPlaying(false);
     await _player.stop();
     return super.onStop();
   }
 
   @override
   Future<void> onPause() async {
-    print('onPause');
+    print('[Isolate] onPause');
     print(AudioServiceBackground.mediaItem.title);
     AudioServiceBackground.setState(
       playing: true,
       processingState: AudioProcessingState.ready
     );
     await _player.pause();
-    print(_allTracks.length);
-    print('${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}');
-    print(_allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']);
-    _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
-      .key.pauseOnly();
+    print('[Isolate] ${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}');
+    AudioServiceBackground.sendCustomEvent('[Send] onPause');
+    // AudioServiceBackground.mediaItem.extras['track'].pauseOnly();
     return super.onPause();
   }
 
   @override
   Future<void> onPlay() async {
-    print('onPlay');
+    print('[Isolate] onPlay');
     AudioServiceBackground.setState(
       playing: true,
       processingState: AudioProcessingState.ready
     );
     await _player.play();
-    _allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}']
-      .key.resumeOnly();
-    print(_allTracks['${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}'].key);
+    print('[Isolate] ${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}');
+    AudioServiceBackground.sendCustomEvent('[Send] onResume');
+    // AudioServiceBackground.mediaItem.extras['track'].resumeOnly();
     return super.onPlay();
   }
 

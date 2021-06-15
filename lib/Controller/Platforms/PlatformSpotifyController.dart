@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
@@ -50,12 +51,13 @@ class PlatformSpotifyController extends PlatformsController {
       if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true) {
         finalPlaylists[i]
             .setTracks(await spController.getPlaylistSongs(finalPlaylists[i]));
-        setAllTracks();
       }
       else
         finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks);
     }
-    return platform.setPlaylist(finalPlaylists);
+    List<Playlist> platPlaylists = platform.setPlaylist(finalPlaylists);
+    super.getAllPlatformTracks();
+    return platPlaylists;
   }
   
   @override

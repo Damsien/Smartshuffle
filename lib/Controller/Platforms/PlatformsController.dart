@@ -12,10 +12,13 @@ import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/Profiles/ProfileView.dart';
 import 'package:palette_generator/palette_generator.dart';
 
+import 'package:protobuf/protobuf.dart';
+
 
 void _entrypoint() => AudioServiceBackground.run(() => AudioPlayerTask());
 abstract class PlatformsController {
   Map<String, State> states = new Map<String, State>();
+  Map<String, Track> allTracks = Map<String, Track>();
   Platform platform;
 
   PlatformsController(Platform platform) {
@@ -66,16 +69,41 @@ abstract class PlatformsController {
 
   getUserInformations();
 
-  @protected
-  void setAllTracks() {
-    AudioPlayerTask().setAllTracksPlatform(this);
-  }
-
   Future<List<Playlist>> getPlaylists({bool refreshing});
 
   Future<List<Track>> getTracks(Playlist playlist);
 
+  Map<String, Track> getAllPlatformTracks() {
+    Map<String, Track> allTracks = Map<String, Track>();
+    for(Playlist playlist in platform.playlists.value) {
+      for(Track track in playlist.getTracks) {
+        allTracks[track.id] = track;
+      }
+    }
+    return this.allTracks = allTracks;
+  }
+
   ValueNotifier<List<Playlist>> getPlaylistsUpdate();
+
+  void mediaPlayerListener(Track track) {
+    AudioService.playbackStateStream.listen(
+      (data) {
+        print('[Eventt] ${data.playing}');
+        print(' ${data.actions.first}');
+        
+        if(data.playing == true && !track.isPlaying.value) track.resumeOnly();
+        else if(data.playing == false && track.isPlaying.value) track.pauseOnly();
+        track.setCurrentDuration(data.currentPosition);
+      },
+      onError: (err) {
+        print('[Eventt] err');
+      },
+      cancelOnError: false,
+      onDone: () {
+        print('[Eventt] done');
+      }
+    );
+  }
 
   /*  CONNECTION    */
 
@@ -144,7 +172,7 @@ abstract class PlatformsController {
   }
 
   resume(File file) {
-    print('play');
+    print('resume');
     AudioService.play();
   }
 

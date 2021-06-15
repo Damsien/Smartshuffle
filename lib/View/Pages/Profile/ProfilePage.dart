@@ -78,16 +78,13 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
       ],
       home: Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: Text(AppLocalizations.of(context).globalTitleProfile),
-        ),
         body: Container(
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
           color: Colors.black54,
           child: SingleChildScrollView(
             child: Padding(
-              padding: EdgeInsets.only(left: 30, right: 30),
+              padding: EdgeInsets.only(left: 30, right: 30, top: 40),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

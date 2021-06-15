@@ -235,9 +235,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
         child: Scaffold(
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
-            title: Text(AppLocalizations.of(context).globalTitleLibrairie),
+            title: tabBar(),
             foregroundColor: this.widget.materialColor.shade300,
-            bottom: tabBar()
           ),
           body: TabBarView(
             controller: this._tabController,

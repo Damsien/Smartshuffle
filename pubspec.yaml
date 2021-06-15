@@ -50,6 +50,7 @@ dependencies:
   flutter_secure_storage: any
 
   equatable: any
+  protobuf: ^2.0.0
 
   mailer: any
 

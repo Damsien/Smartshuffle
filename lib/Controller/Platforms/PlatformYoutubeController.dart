@@ -48,12 +48,13 @@ class PlatformYoutubeController extends PlatformsController {
       if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true) {
         finalPlaylists[i]
             .setTracks(await yt.getPlaylistSongs(finalPlaylists[i]));
-        setAllTracks();
       }
       else
         finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks);
     }
-    return platform.setPlaylist(finalPlaylists);
+    List<Playlist> platPlaylists = platform.setPlaylist(finalPlaylists);
+    super.getAllPlatformTracks();
+    return platPlaylists;
   }
 
   @override
