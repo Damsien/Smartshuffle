@@ -54,7 +54,7 @@ class SearchAlgorithm {
 
   Future<Track> search({@required String tArtist, @required String tTitle, @required Duration tDuration}) async {
     _youtubeApi = await login();
-    String query = '$tArtist - Topic $tTitle';
+    String query = '$tArtist $tTitle';
     print(query);
     YTB.SearchListResponse searchList = await _youtubeApi.search.list(
       ['snippet'],
@@ -68,34 +68,45 @@ class SearchAlgorithm {
     );
 
     List<YTB.SearchResult> asr = searchList.items;
-    YTB.SearchResult rsr = asr[1];
+    YTB.SearchResult rsr = asr[0];
     
     Duration lastSrDuration;
     Duration srDuration;
+
+    int i = 0;
     for(YTB.SearchResult sr in asr) {
-      YTB.VideoListResponse response = await _youtubeApi.videos.list(
-        ['contentDetails'],
-        id: [sr.id.videoId]
-      );
-      srDuration = _toDuration(response.items[0].contentDetails.duration);
 
-      if(srDuration.compareTo(tDuration) == 0)
+      if(i < 3 || (
+        sr.snippet.title.contains(tTitle) ||
+        sr.snippet.title.contains(tTitle.toLowerCase()) ||
+        sr.snippet.title.contains(tTitle.toUpperCase())
+       ))
       {
-        rsr = sr;
-        break;
+        if(sr.id.videoId != null) {
+          YTB.VideoListResponse response = await _youtubeApi.videos.list(
+            ['contentDetails'],
+            id: [sr.id.videoId]
+          );
+          srDuration = _toDuration(response.items[0].contentDetails.duration);
+
+          if(srDuration.compareTo(tDuration) == 0)
+          {
+            rsr = sr;
+            break;
+          }
+
+          if(lastSrDuration != null) {
+            if((srDuration.inSeconds-tDuration.inSeconds).abs() < (lastSrDuration.inSeconds-tDuration.inSeconds).abs()) {
+              rsr = sr;
+              lastSrDuration = _toDuration(response.items[0].contentDetails.duration);
+            }
+          } else {
+            lastSrDuration = _toDuration(response.items[0].contentDetails.duration);
+          }
+        }
       }
 
-      if(lastSrDuration != null)
-      {
-        if(srDuration.inSeconds > tDuration.inSeconds && srDuration.inSeconds < lastSrDuration.inSeconds) {
-          rsr = sr;
-        }
-        if(srDuration.inSeconds < tDuration.inSeconds && srDuration.inSeconds > lastSrDuration.inSeconds) {
-          rsr = sr;
-        }
-      }
-
-      lastSrDuration = _toDuration(response.items[0].contentDetails.duration);
+      i++;
     }
     
     String name = rsr.snippet.title;

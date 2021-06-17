@@ -86,17 +86,15 @@ abstract class PlatformsController {
   ValueNotifier<List<Playlist>> getPlaylistsUpdate();
 
   void mediaPlayerListener(Track track) {
+    print("[MediaPlayer] track : $track");
     AudioService.playbackStateStream.listen(
-      (data) {
-        print('[Eventt] ${data.playing}');
-        
+      (data) {        
         if(data.playing == true && !track.isPlaying.value) track.resumeOnly();
         else if(data.playing == false && track.isPlaying.value) track.pauseOnly();
       },
       onError: (err) {
-        print('[Eventt] $err');
+        print('[Event] $err');
       },
-      cancelOnError: false,
     );
     AudioService.queueStream.listen(
       (data) {
@@ -106,6 +104,13 @@ abstract class PlatformsController {
     AudioService.positionStream.listen(
       (data) {
         track.seekTo(data, false);
+      }
+    );
+    AudioService.customEventStream.listen(
+      (data) {
+        if(data == '[Send] onStop') {
+          track.setIsPlaying(false);
+        }
       }
     );
   }
@@ -160,8 +165,11 @@ abstract class PlatformsController {
   }
 
   play(File file, Track track) async {
-    print('play');
-    await AudioService.stop();
+    if(GlobalQueue.currentTrack != null) {
+      GlobalQueue.currentTrack.setIsPlaying(false);
+    }
+    GlobalQueue.currentTrack = track;
+
     await AudioService.start(
      backgroundTaskEntrypoint: _entrypoint,
      androidNotificationColor: int.parse(_colorToHexString(await _getImagePalette(NetworkImage(track.imageUrlLarge)))),
@@ -173,7 +181,7 @@ abstract class PlatformsController {
       'track_duration_seconds': track.totalDuration.inSeconds,
       'track_id': track.id,
       'track_service_name': track.serviceName
-     });
+    });
   }
 
   resume(File file) {

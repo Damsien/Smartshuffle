@@ -16,28 +16,6 @@ import 'package:path_provider/path_provider.dart';
 
 class AudioPlayerTask extends BackgroundAudioTask {
 
-  // void setAllTracksPlatform(PlatformsController ctrl) {
-  //   for (SM.Playlist play in ctrl.platform.playlists.value) {
-  //     for (MapEntry<Track, DateTime> tr in play.tracks) {
-  //       _allTracks['${tr.key.serviceName}/${tr.key.id}'] = MapEntry(tr.key, false);
-  //     }
-  //   }
-  // }
-
-  void setTrackPlaying(Track track) {
-    if(AudioServiceBackground.mediaItem != null)
-    {
-      ServicesLister service = PlatformsLister.nameToService(AudioServiceBackground.mediaItem.extras["track_service_name"]);
-      if(PlatformsLister.platforms[service].allTracks['${AudioServiceBackground.mediaItem.extras["track_id"]}'].isPlaying.value) {
-        PlatformsLister.platforms[service].allTracks['${AudioServiceBackground.mediaItem.extras["track_id"]}'].setIsPlaying(false);
-      }
-    }
-    track.setIsPlaying(true);
-    print('[Isolate] currenttrack');
-    print('[Isolate] ${track.serviceName}/${track.id}');
-  }
-
-
   final AudioPlayer _player = AudioPlayer();
 
   @override
@@ -48,10 +26,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
         title: params['track_title'],
         artUri: Uri.parse(params['track_image']),
         duration: Duration(seconds: params['track_duration_seconds']),
-        extras: {
-          'track_id': params['track_id'],
-          'track_service_name': params['track_service_name'],
-        }
       );
     // Tell the UI and media notification what we're playing.
     AudioServiceBackground.setMediaItem(mediaItem);
@@ -96,7 +70,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
       playing: false,
       processingState: AudioProcessingState.stopped
     );
-    AudioServiceBackground.mediaItem.extras['track'].setIsPlaying(false);
+    print('stoippp');
+    AudioServiceBackground.sendCustomEvent('[Send] onStop');
     await _player.stop();
     return super.onStop();
   }
@@ -110,7 +85,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
       processingState: AudioProcessingState.ready
     );
     await _player.pause();
-    print('[Isolate] ${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}');
     AudioServiceBackground.sendCustomEvent('[Send] onPause');
     // AudioServiceBackground.mediaItem.extras['track'].pauseOnly();
     return super.onPause();
@@ -134,12 +108,51 @@ class AudioPlayerTask extends BackgroundAudioTask {
   Future<void> onSeekTo(Duration position) async {
     // _currentTrack.seekTo(position, false);
     await _player.seek(position);
+    AudioServiceBackground.setState(
+      playing: true,
+      processingState: AudioProcessingState.ready,
+      position: position
+    );
     return super.onSeekTo(position);
   }
 
 
 
 }
+
+
+
+class QueueManager {
+
+  final int DEFAULT_LENGTH_QUEUE = 5;
+  List<MediaItem> queue = List<MediaItem>();
+
+
+  void setTrackPlaying(Track track) async {
+    await AudioService.stop();
+    track.setIsPlaying(true);
+  }
+
+  Future<List<MediaItem>> queueLoader() async {
+
+    for(int i=queue.length; i<DEFAULT_LENGTH_QUEUE; i++) {
+      Track track = GlobalQueue.queue.value[i].key;
+      File file = await track.loadFile();
+
+      queue[i] = MediaItem(
+        id: file.path,
+        album: track.artist,
+        title: track.name,
+        artUri: Uri.parse(track.imageUrlLarge),
+        duration: Duration(seconds: track.totalDuration.inSeconds),
+      );
+    }
+
+  }
+
+
+}
+
 
 
 class YoutubeRetriever {

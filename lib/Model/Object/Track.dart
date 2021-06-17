@@ -75,8 +75,8 @@ class Track {
   String get serviceName => _service.toString().split(".")[1];  
   // Stream get serviceStream => _stream;
 
-  Future _loadFile() async {
-    _file = await PlatformsLister.platforms[_service].getFile(this);
+  Future<File> loadFile() async {
+    return _file = await PlatformsLister.platforms[_service].getFile(this);
   }
 
   bool setIsSelected(bool isSelected) {
@@ -85,7 +85,6 @@ class Track {
   }
 
   bool setIsPlaying(bool isPlaying) {
-    print('isp');
     _isPlaying.value = isPlaying;
     if(isPlaying) _backPlayer(PLAYMODE_PLAY);
     setIsSelected(isPlaying);
@@ -106,7 +105,6 @@ class Track {
   /*  CONTROLS  */
 
   bool playPause() {
-    print("frerf");
     _isPlaying.value ? _isPlaying.value = false : _isPlaying.value = true;
     if(_isPlaying.value) _backPlayer(PLAYMODE_RESUME);
     else _backPlayer(PLAYMODE_PAUSE);
@@ -115,14 +113,11 @@ class Track {
 
   bool resumeOnly() {
     _isPlaying.value = true;
-    _isPlaying.notifyListeners();
-    print(_isPlaying);
     return _isPlaying.value;
   }
 
   bool pauseOnly() {
     _isPlaying.value = false;
-    _isPlaying.notifyListeners();
     return _isPlaying.value;
   }
 
@@ -130,7 +125,7 @@ class Track {
     PlatformsController ctrl = PlatformsLister.platforms[_service];
     switch(playMode) {
       case PLAYMODE_PLAY : {
-        await _loadFile();
+        if(_file == null) await loadFile();
         ctrl.play(_file, this);
       } break;
       case PLAYMODE_RESUME: ctrl.resume(_file); break;
@@ -141,6 +136,7 @@ class Track {
 
   void seekTo(Duration position, bool influence) {
     _currentDuration.value = position;
+    _currentDuration.notifyListeners();
     if(influence) {
       PlatformsController ctrl = PlatformsLister.platforms[_service];
       ctrl.seekTo(position);

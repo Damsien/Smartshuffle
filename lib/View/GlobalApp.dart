@@ -210,7 +210,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
 
       if (track != null) {
-        AudioPlayerTask().setTrackPlaying(track);
+        QueueManager().setTrackPlaying(track);
 
         this.selectedTrack.value = track;
 
@@ -249,7 +249,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               _tabIndex = _songsTabCtrl.page.toInt();
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
-            AudioPlayerTask().setTrackPlaying(track);
+            QueueManager().setTrackPlaying(track);
           } else {
             GlobalQueue().generateNonPermanentQueue(playlist, false);
             _blockAnimation = true;
@@ -258,7 +258,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               _tabIndex = _songsTabCtrl.page.toInt();
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
-            AudioPlayerTask().setTrackPlaying(track);
+            QueueManager().setTrackPlaying(track);
           }
 
         } else {
@@ -273,13 +273,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     
     if(_panelCtrl.isAttached && this.selectedTrack.value.id != null && !_panelCtrl.isPanelShown) {
       _panelCtrl.show();
-      AudioService.notificationClickEventStream.listen(
-        (data) {
-          if(data) {
-            _panelCtrl.show();
-          }
-        }
-      );
     }
 
   }
@@ -332,6 +325,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     
     if(_panelQueueCtrl.isAttached) {
       _panelQueueCtrl.show();
+      AudioService.notificationClickEventStream.listen(
+        (data) {
+          if(data) {
+            _panelCtrl.show();
+          }
+        }
+      );
     }
     
     if(_songsTabCtrl == null) {
@@ -693,16 +693,21 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                         )
                                       ),
                                       Opacity(
-                                        opacity: 1 - _ratio,
-                                        child: Container(
-                                          constraints: BoxConstraints(
-                                            maxWidth: trackUp.currentDuration.value.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
-                                            minWidth: trackUp.currentDuration.value.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds
-                                          ),
-                                          color: Colors.white,
-                                          width: trackUp.currentDuration.value.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
-                                          height: 2,
-                                        ),
+                                        opacity: 1 - _elementsOpacity,
+                                        child: ValueListenableBuilder(
+                                          valueListenable: trackUp.currentDuration,
+                                          builder: (BuildContext context, Duration duration, __) {
+                                            return Container(
+                                              constraints: BoxConstraints(
+                                                maxWidth: duration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
+                                                minWidth: duration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds
+                                              ),
+                                              color: Colors.white,
+                                              width: duration.inSeconds * _screenWidth / trackUp.totalDuration.inSeconds,
+                                              height: 2,
+                                            );
+                                          }
+                                        )
                                       )
                                     ]
                                   );
@@ -713,7 +718,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                     ValueListenableBuilder(
                       valueListenable: this.selectedTrack.value.isPlaying,
                       builder: (BuildContext context, bool isPlaying, Widget child) {
-                        print(this.selectedTrack.value.isPlaying);
                         return Positioned(
                           top: (_screenHeight * 0.80) * _ratio + (_sideMarge*0.07),
                           right: ((_screenWidth / 2) - (_playButtonSize / 2) - _sideMarge),
