@@ -27,6 +27,8 @@
     "globalClone": "Clone",
     "globalConnect": "Connect",
     "globalInformations": "Informations",
+    "globalReport": "Report",
+    "globalPrecision": "Precision",
     "globalMoreInfo": "More info",
 
     "globalArtist": "Artist",

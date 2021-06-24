@@ -4,6 +4,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/SearchAlgorithm.dart';
+import 'package:smartshuffle/View/ViewGetter/FormsView.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:device_apps/device_apps.dart';
@@ -23,6 +24,8 @@ class TabsView {
   
   static final TabsView _tabsView = TabsView._instance();
 
+  MaterialColor _materialColor;
+
   factory TabsView(State state) {
     _tabsView.state = state;
     return _tabsView;
@@ -38,6 +41,7 @@ class TabsView {
 
   List<Widget> playlistsCreator(Map<ServicesLister, PlatformsController> userPlatforms, List<String> distribution, Function onReorder, Function openPlaylist, MaterialColor materialColor) {
     List elements = new List<Widget>(userPlatforms.length);
+    _materialColor = materialColor;
 
     int i=0;
     for(MapEntry<ServicesLister, PlatformsController> elem in userPlatforms.entries) {
@@ -649,6 +653,9 @@ class TabsView {
       case PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS: {
         trackInformations(ctrl, track);
       } break;
+      case PopupMenuConstants.TRACKSMAINDIALOG_REPORT : {
+        openReportForm(track);
+      } break;
     }
   }
 
@@ -664,6 +671,7 @@ class TabsView {
         TracksPopupItemAddToAnotherPlaylist().build(context),
         TracksPopupItemRemoveFromPlaylist().build(context),
         TracksPopupItemInformations().build(context),
+        TracksPopupItemReport().build(context)
       ],
       onSelected: (value) {
         trackMainDialogOptions(value, name, ctrl, track, index, refresh);
@@ -684,6 +692,7 @@ class TabsView {
           TracksPopupItemAddToAnotherPlaylist().build(this.state.context),
           TracksPopupItemRemoveFromPlaylist().build(this.state.context),
           TracksPopupItemInformations().build(this.state.context),
+          TracksPopupItemReport().build(this.state.context)
         ],
         elevation: 8.0,
       ).then((value){
@@ -845,7 +854,7 @@ class TabsView {
       context: this.state.context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).tabsViewAlreadyExists+" $name "+AppLocalizations.of(this.state.context).from+" $playlistName ?", style: TextStyle(color: Colors.white)),
+          title: Text(AppLocalizations.of(this.state.context).remove+" $name "+AppLocalizations.of(this.state.context).from+" $playlistName ?", style: TextStyle(color: Colors.white)),
           actions: [
             FlatButton(
               child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
@@ -926,6 +935,16 @@ class TabsView {
         );
       }
     );
+  }
+
+
+  void openReportForm(Track track) {
+    Navigator.of(this.state.context)
+      .push(
+        MaterialPageRoute(
+          builder: (context) => FormReport(materialColor: _materialColor, track: track)
+        )
+      );
   }
 
 

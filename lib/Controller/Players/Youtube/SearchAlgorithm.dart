@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:googleapis/youtube/v3.dart' as YTB;
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -53,25 +57,43 @@ class SearchAlgorithm {
   }
 
   Future<Track> search({@required String tArtist, @required String tTitle, @required Duration tDuration}) async {
-    _youtubeApi = await login();
+    // _youtubeApi = await login();
     String query = '$tArtist $tTitle';
-    print(query);
-    YTB.SearchListResponse searchList = await _youtubeApi.search.list(
-      ['snippet'],
-      maxResults: 10,
+    print('query : $query');
+
+    http.Response response = await http.get(
+      Uri.https('youtube.googleapis.com', '/youtube/v3/search',
+        {
+          'part': 'snippet',
+          'maxResults': '10',
+          'q': query,
+          'key': 'AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM'  // Google himself api key
+        }
+      ),
+      headers: {
+        HttpHeaders.refererHeader: 'https://explorer.apis.google.com',
+      },
+    );
+    
+    YTB.SearchListResponse searchList = YTB.SearchListResponse.fromJson(jsonDecode(response.body));
+
+    // YTB.SearchListResponse searchList = await _youtubeApi.search.list(
+    //   ['snippet'],
+    //   maxResults: 10,
       // eventType: 'completed',
       // safeSearch: 'none',
       // order: 'viewCount',
       // topicId: '/m/04rlf',
       // type: ['video, channel, playlist'],
-      q: query
-    );
+    //   q: query
+    // );
 
     List<YTB.SearchResult> asr = searchList.items;
     YTB.SearchResult rsr = asr[0];
     
     Duration lastSrDuration;
     Duration srDuration;
+    Duration finalDuration;
 
     int i = 0;
     for(YTB.SearchResult sr in asr) {
@@ -83,35 +105,49 @@ class SearchAlgorithm {
        ))
       {
         if(sr.id.videoId != null) {
-          YTB.VideoListResponse response = await _youtubeApi.videos.list(
-            ['contentDetails'],
-            id: [sr.id.videoId]
+
+          http.Response response = await http.get(
+            Uri.https('youtube.googleapis.com', '/youtube/v3/videos',
+              {
+                'part': 'contentDetails',
+                'id': sr.id.videoId,
+                'key': 'AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM'  // Google himself api key
+              }
+            ),
+            headers: {
+              HttpHeaders.refererHeader: 'https://explorer.apis.google.com',
+            },
           );
-          srDuration = _toDuration(response.items[0].contentDetails.duration);
+          
+          YTB.VideoListResponse videoList = YTB.VideoListResponse.fromJson(jsonDecode(response.body));
+
+          srDuration = _toDuration(videoList.items[0].contentDetails.duration);
 
           if(srDuration.compareTo(tDuration) == 0)
           {
             rsr = sr;
+            finalDuration = srDuration;
             break;
           }
 
           if(lastSrDuration != null) {
             if((srDuration.inSeconds-tDuration.inSeconds).abs() < (lastSrDuration.inSeconds-tDuration.inSeconds).abs()) {
               rsr = sr;
-              lastSrDuration = _toDuration(response.items[0].contentDetails.duration);
+              finalDuration = srDuration;
+              lastSrDuration = _toDuration(videoList.items[0].contentDetails.duration);
             }
           } else {
-            lastSrDuration = _toDuration(response.items[0].contentDetails.duration);
+            lastSrDuration = _toDuration(videoList.items[0].contentDetails.duration);
           }
         }
       }
 
       i++;
     }
-    
     String name = rsr.snippet.title;
     String artist = rsr.snippet.channelTitle;
     if(artist.contains(' - Topic')) artist = artist.split(' - Topic')[0];
+    print('final rsr : $name $artist');
 
     String id = rsr.id.videoId;
     String imageUrlLittle = rsr.snippet.thumbnails.high.url;
@@ -122,11 +158,7 @@ class SearchAlgorithm {
       imageUrlLarge = 'https://source.unsplash.com/random';
     }
 
-    YTB.VideoListResponse response = await _youtubeApi.videos.list(
-      ['contentDetails'],
-      id: [id]
-    );
-    Duration duration = _toDuration(response.items[0].contentDetails.duration);
+    Duration duration = finalDuration;
 
     Track track = Track(
       id: id,

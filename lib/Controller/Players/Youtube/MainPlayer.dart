@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart' as SM;
@@ -17,6 +18,7 @@ import 'package:path_provider/path_provider.dart';
 class AudioPlayerTask extends BackgroundAudioTask {
 
   final AudioPlayer _player = AudioPlayer();
+  List<MediaItem> _queue;
 
   @override
   Future<void> onStart(Map<String, dynamic> params) async {
@@ -64,42 +66,67 @@ class AudioPlayerTask extends BackgroundAudioTask {
   }
 
   @override
+  Future<void> onUpdateQueue(List<MediaItem> queue) async {
+    AudioServiceBackground.setQueue(queue);
+    _queue = queue;
+    // try {
+    //   await _player.setAudioSource(ConcatenatingAudioSource(
+    //     children:
+    //         queue.map((item) => AudioSource.uri(Uri.parse(item.id))).toList(),
+    //   ));
+    // } catch (e) {
+    //   print(e);
+    // }
+    return super.onUpdateQueue(queue);
+  }
+
+  @override
+  Future<void> onSkipToNext() {
+    // _player.seekToNext();
+    _player.seek(Duration.zero);
+    AudioServiceBackground.sendCustomEvent("SKIP_NEXT_ITEM");
+    return super.onSkipToNext();
+  }
+
+  @override
+  Future<void> onSkipToPrevious() {
+    _player.seek(Duration.zero);
+    AudioServiceBackground.sendCustomEvent("SKIP_PREVIOUS_ITEM");
+    return super.onSkipToPrevious();
+  }
+
+  @override
   Future<void> onStop() async {
     AudioServiceBackground.setState(
       controls: [],
       playing: false,
       processingState: AudioProcessingState.stopped
     );
-    print('stoippp');
-    AudioServiceBackground.sendCustomEvent('[Send] onStop');
+    // AudioServiceBackground.sendCustomEvent('[Isolate] onStop');
     await _player.stop();
     return super.onStop();
   }
 
   @override
   Future<void> onPause() async {
-    print('[Isolate] onPause');
-    print(AudioServiceBackground.mediaItem.title);
     AudioServiceBackground.setState(
       playing: true,
       processingState: AudioProcessingState.ready
     );
     await _player.pause();
-    AudioServiceBackground.sendCustomEvent('[Send] onPause');
+    // AudioServiceBackground.sendCustomEvent('[Send] onPause');
     // AudioServiceBackground.mediaItem.extras['track'].pauseOnly();
     return super.onPause();
   }
 
   @override
   Future<void> onPlay() async {
-    print('[Isolate] onPlay');
     AudioServiceBackground.setState(
       playing: true,
       processingState: AudioProcessingState.ready
     );
     await _player.play();
-    print('[Isolate] ${AudioServiceBackground.mediaItem.extras["track_service_name"]}/${AudioServiceBackground.mediaItem.extras["track_id"]}');
-    AudioServiceBackground.sendCustomEvent('[Send] onResume');
+    // AudioServiceBackground.sendCustomEvent('[Send] onResume');
     // AudioServiceBackground.mediaItem.extras['track'].resumeOnly();
     return super.onPlay();
   }
@@ -126,27 +153,70 @@ class QueueManager {
 
   final int DEFAULT_LENGTH_QUEUE = 5;
   List<MediaItem> queue = List<MediaItem>();
+  int indexManager = 0;
+  Map<String, Function> _functions;
+
+  QueueManager._privateConstructor() {
+    // AudioService.queueStream.listen(
+    //   (data) {
+    //     print(data);
+    //   }
+    // );
+    AudioService.customEventStream.listen(
+      (data) {
+        switch(data) {
+          
+          case 'SKIP_NEXT_ITEM' : {
+            _functions['skip_next'].call();
+          } break;
+
+          case 'SKIP_PREVIOUS_ITEM' : {
+            _functions['skip_previous'].call();
+          } break;
+
+        }
+      }
+    );
+  }
+
+  static final QueueManager _instance = QueueManager._privateConstructor();
+
+  factory QueueManager() {
+    return _instance;
+  }
 
 
-  void setTrackPlaying(Track track) async {
+  void setTrackPlaying(Track track, {Map<String, Function> functions}) async {
+    _functions = functions;
     await AudioService.stop();
-    track.setIsPlaying(true);
+    await track.setIsPlaying(true);
+    // if(queue.isNotEmpty) queue.removeAt(0);
+    queueLoader();
   }
 
   Future<List<MediaItem>> queueLoader() async {
 
-    for(int i=queue.length; i<DEFAULT_LENGTH_QUEUE; i++) {
-      Track track = GlobalQueue.queue.value[i].key;
+    print(queue.length);
+    for(int i=queue.length+1; i<DEFAULT_LENGTH_QUEUE+indexManager+1; i++) {
+      Track track = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex+i].key;
+      print('queuetrack');
+      print(track);
       File file = await track.loadFile();
 
-      queue[i] = MediaItem(
+      MediaItem mi = MediaItem(
         id: file.path,
         album: track.artist,
         title: track.name,
         artUri: Uri.parse(track.imageUrlLarge),
         duration: Duration(seconds: track.totalDuration.inSeconds),
       );
+
+      queue.add(mi);
+
     }
+
+    // await AudioService.updateQueue(queue);
+    return queue;
 
   }
 
@@ -170,9 +240,9 @@ class YoutubeRetriever {
     return _instance;
   }
 
-  Future<File> streamByName(Track track) async {
+  Future<MapEntry<Track, File>> streamByName(Track track) async {
     Track tr = await SearchAlgorithm().search(tArtist: track.artist, tTitle: track.name, tDuration: track.totalDuration);
-    return await streamById(tr.id);
+    return MapEntry(tr, await streamById(tr.id));
   }
 
   Future<File> streamById(String id) async {
@@ -192,7 +262,11 @@ class YoutubeRetriever {
       var fileStream = file.openWrite();
 
       // Pipe all the content of the stream into the file.
-      await stream.pipe(fileStream);
+      try {
+        await stream.pipe(fileStream);
+      } catch(e) {
+        print(e);
+      }
 
       // Close the file.
       await fileStream.flush();

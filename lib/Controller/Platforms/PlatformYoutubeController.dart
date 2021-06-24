@@ -140,7 +140,7 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
-  Future<File> getFile(Track tr) {
+  Future<MapEntry<Track,File>> getFile(Track tr) {
     // TODO: implement stream
     throw UnimplementedError();
   }

@@ -25,6 +25,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+    
+  build_runner: ^1.10.0
   intl: any
   spotify_sdk: any
   just_audio: any
@@ -53,6 +55,7 @@ dependencies:
   protobuf: ^2.0.0
 
   mailer: any
+
 
 
   # The following adds the Cupertino Icons font to your application.

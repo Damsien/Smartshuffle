@@ -11,6 +11,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
+import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:spotify_sdk/models/player_state.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:palette_generator/palette_generator.dart';
@@ -210,7 +211,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
 
       if (track != null) {
-        QueueManager().setTrackPlaying(track);
+        QueueManager().setTrackPlaying(track, functions: {'skip_next': skipNext, 'skip_previous': skipPrevious});
 
         this.selectedTrack.value = track;
 
@@ -249,7 +250,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               _tabIndex = _songsTabCtrl.page.toInt();
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
-            QueueManager().setTrackPlaying(track);
+            QueueManager().setTrackPlaying(this.selectedTrack.value, functions: {'skip_next': skipNext, 'skip_previous': skipPrevious});
           } else {
             GlobalQueue().generateNonPermanentQueue(playlist, false);
             _blockAnimation = true;
@@ -258,7 +259,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               _tabIndex = _songsTabCtrl.page.toInt();
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
-            QueueManager().setTrackPlaying(track);
+            QueueManager().setTrackPlaying(this.selectedTrack.value, functions: {'skip_next': skipNext, 'skip_previous': skipPrevious});
           }
 
         } else {
@@ -289,11 +290,11 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     int lastIndex;
     if (GlobalQueue.currentQueueIndex + 1 < GlobalQueue.queue.value.length) {
       nextTrack = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex + 1].key;
-      GlobalQueue.currentQueueIndex++;
+      GlobalQueue().setCurrentQueueIndex(GlobalQueue.currentQueueIndex+1);
       lastIndex = GlobalQueue.currentQueueIndex;
     } else {
       nextTrack = GlobalQueue.queue.value[0].key;
-      GlobalQueue.currentQueueIndex = 0;
+      GlobalQueue().setCurrentQueueIndex(0);
       lastIndex = GlobalQueue.queue.value.length-1;
     }
     
@@ -310,10 +311,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     Track previousTrack;
     if (GlobalQueue.currentQueueIndex - 1 >= 0) {
       previousTrack = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex - 1].key;
-      GlobalQueue.currentQueueIndex--;
+      GlobalQueue().setCurrentQueueIndex(GlobalQueue.currentQueueIndex-1);
     } else {
       previousTrack = this.selectedTrack.value;
-      GlobalQueue.currentQueueIndex = 0;
+      GlobalQueue().setCurrentQueueIndex(0);
     }
     _isRepeatOnce = false;
     _isRepeatAlways = false;
@@ -383,6 +384,28 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         }
     }
 
+  }
+
+
+  skipNext() {
+    if(_songsTabCtrl.page.toInt() < GlobalQueue.queue.value.length-1) {
+      _songsTabCtrl.animateToPage(_songsTabCtrl.page.toInt()+1, duration: Duration(milliseconds: 500), curve: Curves.ease);
+    } else {
+      _blockAnimation = true;
+      _songsTabCtrl.jumpToPage(0);
+      _tabIndex = _songsTabCtrl.page.toInt();
+      _blockAnimation = false;
+      moveToNextTrack();
+    }
+  }
+
+
+  skipPrevious() {
+    if(this.selectedTrack.value.currentDuration.value.inSeconds >= 1) {
+      this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
+    } else if(_songsTabCtrl.page.toInt() > 0) {
+      _songsTabCtrl.animateToPage(_songsTabCtrl.page.toInt()-1, duration: Duration(milliseconds: 500), curve: Curves.ease);
+    }
   }
 
 
@@ -616,7 +639,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                                           : _currentSliderValue = 0.0;
                                                           return _currentSliderValue;
                                                       }.call(),
-                                                      onChanged: (double value) {},
+                                                      onChanged: (double value) {
+                                                        _panelCtrl.open();
+                                                      },
                                                       onChangeEnd: (double value) {
                                                         trackUp.seekTo(Duration(seconds: (value * trackUp.totalDuration.inSeconds).toInt()), true);
                                                       },
@@ -715,6 +740,38 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                               );
                       }
                     ),
+                    Positioned(
+                      top: (_screenHeight * 0.05),
+                      right: (_screenWidth * 0.03),
+                      child: IgnorePointer(
+                        ignoring: (_elementsOpacity < 0.8 ? true : false),
+                        child: Opacity(
+                          opacity: _elementsOpacity,
+                          child: PopupMenuButton(
+                            iconSize: 35,
+                            icon: Icon(Icons.more_vert),
+                            tooltip: AppLocalizations.of(context).options,
+                            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                              TracksPopupItemAddToQueue().build(context),
+                              TracksPopupItemAddToAnotherPlaylist().build(context),
+                              TracksPopupItemRemoveFromPlaylist().build(context),
+                              TracksPopupItemInformations().build(context),
+                              TracksPopupItemReport().build(context)
+                            ],
+                            onSelected: (value) {
+                              TabsView(this).trackMainDialogOptions(
+                                value,
+                                this.selectedTrack.value.name,
+                                PlatformsLister.platforms[this.selectedTrack.value.service],
+                                this.selectedTrack.value,
+                                this.selectedPlaylist.getTracks.indexOf(this.selectedTrack.value),
+                                null
+                              );
+                            },
+                          )
+                        )
+                      )
+                    ),
                     ValueListenableBuilder(
                       valueListenable: this.selectedTrack.value.isPlaying,
                       builder: (BuildContext context, bool isPlaying, Widget child) {
@@ -744,17 +801,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                       child: Opacity(
                         opacity: _elementsOpacity,
                         child: InkWell(
-                            onTap: () {
-                              if(_songsTabCtrl.page.toInt() < GlobalQueue.queue.value.length-1) {
-                                _songsTabCtrl.animateToPage(_songsTabCtrl.page.toInt()+1, duration: Duration(milliseconds: 500), curve: Curves.ease);
-                              } else {
-                                _blockAnimation = true;
-                                _songsTabCtrl.jumpToPage(0);
-                                _tabIndex = _songsTabCtrl.page.toInt();
-                                _blockAnimation = false;
-                                moveToNextTrack();
-                              }
-                            },
+                            onTap: () => skipNext(),
                             child: Icon(
                             Icons.skip_next,
                             size: _playButtonSize,
@@ -768,13 +815,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                       child: Opacity(
                         opacity: _elementsOpacity,
                         child: InkWell(
-                            onTap: () {
-                              if(this.selectedTrack.value.currentDuration.value.inSeconds >= 1) {
-                                this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
-                              } else if(_songsTabCtrl.page.toInt() > 0) {
-                                _songsTabCtrl.animateToPage(_songsTabCtrl.page.toInt()-1, duration: Duration(milliseconds: 500), curve: Curves.ease);
-                              }
-                            },
+                            onTap: () => skipPrevious(),
                             child: Icon(
                             Icons.skip_previous,
                             size: _playButtonSize,

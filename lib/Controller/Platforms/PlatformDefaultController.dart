@@ -106,7 +106,7 @@ class PlatformDefaultController extends PlatformsController {
   void renamePlaylist(Playlist playlist, String name) {}
 
   @override
-  Future<File> getFile(Track tr) {
+  Future<MapEntry<Track,File>> getFile(Track tr) {
     // TODO: implement stream
     throw UnimplementedError();
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
@@ -18,6 +19,11 @@ class GlobalQueue {
   }
 
   GlobalQueue._instance();
+
+  void setCurrentQueueIndex(int value) {
+    currentQueueIndex = value;
+    QueueManager().indexManager = currentQueueIndex;
+  }
 
   void reBuildQueue() {
     queue.value.clear();
@@ -60,7 +66,7 @@ class GlobalQueue {
     for(Track tr in tracks) {
       if(!noPermanentQueue.value.contains(tr))  addToNoPermanentQueue(tr);
     }
-    currentQueueIndex = 0;
+    setCurrentQueueIndex(0);
   }
 
   void _orderedNoPermanentQueue(Playlist playlist, Track selectedTrack) {
@@ -68,11 +74,8 @@ class GlobalQueue {
     for(Track tr in tracks) {
       addToNoPermanentQueue(tr);
     }
-    if(selectedTrack != null) {
-      currentQueueIndex = tracks.indexOf(selectedTrack);
-    } else {
-      currentQueueIndex = 0;
-    }
+    if(selectedTrack != null) setCurrentQueueIndex(tracks.indexOf(selectedTrack));
+    else setCurrentQueueIndex(0);
   }
 
   void generateNonPermanentQueue(Playlist playlist, bool isShuflle, {Track selectedTrack}) {
@@ -115,7 +118,7 @@ class GlobalQueue {
 
   void _resetNoPermanentQueue() {
     noPermanentQueue.value.clear();
-    currentQueueIndex = 0;
+    setCurrentQueueIndex(0);
     //reBuildQueue();
   }
 

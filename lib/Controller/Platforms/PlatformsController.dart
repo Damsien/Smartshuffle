@@ -86,15 +86,11 @@ abstract class PlatformsController {
   ValueNotifier<List<Playlist>> getPlaylistsUpdate();
 
   void mediaPlayerListener(Track track) {
-    print("[MediaPlayer] track : $track");
     AudioService.playbackStateStream.listen(
       (data) {        
         if(data.playing == true && !track.isPlaying.value) track.resumeOnly();
         else if(data.playing == false && track.isPlaying.value) track.pauseOnly();
-      },
-      onError: (err) {
-        print('[Event] $err');
-      },
+      }
     );
     AudioService.queueStream.listen(
       (data) {
@@ -108,7 +104,7 @@ abstract class PlatformsController {
     );
     AudioService.customEventStream.listen(
       (data) {
-        if(data == '[Send] onStop') {
+        if(data == '[Isolate] onStop') {
           track.setIsPlaying(false);
         }
       }
@@ -157,11 +153,13 @@ abstract class PlatformsController {
   Future<Color> _getImagePalette (ImageProvider imageProvider) async {
     final PaletteGenerator paletteGenerator = await PaletteGenerator
       .fromImageProvider(imageProvider);
-    return paletteGenerator.dominantColor.color;
+    return paletteGenerator.dominantColor?.color;
   }
 
   String _colorToHexString(Color color) {
-    return '0xFF${color.value.toRadixString(16).substring(2, 8)}';
+    if(color != null)
+      return '0xFF${color.value.toRadixString(16).substring(2, 8)}';
+    else return null;
   }
 
   play(File file, Track track) async {
@@ -170,9 +168,12 @@ abstract class PlatformsController {
     }
     GlobalQueue.currentTrack = track;
 
+    int notificationColor = int.parse(_colorToHexString(await _getImagePalette(NetworkImage(track.imageUrlLarge))));
+
     await AudioService.start(
      backgroundTaskEntrypoint: _entrypoint,
-     androidNotificationColor: int.parse(_colorToHexString(await _getImagePalette(NetworkImage(track.imageUrlLarge)))),
+     androidNotificationColor: notificationColor,
+     androidEnableQueue: true,
      params: {
       'file': file.path,
       'track_title': track.name,
@@ -185,12 +186,10 @@ abstract class PlatformsController {
   }
 
   resume(File file) {
-    print('resume');
     AudioService.play();
   }
 
   pause() {
-    print('pause');
     AudioService.pause();
   }
 
@@ -201,6 +200,6 @@ abstract class PlatformsController {
 
   /*  STREAM  */
 
-  Future<File> getFile(Track tr);
+  Future<MapEntry<Track, File>> getFile(Track tr);
 
 }

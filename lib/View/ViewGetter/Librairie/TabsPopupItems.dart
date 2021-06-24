@@ -15,6 +15,7 @@ class PopupMenuConstants {
   static const String TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST = 'TRACKSMAINDIALOG:add_to_another_playlist';
   static const String TRACKSMAINDIALOG_REMOVEFROMPLAYLIST = 'TRACKSMAINDIALOG:remove_from_playlist';
   static const String TRACKSMAINDIALOG_INFORMATIONS = 'TRACKSMAINDIALOG:informations';
+  static const String TRACKSMAINDIALOG_REPORT = 'TRACKSMAINDIALOG:report';
 
   static const String PLAYLISTSMAINDIALOG_RENAME = "PLAYLISTMAINDIALOG:rename";
   static const String PLAYLISTSMAINDIALOG_CLONE = "PLAYLISTMAINDIALOG:clone";
@@ -147,6 +148,18 @@ class TracksPopupItemInformations extends StatelessWidget {
     return PopupMenuItem(
       value: PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS,
       child: Text(AppLocalizations.of(context).globalInformations)
+    );
+  }
+
+}
+
+class TracksPopupItemReport extends StatelessWidget {
+
+  @override
+  PopupMenuItem build(BuildContext context) {
+    return PopupMenuItem(
+      value: PopupMenuConstants.TRACKSMAINDIALOG_REPORT,
+      child: Text(AppLocalizations.of(context).globalReport)
     );
   }
 

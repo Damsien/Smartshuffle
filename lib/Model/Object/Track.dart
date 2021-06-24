@@ -28,6 +28,7 @@ class Track {
   ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   ValueNotifier<bool> _isSelected = ValueNotifier<bool>(false);
 
+  Track _tempoTrack;
   File _file;
 
   Track(
@@ -75,8 +76,13 @@ class Track {
   String get serviceName => _service.toString().split(".")[1];  
   // Stream get serviceStream => _stream;
 
+  Track get tempoTrack => _tempoTrack;
+
   Future<File> loadFile() async {
-    return _file = await PlatformsLister.platforms[_service].getFile(this);
+    MapEntry<Track, File> me = await PlatformsLister.platforms[_service].getFile(this);
+    _tempoTrack = me.key;
+    _totalDuration = _tempoTrack.totalDuration;
+    return _file = me.value;
   }
 
   bool setIsSelected(bool isSelected) {
@@ -84,9 +90,9 @@ class Track {
     return _isSelected.value;
   }
 
-  bool setIsPlaying(bool isPlaying) {
+  Future<bool> setIsPlaying(bool isPlaying) async {
     _isPlaying.value = isPlaying;
-    if(isPlaying) _backPlayer(PLAYMODE_PLAY);
+    if(isPlaying) await _backPlayer(PLAYMODE_PLAY);
     setIsSelected(isPlaying);
     _isPlaying.notifyListeners();
     return _isPlaying.value;
@@ -121,7 +127,7 @@ class Track {
     return _isPlaying.value;
   }
 
-  void _backPlayer(String playMode) async {
+  Future<void> _backPlayer(String playMode) async {
     PlatformsController ctrl = PlatformsLister.platforms[_service];
     switch(playMode) {
       case PLAYMODE_PLAY : {
