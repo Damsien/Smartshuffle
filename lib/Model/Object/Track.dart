@@ -15,7 +15,7 @@ class Track {
   String _artist;
   String _album;
   ValueNotifier<Duration> _currentDuration = ValueNotifier<Duration>(Duration(seconds: 0));
-  Duration _totalDuration = Duration(minutes: 3);
+  ValueNotifier<Duration> _totalDuration = ValueNotifier<Duration>(Duration(seconds: 30));
   ServicesLister _service;
   String _imageUrlLittle = DEFAULT_IMAGE_URL;
   String _imageUrlLarge = DEFAULT_IMAGE_URL;
@@ -50,7 +50,7 @@ class Track {
     _service = service;
     if (addDate != null) _addDate = addDate;
     else _addDate = DateTime.now();
-    if (totalDuration != null) _totalDuration = totalDuration;
+    if (totalDuration != null) _totalDuration.value = totalDuration;
   }
 
   ValueListenable<bool> get isSelected => _isSelected;
@@ -64,7 +64,7 @@ class Track {
   
   void setCurrentDuration(Duration duration) => _currentDuration.value = duration;
   ValueNotifier<Duration>  get currentDuration => _currentDuration;
-  Duration  get totalDuration => _totalDuration;
+  ValueNotifier<Duration>  get totalDuration => _totalDuration;
   
   String get imageUrlLittle => _imageUrlLittle;
   String get imageUrlLarge => _imageUrlLarge;
@@ -82,6 +82,7 @@ class Track {
     MapEntry<Track, File> me = await PlatformsLister.platforms[_service].getFile(this);
     _tempoTrack = me.key;
     _totalDuration = _tempoTrack.totalDuration;
+    _totalDuration.notifyListeners();
     return _file = me.value;
   }
 

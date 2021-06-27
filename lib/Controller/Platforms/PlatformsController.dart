@@ -99,7 +99,9 @@ abstract class PlatformsController {
     );
     AudioService.positionStream.listen(
       (data) {
-        track.seekTo(data, false);
+        if(data.inMilliseconds < GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.totalDuration.value.inMilliseconds-200) {
+          track.seekTo(data, false);
+        }
       }
     );
     AudioService.customEventStream.listen(
@@ -163,23 +165,34 @@ abstract class PlatformsController {
   }
 
   play(File file, Track track) async {
-    if(GlobalQueue.currentTrack != null) {
-      GlobalQueue.currentTrack.setIsPlaying(false);
+    // if(GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key != null) {
+    //   GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.setIsPlaying(false);
+    // }
+    // GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key = track;
+    for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
+      me.key.setIsPlaying(false);
     }
-    GlobalQueue.currentTrack = track;
+    int notificationColor;
+    
+    try {
+      notificationColor = int.parse(_colorToHexString(await _getImagePalette(NetworkImage(track.imageUrlLarge))));
+    } catch (e) {}
 
-    int notificationColor = int.parse(_colorToHexString(await _getImagePalette(NetworkImage(track.imageUrlLarge))));
+    if(!AudioService.connected) {
+      await AudioService.connect();
+    }
 
+    print('       START');
     await AudioService.start(
      backgroundTaskEntrypoint: _entrypoint,
      androidNotificationColor: notificationColor,
-     androidEnableQueue: true,
+     androidEnableQueue: false,
      params: {
       'file': file.path,
       'track_title': track.name,
       'track_artist': track.artist,
       'track_image': track.imageUrlLarge,
-      'track_duration_seconds': track.totalDuration.inSeconds,
+      'track_duration_seconds': track.totalDuration.value.inSeconds,
       'track_id': track.id,
       'track_service_name': track.serviceName
     });

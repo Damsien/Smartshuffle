@@ -110,6 +110,7 @@ class API {
       _token = token;
       await _getUserProfile();
     }
+    print('Spotify token :');
     print(token);
   }
 

@@ -672,6 +672,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.27.1"
+  screen_state:
+    dependency: "direct main"
+    description:
+      name: screen_state
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.0"
   shelf:
     dependency: transitive
     description:
@@ -858,7 +865,7 @@ packages:
       name: youtube_explode_dart
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.9.4"
+    version: "1.9.6"
 sdks:
   dart: ">=2.13.0 <3.0.0"
   flutter: ">=1.26.0-17.6.pre"

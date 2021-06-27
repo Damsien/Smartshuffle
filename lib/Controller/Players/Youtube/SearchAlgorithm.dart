@@ -8,6 +8,7 @@ import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Services/youtube/api_auth.dart';
 import 'package:smartshuffle/Services/youtube/api_controller.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 class SearchAlgorithm {
 
@@ -15,6 +16,7 @@ class SearchAlgorithm {
 
   static final SearchAlgorithm _instance = SearchAlgorithm._singleton();
   YTB.YouTubeApi _youtubeApi;
+  YoutubeExplode _ytbE = YoutubeExplode();
 
   factory SearchAlgorithm() {
     return _instance;
@@ -59,7 +61,7 @@ class SearchAlgorithm {
   Future<Track> search({@required String tArtist, @required String tTitle, @required Duration tDuration}) async {
     // _youtubeApi = await login();
     String query = '$tArtist $tTitle';
-    print('query : $query');
+    // print('Query : $query');
 
     http.Response response = await http.get(
       Uri.https('youtube.googleapis.com', '/youtube/v3/search',
@@ -106,22 +108,25 @@ class SearchAlgorithm {
       {
         if(sr.id.videoId != null) {
 
-          http.Response response = await http.get(
-            Uri.https('youtube.googleapis.com', '/youtube/v3/videos',
-              {
-                'part': 'contentDetails',
-                'id': sr.id.videoId,
-                'key': 'AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM'  // Google himself api key
-              }
-            ),
-            headers: {
-              HttpHeaders.refererHeader: 'https://explorer.apis.google.com',
-            },
-          );
+          // http.Response response = await http.get(
+          //   Uri.https('youtube.googleapis.com', '/youtube/v3/videos',
+          //     {
+          //       'part': 'contentDetails',
+          //       'id': sr.id.videoId,
+          //       'key': 'AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM'  // Google himself api key
+          //     }
+          //   ),
+          //   headers: {
+          //     HttpHeaders.refererHeader: 'https://explorer.apis.google.com',
+          //   },
+          // );
           
-          YTB.VideoListResponse videoList = YTB.VideoListResponse.fromJson(jsonDecode(response.body));
+          // YTB.VideoListResponse videoList = YTB.VideoListResponse.fromJson(jsonDecode(response.body));
 
-          srDuration = _toDuration(videoList.items[0].contentDetails.duration);
+          // srDuration = _toDuration(videoList.items[0].contentDetails.duration);
+
+          Video video = await _ytbE.videos.get(VideoId(sr.id.videoId));
+          srDuration = video.duration;
 
           if(srDuration.compareTo(tDuration) == 0)
           {
@@ -134,20 +139,29 @@ class SearchAlgorithm {
             if((srDuration.inSeconds-tDuration.inSeconds).abs() < (lastSrDuration.inSeconds-tDuration.inSeconds).abs()) {
               rsr = sr;
               finalDuration = srDuration;
-              lastSrDuration = _toDuration(videoList.items[0].contentDetails.duration);
+              lastSrDuration = video.duration;
             }
           } else {
-            lastSrDuration = _toDuration(videoList.items[0].contentDetails.duration);
+            lastSrDuration = video.duration;
           }
         }
       }
 
       i++;
     }
+
+
+    if(finalDuration == null) {
+      Video video = await _ytbE.videos.get(asr[0].id.videoId);
+      finalDuration = video.duration;
+    }
+
+
+
     String name = rsr.snippet.title;
     String artist = rsr.snippet.channelTitle;
     if(artist.contains(' - Topic')) artist = artist.split(' - Topic')[0];
-    print('final rsr : $name $artist');
+    // print('Track found : $name $artist');
 
     String id = rsr.id.videoId;
     String imageUrlLittle = rsr.snippet.thumbnails.high.url;

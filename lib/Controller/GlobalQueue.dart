@@ -5,7 +5,7 @@ import 'package:smartshuffle/Model/Object/Track.dart';
 
 class GlobalQueue {
   
-  static Track currentTrack;
+  // static Track currentTrack;
 
   static ValueNotifier<List<Track>> permanentQueue = ValueNotifier<List<Track>>(List<Track>());
   static ValueNotifier<List<Track>> noPermanentQueue = ValueNotifier<List<Track>>(List<Track>());

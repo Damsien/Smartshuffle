@@ -22,12 +22,16 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   @override
   Future<void> onStart(Map<String, dynamic> params) async {
+    print('                      STARTO');
     final mediaItem = MediaItem(
         id: params['file'],
         album: params['track_artist'],
         title: params['track_title'],
         artUri: Uri.parse(params['track_image']),
         duration: Duration(seconds: params['track_duration_seconds']),
+        extras: {
+          'track_id': params['track_id']
+        }
       );
     // Tell the UI and media notification what we're playing.
     AudioServiceBackground.setMediaItem(mediaItem);
@@ -67,8 +71,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   @override
   Future<void> onUpdateQueue(List<MediaItem> queue) async {
-    AudioServiceBackground.setQueue(queue);
-    _queue = queue;
+    // AudioServiceBackground.setQueue(queue);
+    // _queue = queue;
     // try {
     //   await _player.setAudioSource(ConcatenatingAudioSource(
     //     children:
@@ -177,6 +181,13 @@ class QueueManager {
         }
       }
     );
+    // AudioService.positionStream.listen(
+    //   (data) {
+    //     if(data.inSeconds >= GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.totalDuration.value.inSeconds-1) {
+    //       GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.seekTo(data, false);
+    //     }
+    //   }
+    // );
   }
 
   static final QueueManager _instance = QueueManager._privateConstructor();
@@ -195,12 +206,10 @@ class QueueManager {
   }
 
   Future<List<MediaItem>> queueLoader() async {
+    // print('          queueLoader');
 
-    print(queue.length);
     for(int i=queue.length+1; i<DEFAULT_LENGTH_QUEUE+indexManager+1; i++) {
       Track track = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex+i].key;
-      print('queuetrack');
-      print(track);
       File file = await track.loadFile();
 
       MediaItem mi = MediaItem(
@@ -208,7 +217,7 @@ class QueueManager {
         album: track.artist,
         title: track.name,
         artUri: Uri.parse(track.imageUrlLarge),
-        duration: Duration(seconds: track.totalDuration.inSeconds),
+        duration: Duration(seconds: track.totalDuration.value.inSeconds),
       );
 
       queue.add(mi);
@@ -241,7 +250,7 @@ class YoutubeRetriever {
   }
 
   Future<MapEntry<Track, File>> streamByName(Track track) async {
-    Track tr = await SearchAlgorithm().search(tArtist: track.artist, tTitle: track.name, tDuration: track.totalDuration);
+    Track tr = await SearchAlgorithm().search(tArtist: track.artist, tTitle: track.name, tDuration: track.totalDuration.value);
     return MapEntry(tr, await streamById(tr.id));
   }
 
@@ -257,7 +266,7 @@ class YoutubeRetriever {
       // Open a file for writing.
       final Directory directory = await getTemporaryDirectory();
       String path = '${directory.path}/$id.mp3';
-      print(path);
+      print('Path : $path');
       file = File(path);
       var fileStream = file.openWrite();
 

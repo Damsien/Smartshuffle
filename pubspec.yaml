@@ -42,7 +42,7 @@ dependencies:
   palette_generator: any
   focus_detector: any
   visibility_detector: any
-  youtube_explode_dart: any
+  youtube_explode_dart: ^1.9.6
 
     #google sign in
   firebase_auth: any
@@ -53,6 +53,7 @@ dependencies:
 
   equatable: any
   protobuf: ^2.0.0
+  screen_state: any
 
   mailer: any
 
