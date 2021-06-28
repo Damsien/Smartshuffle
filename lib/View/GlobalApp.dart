@@ -4,7 +4,7 @@ import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
-import 'package:screen_state/screen_state.dart';
+import 'package:focus_detector/focus_detector.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/foundation.dart';
@@ -66,11 +66,14 @@ class _GlobalApp extends StatefulWidget {
   GlobalApp createState() => GlobalApp();
 }
 
-class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
+class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin, WidgetsBindingObserver {
+  static const String SCREEN_VISIBLE = "screen_visible";
+  static const String SCREEN_IDLE = "screen_idle";
+
+  ValueNotifier<String> screenState = ValueNotifier<String>(SCREEN_VISIBLE);
+
   PageController pageController;
   List<Widget> pages;
-
-  Screen _screen = Screen();
 
   Map<ServicesLister, PlatformsController> userPlatforms =
       new Map<ServicesLister, PlatformsController>();
@@ -147,13 +150,21 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       DeviceOrientation.portraitDown,
     ]);
     //this.checkForUpdate();
+    WidgetsBinding.instance.addObserver(this);
     _initAudioService();
     this.initPage();
     super.initState();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state);
+    super.didChangeAppLifecycleState(state);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     AudioService.disconnect();
     super.dispose();
   }
@@ -173,16 +184,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     };
 
     this.materialColor = MaterialColor(0xFFFDD835, colorCodes);
-
-    try {
-      _screen.screenStateStream.listen(
-        (data) {
-          print(data);
-        }
-      );
-    } on ScreenStateException catch (exception) {
-      print(exception);
-    }
 
     Widget playlistsPage = new PlaylistsPage(setPlaying: setPlaying, materialColor: this.materialColor);
     Widget searchPage = new SearchPageMain();
@@ -225,7 +226,22 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       } else if(_songsTabCtrl.page.round() < GlobalQueue.queue.value.length-1) {
         // _songsTabCtrl.jumpToPage(GlobalQueue.queue.value.length+1);
         _blockAnimation = true;
-        _songsTabCtrl.nextPage(duration: Duration(milliseconds: 250), curve: Curves.ease);
+        if(screenState.value == SCREEN_VISIBLE) {
+          _songsTabCtrl.nextPage(duration: Duration(milliseconds: 250), curve: Curves.ease);
+        } else {
+          Function f;
+          f = () {
+            print('listener');
+            print(screenState.value);
+            if(screenState.value == SCREEN_VISIBLE) {
+              _blockAnimation = true;
+              _songsTabCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+              screenState.removeListener(f);
+            }
+          };
+          screenState.addListener(f);
+        }
+        print('movetoN');
         moveToNextTrack();
       } else {
         _blockAnimation = true;
@@ -423,11 +439,25 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   skipNext() {
     if(_songsTabCtrl.page.toInt() < GlobalQueue.queue.value.length-1) {
-      _songsTabCtrl.animateToPage(_songsTabCtrl.page.toInt()+1, duration: Duration(milliseconds: 500), curve: Curves.ease);
+      _blockAnimation = true;
+      if(screenState.value == SCREEN_VISIBLE) {
+        _songsTabCtrl.nextPage(duration: Duration(milliseconds: 250), curve: Curves.ease);
+      } else {
+        Function f;
+        f = () {
+          _blockAnimation = true;
+          if(screenState.value == SCREEN_VISIBLE) {
+            _songsTabCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+            screenState.removeListener(f);
+          }
+        };
+        screenState.addListener(f);
+      }
+      moveToNextTrack();
     } else {
       _blockAnimation = true;
       _songsTabCtrl.jumpToPage(0);
-      _tabIndex = _songsTabCtrl.page.toInt();
+      _tabIndex = _songsTabCtrl.page.round();
       _blockAnimation = false;
       moveToNextTrack();
     }
@@ -438,7 +468,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     if(this.selectedTrack.value.currentDuration.value.inSeconds >= 1) {
       this.selectedTrack.value.seekTo(Duration(seconds: 0), true);
     } else if(_songsTabCtrl.page.toInt() > 0) {
-      _songsTabCtrl.animateToPage(_songsTabCtrl.page.toInt()-1, duration: Duration(milliseconds: 500), curve: Curves.ease);
+      _songsTabCtrl.previousPage(duration: Duration(milliseconds: 500), curve: Curves.ease);
     }
   }
 
@@ -1269,30 +1299,38 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   physics: NeverScrollableScrollPhysics(),
                   children: this.pages,
                 ),
-                buildPanel()
+                FocusDetector(
+                  onVisibilityGained: () {screenState.value = SCREEN_VISIBLE; print('gained');},
+                  onFocusGained: ()  {screenState.value = SCREEN_VISIBLE; print('gained');},
+                  onForegroundGained: ()  {screenState.value = SCREEN_VISIBLE; print('gained');},
+                  onForegroundLost:  () {screenState.value = SCREEN_IDLE; print('idle');},
+                  // onFocusLost:  () {screenState.value = SCREEN_IDLE; print('idle');},
+                  onVisibilityLost:   () {screenState.value = SCREEN_IDLE; print('idle');},
+                  child: buildPanel()
+                )
               ])
             ),
             bottomNavigationBar: Container(
-                height: _botBarHeight,
-                child: BottomNavigationBar(
-                  selectedItemColor: this.materialColor.shade300,
-                  items: <BottomNavigationBarItem>[
-                    BottomNavigationBarItem(
-                        icon: Icon(Icons.library_music),
-                        label: AppLocalizations.of(context).globalTitleLibrairie,
-                        backgroundColor: Colors.black),
-                    BottomNavigationBarItem(
-                        icon: Icon(Icons.search),
-                        label: AppLocalizations.of(context).globalTitleSearch,
-                        backgroundColor: Colors.black),
-                    BottomNavigationBarItem(
-                        icon: Icon(Icons.account_circle),
-                        label: AppLocalizations.of(context).globalTitleProfile,
-                        backgroundColor: Colors.black),
-                  ],
-                  currentIndex: this.selectedIndex,
-                  onTap: this.onItemTapped,
-                )
+              height: _botBarHeight,
+              child:  BottomNavigationBar(
+                selectedItemColor: this.materialColor.shade300,
+                items: <BottomNavigationBarItem>[
+                  BottomNavigationBarItem(
+                      icon: Icon(Icons.library_music),
+                      label: AppLocalizations.of(context).globalTitleLibrairie,
+                      backgroundColor: Colors.black),
+                  BottomNavigationBarItem(
+                      icon: Icon(Icons.search),
+                      label: AppLocalizations.of(context).globalTitleSearch,
+                      backgroundColor: Colors.black),
+                  BottomNavigationBarItem(
+                      icon: Icon(Icons.account_circle),
+                      label: AppLocalizations.of(context).globalTitleProfile,
+                      backgroundColor: Colors.black),
+                ],
+                currentIndex: this.selectedIndex,
+                onTap: this.onItemTapped,
+              )
             )
         ),
       localizationsDelegates: [
