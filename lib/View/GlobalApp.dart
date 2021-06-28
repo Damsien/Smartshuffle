@@ -66,7 +66,7 @@ class _GlobalApp extends StatefulWidget {
   GlobalApp createState() => GlobalApp();
 }
 
-class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin, WidgetsBindingObserver {
+class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   static const String SCREEN_VISIBLE = "screen_visible";
   static const String SCREEN_IDLE = "screen_idle";
 
@@ -150,21 +150,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin, Widgets
       DeviceOrientation.portraitDown,
     ]);
     //this.checkForUpdate();
-    WidgetsBinding.instance.addObserver(this);
     _initAudioService();
     this.initPage();
     super.initState();
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    print(state);
-    super.didChangeAppLifecycleState(state);
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     AudioService.disconnect();
     super.dispose();
   }
@@ -212,11 +204,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin, Widgets
   /*    BACK PLAYER    */
 
 
-  positionCheck(Duration position) async {
-    if(position.inSeconds >= this.selectedTrack.value.totalDuration.value.inSeconds-1 && AudioService.playbackState.playing
-      && AudioService.currentMediaItem.extras['track_id'] == this.selectedTrack.value.id) {
+  trackEnded() {
+    print('end');
+    print(AudioService.playbackState.playing);
+    print(AudioService.currentMediaItem.extras['track_id']);
+    print(this.selectedTrack.value.id);
+    if(AudioService.playbackState.playing && AudioService.currentMediaItem.extras['track_id'] == this.selectedTrack.value.id) {
       print('Track ended : ${this.selectedTrack.value.name}');
-      print(position);
       // await AudioService.stop();
       if(_isRepeatOnce) {
         _isRepeatOnce = false;
@@ -295,7 +289,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin, Widgets
         }
 
 
-        QueueManager().setTrackPlaying(track, functions: {'skip_next': skipNext, 'skip_previous': skipPrevious});
+        QueueManager().setTrackPlaying(track, functions: {'skip_next': skipNext, 'skip_previous': skipPrevious, 'track_ended': trackEnded});
 
       } else {
 
@@ -320,7 +314,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin, Widgets
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
             // this.selectedTrack.value.currentDuration.addListener(positionCheck);
           }
-          QueueManager().setTrackPlaying(this.selectedTrack.value, functions: {'skip_next': skipNext, 'skip_previous': skipPrevious});
+
+          QueueManager().setTrackPlaying(this.selectedTrack.value, functions: {'skip_next': skipNext, 'skip_previous': skipPrevious, 'track_ended': trackEnded});
 
         } else {
           
@@ -329,12 +324,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin, Widgets
         }
 
       }
-
-      AudioService.positionStream.listen(
-        (data) {
-          positionCheck(data);
-        }
-      );
 
     //mainImageColorRetriever();
     

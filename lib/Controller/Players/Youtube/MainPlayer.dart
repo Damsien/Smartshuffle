@@ -20,6 +20,9 @@ class AudioPlayerTask extends BackgroundAudioTask {
   final AudioPlayer _player = AudioPlayer();
   List<MediaItem> _queue;
 
+  AudioPlayerTask() {
+  }
+
   @override
   Future<void> onStart(Map<String, dynamic> params) async {
     print('                      STARTO');
@@ -66,6 +69,16 @@ class AudioPlayerTask extends BackgroundAudioTask {
     _player.play();
     // Start loading something (will play when ready).
     await _player.setFilePath(mediaItem.id);
+    
+    _player.positionStream.listen(
+      (position) {
+        if(position.inMilliseconds >= _player.duration.inMilliseconds-900) {
+          print('ended');
+          AudioServiceBackground.sendCustomEvent('TRACK_ENDED');
+        }
+      }
+    );
+
     return super.onStart(params);
   }
 
@@ -88,14 +101,14 @@ class AudioPlayerTask extends BackgroundAudioTask {
   Future<void> onSkipToNext() {
     // _player.seekToNext();
     _player.seek(Duration.zero);
-    AudioServiceBackground.sendCustomEvent("SKIP_NEXT_ITEM");
+    AudioServiceBackground.sendCustomEvent('SKIP_NEXT_ITEM');
     return super.onSkipToNext();
   }
 
   @override
   Future<void> onSkipToPrevious() {
     _player.seek(Duration.zero);
-    AudioServiceBackground.sendCustomEvent("SKIP_PREVIOUS_ITEM");
+    AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS_ITEM');
     return super.onSkipToPrevious();
   }
 
@@ -168,6 +181,7 @@ class QueueManager {
     // );
     AudioService.customEventStream.listen(
       (data) {
+            print(data);
         switch(data) {
           
           case 'SKIP_NEXT_ITEM' : {
@@ -176,6 +190,10 @@ class QueueManager {
 
           case 'SKIP_PREVIOUS_ITEM' : {
             _functions['skip_previous'].call();
+          } break;
+
+          case 'TRACK_ENDED' : {
+            _functions['track_ended'].call();
           } break;
 
         }
