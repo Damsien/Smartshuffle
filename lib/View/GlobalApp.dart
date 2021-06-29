@@ -1289,12 +1289,12 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   children: this.pages,
                 ),
                 FocusDetector(
-                  onVisibilityGained: () {screenState.value = SCREEN_VISIBLE; print('gained');},
-                  onFocusGained: ()  {screenState.value = SCREEN_VISIBLE; print('gained');},
-                  onForegroundGained: ()  {screenState.value = SCREEN_VISIBLE; print('gained');},
-                  onForegroundLost:  () {screenState.value = SCREEN_IDLE; print('idle');},
+                  onVisibilityGained: () {screenState.value = SCREEN_VISIBLE;},
+                  onFocusGained: ()  {screenState.value = SCREEN_VISIBLE;},
+                  onForegroundGained: ()  {screenState.value = SCREEN_VISIBLE;},
+                  onForegroundLost:  () {screenState.value = SCREEN_IDLE;},
                   // onFocusLost:  () {screenState.value = SCREEN_IDLE; print('idle');},
-                  onVisibilityLost:   () {screenState.value = SCREEN_IDLE; print('idle');},
+                  onVisibilityLost:   () {screenState.value = SCREEN_IDLE;},
                   child: buildPanel()
                 )
               ])

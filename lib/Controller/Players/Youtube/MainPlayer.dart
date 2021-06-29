@@ -18,10 +18,7 @@ import 'package:path_provider/path_provider.dart';
 class AudioPlayerTask extends BackgroundAudioTask {
 
   final AudioPlayer _player = AudioPlayer();
-  List<MediaItem> _queue;
-
-  AudioPlayerTask() {
-  }
+  List<MediaItem> _queue = List<MediaItem>();
 
   @override
   Future<void> onStart(Map<String, dynamic> params) async {
@@ -65,16 +62,18 @@ class AudioPlayerTask extends BackgroundAudioTask {
       );
     });
 
+    AudioServiceBackground.setQueue(_queue);
+    _queue.add(mediaItem);
     // Play when ready.
     _player.play();
     // Start loading something (will play when ready).
-    await _player.setFilePath(mediaItem.id);
+    await _player.setFilePath(_queue[0].id);
     
     _player.positionStream.listen(
       (position) {
         if(position.inMilliseconds >= _player.duration.inMilliseconds-900) {
           print('ended');
-          AudioServiceBackground.sendCustomEvent('TRACK_ENDED');
+          // AudioServiceBackground.sendCustomEvent('TRACK_ENDED');
         }
       }
     );
@@ -84,8 +83,9 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   @override
   Future<void> onUpdateQueue(List<MediaItem> queue) async {
-    // AudioServiceBackground.setQueue(queue);
-    // _queue = queue;
+    _queue.add(queue[0]);
+    await _player.setFilePath(queue[0].id);
+    // AudioServiceBackground.setQueue(_queue);
     // try {
     //   await _player.setAudioSource(ConcatenatingAudioSource(
     //     children:
@@ -99,16 +99,17 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   @override
   Future<void> onSkipToNext() {
-    // _player.seekToNext();
-    _player.seek(Duration.zero);
-    AudioServiceBackground.sendCustomEvent('SKIP_NEXT_ITEM');
+    _player.seekToNext();
+    // _player.seek(Duration.zero);
+    // AudioServiceBackground.sendCustomEvent('SKIP_NEXT_ITEM');
     return super.onSkipToNext();
   }
 
   @override
   Future<void> onSkipToPrevious() {
-    _player.seek(Duration.zero);
-    AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS_ITEM');
+    _player.seekToPrevious();
+    // _player.seek(Duration.zero);
+    // AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS_ITEM');
     return super.onSkipToPrevious();
   }
 
@@ -219,14 +220,14 @@ class QueueManager {
     _functions = functions;
     await AudioService.stop();
     await track.setIsPlaying(true);
-    // if(queue.isNotEmpty) queue.removeAt(0);
+    if(queue.isNotEmpty) queue.removeAt(0);
     queueLoader();
   }
 
   Future<List<MediaItem>> queueLoader() async {
     // print('          queueLoader');
 
-    for(int i=queue.length+1; i<DEFAULT_LENGTH_QUEUE+indexManager+1; i++) {
+    for(int i=0; i<DEFAULT_LENGTH_QUEUE; i++) {
       Track track = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex+i].key;
       File file = await track.loadFile();
 
@@ -239,10 +240,10 @@ class QueueManager {
       );
 
       queue.add(mi);
+      await AudioService.addQueueItem(mi);
 
     }
 
-    // await AudioService.updateQueue(queue);
     return queue;
 
   }

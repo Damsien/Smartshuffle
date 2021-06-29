@@ -186,7 +186,7 @@ abstract class PlatformsController {
     await AudioService.start(
      backgroundTaskEntrypoint: _entrypoint,
      androidNotificationColor: notificationColor,
-     androidEnableQueue: false,
+     androidEnableQueue: true,
      params: {
       'file': file.path,
       'track_title': track.name,
