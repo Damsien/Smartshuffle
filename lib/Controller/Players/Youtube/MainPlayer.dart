@@ -19,6 +19,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   final AudioPlayer _player = AudioPlayer();
   List<MediaItem> _queue = List<MediaItem>();
+  ConcatenatingAudioSource _audioSources;
 
   @override
   Future<void> onStart(Map<String, dynamic> params) async {
@@ -62,12 +63,15 @@ class AudioPlayerTask extends BackgroundAudioTask {
       );
     });
 
-    AudioServiceBackground.setQueue(_queue);
     _queue.add(mediaItem);
+    AudioServiceBackground.setQueue(_queue);
+    _audioSources = ConcatenatingAudioSource(
+      children: [AudioSource.uri(Uri.file(mediaItem.id))]
+    );
     // Play when ready.
     _player.play();
     // Start loading something (will play when ready).
-    await _player.setFilePath(_queue[0].id);
+    await _player.setAudioSource(_audioSources);
     
     _player.positionStream.listen(
       (position) {
@@ -82,10 +86,18 @@ class AudioPlayerTask extends BackgroundAudioTask {
   }
 
   @override
+  Future<void> onAddQueueItem(MediaItem mediaItem) async {
+    _queue.add(mediaItem);
+    await _audioSources.add(AudioSource.uri(Uri.file(mediaItem.id)));
+
+    return super.onAddQueueItem(mediaItem);
+  }
+
+  @override
   Future<void> onUpdateQueue(List<MediaItem> queue) async {
-    _queue.add(queue[0]);
-    await _player.setFilePath(queue[0].id);
+    // _queue.add(queue[0]);
     // AudioServiceBackground.setQueue(_queue);
+    // await _player.setFilePath(queue[0].id);
     // try {
     //   await _player.setAudioSource(ConcatenatingAudioSource(
     //     children:
@@ -98,20 +110,43 @@ class AudioPlayerTask extends BackgroundAudioTask {
   }
 
   @override
-  Future<void> onSkipToNext() {
-    _player.seekToNext();
-    // _player.seek(Duration.zero);
-    // AudioServiceBackground.sendCustomEvent('SKIP_NEXT_ITEM');
-    return super.onSkipToNext();
+  Future<void> onSkipToQueueItem(String mediaId) async {
+    // Then default implementations of onSkipToNext and onSkipToPrevious will
+    // delegate to this method.
+    final newIndex = _queue.indexWhere((item) => item.id == mediaId);
+    if (newIndex == -1) return;
+    // During a skip, the player may enter the buffering state. We could just
+    // propagate that state directly to AudioService clients but AudioService
+    // has some more specific states we could use for skipping to next and
+    // previous. This variable holds the preferred state to send instead of
+    // buffering during a skip, and it is cleared as soon as the player exits
+    // buffering (see the listener in onStart).
+
+    // This jumps to the beginning of the queue item at newIndex.
+    _player.seek(Duration.zero, index: newIndex);
+    // Demonstrate custom events.
+    // AudioServiceBackground.sendCustomEvent('skip to $newIndex');
   }
 
-  @override
-  Future<void> onSkipToPrevious() {
-    _player.seekToPrevious();
-    // _player.seek(Duration.zero);
-    // AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS_ITEM');
-    return super.onSkipToPrevious();
-  }
+  // @override
+  // Future<void> onSkipToNext() async {
+  //   await _player.seekToNext();
+  //   AudioServiceBackground.setMediaItem(_queue[_player.currentIndex]);
+  //   _player.play();
+  //   // _player.seek(Duration.zero);
+  //   // AudioServiceBackground.sendCustomEvent('SKIP_NEXT_ITEM');
+  //   return super.onSkipToNext();
+  // }
+
+  // @override
+  // Future<void> onSkipToPrevious() async {
+  //   await _player.seekToPrevious();
+  //   AudioServiceBackground.setMediaItem(_queue[_player.currentIndex]);
+  //   _player.play();
+  //   // _player.seek(Duration.zero);
+  //   // AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS_ITEM');
+  //   return super.onSkipToPrevious();
+  // }
 
   @override
   Future<void> onStop() async {
