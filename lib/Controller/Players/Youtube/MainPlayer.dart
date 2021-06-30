@@ -6,6 +6,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:palette_generator/palette_generator.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart' as SM;
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
@@ -15,10 +16,12 @@ import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:path_provider/path_provider.dart';
 
+void _entrypoint() => AudioServiceBackground.run(() => AudioPlayerTask());
 class AudioPlayerTask extends BackgroundAudioTask {
 
   final AudioPlayer _player = AudioPlayer();
   List<MediaItem> _queue = List<MediaItem>();
+  List<Track> _trackQueue = List<Track>();
   ConcatenatingAudioSource _audioSources;
 
   @override
@@ -88,7 +91,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
   @override
   Future<void> onAddQueueItem(MediaItem mediaItem) async {
     _queue.add(mediaItem);
-    await _audioSources.add(AudioSource.uri(Uri.file(mediaItem.id)));
+    // await _audioSources.add(AudioSource.uri(Uri.file(mediaItem.id)));
 
     return super.onAddQueueItem(mediaItem);
   }
@@ -110,33 +113,14 @@ class AudioPlayerTask extends BackgroundAudioTask {
   }
 
   @override
-  Future<void> onSkipToQueueItem(String mediaId) async {
-    // Then default implementations of onSkipToNext and onSkipToPrevious will
-    // delegate to this method.
-    final newIndex = _queue.indexWhere((item) => item.id == mediaId);
-    if (newIndex == -1) return;
-    // During a skip, the player may enter the buffering state. We could just
-    // propagate that state directly to AudioService clients but AudioService
-    // has some more specific states we could use for skipping to next and
-    // previous. This variable holds the preferred state to send instead of
-    // buffering during a skip, and it is cleared as soon as the player exits
-    // buffering (see the listener in onStart).
-
-    // This jumps to the beginning of the queue item at newIndex.
-    _player.seek(Duration.zero, index: newIndex);
-    // Demonstrate custom events.
-    // AudioServiceBackground.sendCustomEvent('skip to $newIndex');
+  Future<void> onSkipToNext() async {
+    // await _player.seekToNext();
+    // AudioServiceBackground.setMediaItem(_queue[_player.currentIndex]);
+    await _playTrack(firstTrack);
+    // _player.seek(Duration.zero);
+    // AudioServiceBackground.sendCustomEvent('SKIP_NEXT_ITEM');
+    return super.onSkipToNext();
   }
-
-  // @override
-  // Future<void> onSkipToNext() async {
-  //   await _player.seekToNext();
-  //   AudioServiceBackground.setMediaItem(_queue[_player.currentIndex]);
-  //   _player.play();
-  //   // _player.seek(Duration.zero);
-  //   // AudioServiceBackground.sendCustomEvent('SKIP_NEXT_ITEM');
-  //   return super.onSkipToNext();
-  // }
 
   // @override
   // Future<void> onSkipToPrevious() async {
@@ -195,6 +179,75 @@ class AudioPlayerTask extends BackgroundAudioTask {
     );
     return super.onSeekTo(position);
   }
+  
+  
+  Future<Color> _getImagePalette (ImageProvider imageProvider) async {
+    final PaletteGenerator paletteGenerator = await PaletteGenerator
+      .fromImageProvider(imageProvider);
+    return paletteGenerator.dominantColor?.color;
+  }
+
+  String _colorToHexString(Color color) {
+    if(color != null)
+      return '0xFF${color.value.toRadixString(16).substring(2, 8)}';
+    else return null;
+  }
+
+  Future<int> _getMainImageColor(String imageUrl) async {
+    return int.parse(_colorToHexString(await _getImagePalette(NetworkImage(imageUrl))));
+  }
+
+  Future<MapEntry<Track, File>> _getFilePath(Track track) async {
+    if(_queue.where((element) => false))
+    return await YoutubeRetriever().streamByName(track);
+  }
+
+  Future<void> _playTrack(Track track) async {
+    int notificationColor = await _getMainImageColor(track.imageUrlLarge);
+    MapEntry<Track, File> foundTrack = await _getFilePath(track);
+
+    await AudioService.start(
+    backgroundTaskEntrypoint: _entrypoint,
+    androidNotificationColor: notificationColor,
+    androidEnableQueue: true,
+    params: {
+      'file': foundTrack.value.path,
+      'track_title': track.name,
+      'track_artist': track.artist,
+      'track_image': track.imageUrlLarge,
+      'track_duration_seconds': foundTrack.key.totalDuration.value.inSeconds,
+      'track_id': track.id,
+      'track_service_name': track.serviceName
+    });
+  }
+
+  @override
+  Future onCustomAction(String type, arguments) async {
+
+    switch(type) {
+
+      case 'LAUNCH_QUEUE' : {
+
+        for(int i=0; i<arguments['queue']['id'].length; i++) {
+          _trackQueue.add(Track(
+            id: arguments['queue']['id'][i],
+            name: arguments['queue']['id'][i],
+            artist: arguments['queue']['artist'][i],
+            imageUrlLarge: arguments['queue']['image'][i],
+            service: PlatformsLister.nameToService(arguments['queue']['service'][i])
+          ));
+        }
+
+        Track firstTrack = _trackQueue.first;
+        await _playTrack(firstTrack);
+
+      } break;
+
+    }
+    
+
+    return super.onCustomAction(type, arguments);
+  }
 
 
 
@@ -221,6 +274,7 @@ class QueueManager {
         switch(data) {
           
           case 'SKIP_NEXT_ITEM' : {
+            print('skipiiiing');
             _functions['skip_next'].call();
           } break;
 
@@ -272,6 +326,7 @@ class QueueManager {
         title: track.name,
         artUri: Uri.parse(track.imageUrlLarge),
         duration: Duration(seconds: track.totalDuration.value.inSeconds),
+        extras: {'track_id': track.id, 'service_name': track.serviceName}
       );
 
       queue.add(mi);

@@ -15,7 +15,6 @@ import 'package:palette_generator/palette_generator.dart';
 import 'package:protobuf/protobuf.dart';
 
 
-void _entrypoint() => AudioServiceBackground.run(() => AudioPlayerTask());
 abstract class PlatformsController {
   Map<String, State> states = new Map<String, State>();
   Map<String, Track> allTracks = Map<String, Track>();
@@ -151,18 +150,6 @@ abstract class PlatformsController {
 
 
   /*  MEDIA PLAYER CONTROLS  */
-  
-  Future<Color> _getImagePalette (ImageProvider imageProvider) async {
-    final PaletteGenerator paletteGenerator = await PaletteGenerator
-      .fromImageProvider(imageProvider);
-    return paletteGenerator.dominantColor?.color;
-  }
-
-  String _colorToHexString(Color color) {
-    if(color != null)
-      return '0xFF${color.value.toRadixString(16).substring(2, 8)}';
-    else return null;
-  }
 
   play(File file, Track track) async {
     // if(GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key != null) {
@@ -172,30 +159,40 @@ abstract class PlatformsController {
     for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
       me.key.setIsPlaying(false);
     }
-    int notificationColor;
-    
-    try {
-      notificationColor = int.parse(_colorToHexString(await _getImagePalette(NetworkImage(track.imageUrlLarge))));
-    } catch (e) {}
 
     if(!AudioService.connected) {
       await AudioService.connect();
     }
 
+    Map<String, List<String>> queue = Map<String, List<String>>();
+    queue['name'] = List<String>();
+    queue['artist'] = List<String>();
+    queue['image'] = List<String>();
+    queue['id'] = List<String>();
+    queue['service'] = List<String>();
+    for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
+      queue['name'].add(me.key.name);
+      queue['artist'].add(me.key.artist);
+      queue['image'].add(me.key.imageUrlLarge);
+      queue['id'].add(me.key.id);
+      queue['service'].add(me.key.serviceName);
+    }
+
     print('       START');
-    await AudioService.start(
-     backgroundTaskEntrypoint: _entrypoint,
-     androidNotificationColor: notificationColor,
-     androidEnableQueue: true,
-     params: {
-      'file': file.path,
-      'track_title': track.name,
-      'track_artist': track.artist,
-      'track_image': track.imageUrlLarge,
-      'track_duration_seconds': track.totalDuration.value.inSeconds,
-      'track_id': track.id,
-      'track_service_name': track.serviceName
-    });
+    // await AudioService.start(
+    //  backgroundTaskEntrypoint: _entrypoint,
+    //  androidNotificationColor: notificationColor,
+    //  androidEnableQueue: true,
+    //  params: {
+    //   'file': file.path,
+    //   'track_title': track.name,
+    //   'track_artist': track.artist,
+    //   'track_image': track.imageUrlLarge,
+    //   'track_duration_seconds': track.totalDuration.value.inSeconds,
+    //   'track_id': track.id,
+    //   'track_service_name': track.serviceName
+    // });
+    await AudioService.customAction('LAUNCH_QUEUE', {'queue': queue});
   }
 
   resume(File file) {
