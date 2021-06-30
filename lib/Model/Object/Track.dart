@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class Track {
@@ -21,7 +22,7 @@ class Track {
   String _imageUrlLarge = DEFAULT_IMAGE_URL;
   DateTime _addDate;
 
-  static const String PLAYMODE_PLAY = "play";
+  // static const String PLAYMODE_PLAY = "play";
   static const String PLAYMODE_RESUME = "resume";
   static const String PLAYMODE_PAUSE = "pause";
 
@@ -78,8 +79,15 @@ class Track {
 
   Track get tempoTrack => _tempoTrack;
 
+  // Future<File> get file async {
+  //   Completer().complete(_file);
+  //   if(_file != null) return Completer().future;
+  //   else return await loadFile();
+  // }
+
   Future<File> loadFile() async {
-    MapEntry<Track, File> me = await PlatformsLister.platforms[_service].getFile(this);
+    PlatformsController ctrl = PlatformsLister.platforms[_service];
+    MapEntry<Track, File> me = await ctrl.getFile(this);
     _tempoTrack = me.key;
     _totalDuration = _tempoTrack.totalDuration;
     _totalDuration.notifyListeners();
@@ -88,12 +96,13 @@ class Track {
 
   bool setIsSelected(bool isSelected) {
     _isSelected.value = isSelected;
+    if(!isSelected) seekTo(Duration.zero, false);
     return _isSelected.value;
   }
 
   Future<bool> setIsPlaying(bool isPlaying) async {
     _isPlaying.value = isPlaying;
-    if(isPlaying) await _backPlayer(PLAYMODE_PLAY);
+    // if(isPlaying) await _backPlayer(PLAYMODE_PLAY);
     setIsSelected(isPlaying);
     _isPlaying.notifyListeners();
     return _isPlaying.value;
@@ -131,14 +140,13 @@ class Track {
   Future<void> _backPlayer(String playMode) async {
     PlatformsController ctrl = PlatformsLister.platforms[_service];
     switch(playMode) {
-      case PLAYMODE_PLAY : {
-        if(_file == null) await loadFile();
-        ctrl.play(_file, this);
-      } break;
+      // case PLAYMODE_PLAY : {
+      //   if(_file == null) await loadFile();
+      //   ctrl.play(_file, this);
+      // } break;
       case PLAYMODE_RESUME: ctrl.resume(_file); break;
       case PLAYMODE_PAUSE: ctrl.pause(); break;
     }
-    ctrl.mediaPlayerListener(this);
   }
 
   void seekTo(Duration position, bool influence) {

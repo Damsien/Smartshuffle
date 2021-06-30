@@ -1,5 +1,6 @@
 
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
@@ -15,30 +16,16 @@ import 'package:smartshuffle/Controller/Players/Youtube/SearchAlgorithm.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'package:path_provider/path_provider.dart';
-
-void _entrypoint() => AudioServiceBackground.run(() => AudioPlayerTask());
 class AudioPlayerTask extends BackgroundAudioTask {
 
+  static const int DEFAULT_LENGTH_QUEUE = 5;
   final AudioPlayer _player = AudioPlayer();
   List<MediaItem> _queue = List<MediaItem>();
-  List<Track> _trackQueue = List<Track>();
-  ConcatenatingAudioSource _audioSources;
+  List<Track> trackQueue = List<Track>();
+  int currentIndex = 0;
 
   @override
   Future<void> onStart(Map<String, dynamic> params) async {
-    print('                      STARTO');
-    final mediaItem = MediaItem(
-        id: params['file'],
-        album: params['track_artist'],
-        title: params['track_title'],
-        artUri: Uri.parse(params['track_image']),
-        duration: Duration(seconds: params['track_duration_seconds']),
-        extras: {
-          'track_id': params['track_id']
-        }
-      );
-    // Tell the UI and media notification what we're playing.
-    AudioServiceBackground.setMediaItem(mediaItem);
     // Listen to state changes on the player...
     _player.playerStateStream.listen((playerState) {
       // ... and forward them to all audio_service clients.
@@ -66,71 +53,25 @@ class AudioPlayerTask extends BackgroundAudioTask {
       );
     });
 
-    _queue.add(mediaItem);
-    AudioServiceBackground.setQueue(_queue);
-    _audioSources = ConcatenatingAudioSource(
-      children: [AudioSource.uri(Uri.file(mediaItem.id))]
-    );
-    // Play when ready.
-    _player.play();
-    // Start loading something (will play when ready).
-    await _player.setAudioSource(_audioSources);
-    
-    _player.positionStream.listen(
-      (position) {
-        if(position.inMilliseconds >= _player.duration.inMilliseconds-900) {
-          print('ended');
-          // AudioServiceBackground.sendCustomEvent('TRACK_ENDED');
-        }
-      }
-    );
-
     return super.onStart(params);
   }
 
   @override
-  Future<void> onAddQueueItem(MediaItem mediaItem) async {
-    _queue.add(mediaItem);
-    // await _audioSources.add(AudioSource.uri(Uri.file(mediaItem.id)));
-
-    return super.onAddQueueItem(mediaItem);
-  }
-
-  @override
-  Future<void> onUpdateQueue(List<MediaItem> queue) async {
-    // _queue.add(queue[0]);
-    // AudioServiceBackground.setQueue(_queue);
-    // await _player.setFilePath(queue[0].id);
-    // try {
-    //   await _player.setAudioSource(ConcatenatingAudioSource(
-    //     children:
-    //         queue.map((item) => AudioSource.uri(Uri.parse(item.id))).toList(),
-    //   ));
-    // } catch (e) {
-    //   print(e);
-    // }
-    return super.onUpdateQueue(queue);
-  }
-
-  @override
   Future<void> onSkipToNext() async {
-    // await _player.seekToNext();
-    // AudioServiceBackground.setMediaItem(_queue[_player.currentIndex]);
-    await _playTrack(firstTrack);
-    // _player.seek(Duration.zero);
-    // AudioServiceBackground.sendCustomEvent('SKIP_NEXT_ITEM');
+    await _playTrack(trackQueue[currentIndex]);
+    AudioServiceBackground.sendCustomEvent('SKIP_NEXT');
+    currentIndex++;
+    _queueLoader();
     return super.onSkipToNext();
   }
 
-  // @override
-  // Future<void> onSkipToPrevious() async {
-  //   await _player.seekToPrevious();
-  //   AudioServiceBackground.setMediaItem(_queue[_player.currentIndex]);
-  //   _player.play();
-  //   // _player.seek(Duration.zero);
-  //   // AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS_ITEM');
-  //   return super.onSkipToPrevious();
-  // }
+  @override
+  Future<void> onSkipToPrevious() async {
+    await _playTrack(trackQueue[currentIndex]);
+    AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS');
+    currentIndex--;
+    return super.onSkipToPrevious();
+  }
 
   @override
   Future<void> onStop() async {
@@ -139,7 +80,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
       playing: false,
       processingState: AudioProcessingState.stopped
     );
-    // AudioServiceBackground.sendCustomEvent('[Isolate] onStop');
+    AudioServiceBackground.sendCustomEvent('STOP');
     await _player.stop();
     return super.onStop();
   }
@@ -151,8 +92,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
       processingState: AudioProcessingState.ready
     );
     await _player.pause();
-    // AudioServiceBackground.sendCustomEvent('[Send] onPause');
-    // AudioServiceBackground.mediaItem.extras['track'].pauseOnly();
     return super.onPause();
   }
 
@@ -163,8 +102,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
       processingState: AudioProcessingState.ready
     );
     await _player.play();
-    // AudioServiceBackground.sendCustomEvent('[Send] onResume');
-    // AudioServiceBackground.mediaItem.extras['track'].resumeOnly();
     return super.onPlay();
   }
 
@@ -198,27 +135,73 @@ class AudioPlayerTask extends BackgroundAudioTask {
   }
 
   Future<MapEntry<Track, File>> _getFilePath(Track track) async {
-    if(_queue.where((element) => false))
-    return await YoutubeRetriever().streamByName(track);
+    MediaItem searchingItem = _queue.firstWhere((element) => 
+      (element.extras['track_id'] == track.id && element.extras['track_service_name'] == track.serviceName),
+      orElse: () => null);
+    if(searchingItem != null) {
+      MapEntry<Track, File> me = MapEntry<Track, File>(
+        Track(
+          id: searchingItem.id,
+          name: track.name,
+          artist: track.artist,
+          imageUrlLarge: track.imageUrlLarge,
+          totalDuration: track.totalDuration.value
+        ),
+        File.fromUri(Uri.file(searchingItem.id))
+      );
+      Completer c = Completer();
+      c.complete(me);
+      return c.future;
+    } else {
+      File file = await track.loadFile();
+      return MapEntry(track, file);
+    }
   }
 
   Future<void> _playTrack(Track track) async {
-    int notificationColor = await _getMainImageColor(track.imageUrlLarge);
+    // int notificationColor = await _getMainImageColor(track.imageUrlLarge);
     MapEntry<Track, File> foundTrack = await _getFilePath(track);
 
-    await AudioService.start(
-    backgroundTaskEntrypoint: _entrypoint,
-    androidNotificationColor: notificationColor,
-    androidEnableQueue: true,
-    params: {
-      'file': foundTrack.value.path,
-      'track_title': track.name,
-      'track_artist': track.artist,
-      'track_image': track.imageUrlLarge,
-      'track_duration_seconds': foundTrack.key.totalDuration.value.inSeconds,
-      'track_id': track.id,
-      'track_service_name': track.serviceName
-    });
+    // await AudioService.stop();
+    final mediaItem = MediaItem(
+      id: foundTrack.value.path,
+      album: track.artist,
+      title: track.name,
+      artUri: Uri.parse(track.imageUrlLarge),
+      duration: foundTrack.key.totalDuration.value
+    );
+    // Tell the UI and media notification what we're playing.
+    AudioServiceBackground.setMediaItem(mediaItem);
+
+    // Play when ready.
+    _player.play();
+    // Start loading something (will play when ready).
+    print(mediaItem.id);
+    await _player.setFilePath(mediaItem.id);
+    
+    _player.positionStream.listen(
+      (position) {
+        if(position.inMilliseconds >= _player.duration.inMilliseconds-900) {
+          AudioService.skipToNext();
+        }
+      }
+    );
+
+  }
+
+  Duration _parseDuration(String s) {
+    int hours = 0;
+    int minutes = 0;
+    int micros;
+    List<String> parts = s.split(':');
+    if (parts.length > 2) {
+      hours = int.parse(parts[parts.length - 3]);
+    }
+    if (parts.length > 1) {
+      minutes = int.parse(parts[parts.length - 2]);
+    }
+    micros = (double.parse(parts[parts.length - 1]) * 1000000).round();
+    return Duration(hours: hours, minutes: minutes, microseconds: micros);
   }
 
   @override
@@ -227,19 +210,49 @@ class AudioPlayerTask extends BackgroundAudioTask {
     switch(type) {
 
       case 'LAUNCH_QUEUE' : {
-
+        trackQueue.clear();
         for(int i=0; i<arguments['queue']['id'].length; i++) {
-          _trackQueue.add(Track(
+          trackQueue.add(Track(
             id: arguments['queue']['id'][i],
-            name: arguments['queue']['id'][i],
+            name: arguments['queue']['name'][i],
             artist: arguments['queue']['artist'][i],
             imageUrlLarge: arguments['queue']['image'][i],
-            service: PlatformsLister.nameToService(arguments['queue']['service'][i])
+            service: PlatformsLister.nameToService(arguments['queue']['service'][i]),
+            totalDuration: _parseDuration(arguments['queue']['duration'][i])
           ));
         }
 
-        Track firstTrack = _trackQueue.first;
+        Track firstTrack = trackQueue.first;
         await _playTrack(firstTrack);
+        currentIndex++;
+
+      } break;
+
+
+      case 'INSERT_ITEM' : {
+        Track tr = Track(
+          id: arguments['track']['id'],
+          name: arguments['queue']['id'],
+          artist: arguments['queue']['artist'],
+          imageUrlLarge: arguments['queue']['image'],
+          service: PlatformsLister.nameToService(arguments['queue']['service'])
+        );
+        trackQueue.insert(arguments['index'], tr);
+        _queueLoader();
+
+      } break;
+
+
+      case 'REMOVE_ITEM' : {
+        trackQueue.removeAt(arguments['index']);
+
+      } break;
+
+
+      case 'REORDER_ITEM' : {
+        Track track = trackQueue.removeAt(arguments['old_index']);
+        trackQueue.insert(arguments['new_index'], track);
+        _queueLoader();
 
       } break;
 
@@ -250,94 +263,97 @@ class AudioPlayerTask extends BackgroundAudioTask {
   }
 
 
+  Future<List<MediaItem>> _queueLoader() async {
+    for(int i=currentIndex; i<currentIndex+DEFAULT_LENGTH_QUEUE; i++) {
+      Track track = trackQueue[currentIndex+i];
+
+      if(
+        _queue.firstWhere((element) => 
+        (element.extras['track_id'] == track.id && element.extras['track_service_name'] == track.serviceName),
+        orElse: () => null)
+        == null
+      ) {
+        File file = await track.loadFile();
+
+        MediaItem mi = MediaItem(
+          id: file.path,
+          album: track.artist,
+          title: track.name,
+          artUri: Uri.parse(track.imageUrlLarge),
+          duration: Duration(seconds: track.totalDuration.value.inSeconds),
+          extras: {'track_id': track.id, 'service_name': track.serviceName}
+        );
+
+        _queue.add(mi);
+      }
+
+    }
+
+    return _queue;
+
+  }
+
 
 }
 
 
 
-class QueueManager {
+class PlayerListener {
 
-  final int DEFAULT_LENGTH_QUEUE = 5;
-  List<MediaItem> queue = List<MediaItem>();
-  int indexManager = 0;
-  Map<String, Function> _functions;
+  static final PlayerListener _instance = PlayerListener._singleton();
+  Track _track;
+  Function _skipToNext;
+  Function _skipToPrevious;
 
-  QueueManager._privateConstructor() {
-    // AudioService.queueStream.listen(
-    //   (data) {
-    //     print(data);
-    //   }
-    // );
+  PlayerListener._singleton();
+  
+  factory PlayerListener() {
+    return _instance;
+  }
+
+  void listen(Track track, Function skipToNext, Function skipToPrevious) {
+    _track = track;
+    _skipToNext = skipToNext;
+    _skipToPrevious = skipToPrevious;
+
+    for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
+      me.key.setIsPlaying(false);
+    }
+    track.setIsPlaying(true);
+
+    AudioService.playbackStateStream.listen(
+      (data) {        
+        if(data.playing == true && !track.isPlaying.value) track.resumeOnly();
+        else if(data.playing == false && track.isPlaying.value) track.pauseOnly();
+      }
+    );
+    AudioService.positionStream.listen(
+      (data) {
+        track.seekTo(data, false);
+      }
+    );
     AudioService.customEventStream.listen(
       (data) {
-            print(data);
-        switch(data) {
-          
-          case 'SKIP_NEXT_ITEM' : {
-            print('skipiiiing');
-            _functions['skip_next'].call();
+        switch (data) {
+
+          case 'STOP' : {
+            _track.setIsPlaying(false);
           } break;
 
-          case 'SKIP_PREVIOUS_ITEM' : {
-            _functions['skip_previous'].call();
+
+          case 'SKIP_NEXT' : {
+            _skipToNext.call();
           } break;
 
-          case 'TRACK_ENDED' : {
-            _functions['track_ended'].call();
+
+          case 'SKIP_PREVIOUS' : {
+            _skipToPrevious.call();
           } break;
 
         }
       }
     );
-    // AudioService.positionStream.listen(
-    //   (data) {
-    //     if(data.inSeconds >= GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.totalDuration.value.inSeconds-1) {
-    //       GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.seekTo(data, false);
-    //     }
-    //   }
-    // );
   }
-
-  static final QueueManager _instance = QueueManager._privateConstructor();
-
-  factory QueueManager() {
-    return _instance;
-  }
-
-
-  void setTrackPlaying(Track track, {Map<String, Function> functions}) async {
-    _functions = functions;
-    await AudioService.stop();
-    await track.setIsPlaying(true);
-    if(queue.isNotEmpty) queue.removeAt(0);
-    queueLoader();
-  }
-
-  Future<List<MediaItem>> queueLoader() async {
-    // print('          queueLoader');
-
-    for(int i=0; i<DEFAULT_LENGTH_QUEUE; i++) {
-      Track track = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex+i].key;
-      File file = await track.loadFile();
-
-      MediaItem mi = MediaItem(
-        id: file.path,
-        album: track.artist,
-        title: track.name,
-        artUri: Uri.parse(track.imageUrlLarge),
-        duration: Duration(seconds: track.totalDuration.value.inSeconds),
-        extras: {'track_id': track.id, 'service_name': track.serviceName}
-      );
-
-      queue.add(mi);
-      await AudioService.addQueueItem(mi);
-
-    }
-
-    return queue;
-
-  }
-
 
 }
 

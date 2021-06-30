@@ -84,34 +84,6 @@ abstract class PlatformsController {
 
   ValueNotifier<List<Playlist>> getPlaylistsUpdate();
 
-  void mediaPlayerListener(Track track) {
-    AudioService.playbackStateStream.listen(
-      (data) {        
-        if(data.playing == true && !track.isPlaying.value) track.resumeOnly();
-        else if(data.playing == false && track.isPlaying.value) track.pauseOnly();
-      }
-    );
-    AudioService.queueStream.listen(
-      (data) {
-        
-      }
-    );
-    AudioService.positionStream.listen(
-      (data) {
-        if(data.inMilliseconds < GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.totalDuration.value.inMilliseconds-200) {
-          track.seekTo(data, false);
-        }
-      }
-    );
-    AudioService.customEventStream.listen(
-      (data) {
-        if(data == '[Isolate] onStop') {
-          track.setIsPlaying(false);
-        }
-      }
-    );
-  }
-
   /*  CONNECTION    */
 
   connect();
@@ -150,50 +122,6 @@ abstract class PlatformsController {
 
 
   /*  MEDIA PLAYER CONTROLS  */
-
-  play(File file, Track track) async {
-    // if(GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key != null) {
-    //   GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key.setIsPlaying(false);
-    // }
-    // GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key = track;
-    for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
-      me.key.setIsPlaying(false);
-    }
-
-    if(!AudioService.connected) {
-      await AudioService.connect();
-    }
-
-    Map<String, List<String>> queue = Map<String, List<String>>();
-    queue['name'] = List<String>();
-    queue['artist'] = List<String>();
-    queue['image'] = List<String>();
-    queue['id'] = List<String>();
-    queue['service'] = List<String>();
-    for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
-      queue['name'].add(me.key.name);
-      queue['artist'].add(me.key.artist);
-      queue['image'].add(me.key.imageUrlLarge);
-      queue['id'].add(me.key.id);
-      queue['service'].add(me.key.serviceName);
-    }
-
-    print('       START');
-    // await AudioService.start(
-    //  backgroundTaskEntrypoint: _entrypoint,
-    //  androidNotificationColor: notificationColor,
-    //  androidEnableQueue: true,
-    //  params: {
-    //   'file': file.path,
-    //   'track_title': track.name,
-    //   'track_artist': track.artist,
-    //   'track_image': track.imageUrlLarge,
-    //   'track_duration_seconds': track.totalDuration.value.inSeconds,
-    //   'track_id': track.id,
-    //   'track_service_name': track.serviceName
-    // });
-    await AudioService.customAction('LAUNCH_QUEUE', {'queue': queue});
-  }
 
   resume(File file) {
     AudioService.play();

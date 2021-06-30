@@ -22,7 +22,6 @@ class GlobalQueue {
 
   void setCurrentQueueIndex(int value) {
     currentQueueIndex = value;
-    QueueManager().indexManager = currentQueueIndex;
   }
 
   void reBuildQueue() {

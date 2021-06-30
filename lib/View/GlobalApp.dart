@@ -34,6 +34,8 @@ import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 import 'Pages/Profile/ProfilePage.dart';
 import 'Pages/Search/SearchPage.dart';
 
+
+void _entrypoint() => AudioServiceBackground.run(() => AudioPlayerTask());
 class GlobalAppMain extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -204,45 +206,31 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   /*    BACK PLAYER    */
 
 
-  trackEnded() {
-    print('end');
-    print(AudioService.playbackState.playing);
-    print(AudioService.currentMediaItem.extras['track_id']);
-    print(this.selectedTrack.value.id);
-    if(AudioService.playbackState.playing && AudioService.currentMediaItem.extras['track_id'] == this.selectedTrack.value.id) {
-      print('Track ended : ${this.selectedTrack.value.name}');
-      // await AudioService.stop();
-      if(_isRepeatOnce) {
-        _isRepeatOnce = false;
-        this.selectedTrack.value.seekTo(Duration.zero, true);
-      } else if(_isRepeatAlways) {
-        this.selectedTrack.value.seekTo(Duration.zero, true);
-      } else if(_songsTabCtrl.page.round() < GlobalQueue.queue.value.length-1) {
-        // _songsTabCtrl.jumpToPage(GlobalQueue.queue.value.length+1);
-        _blockAnimation = true;
-        if(screenState.value == SCREEN_VISIBLE) {
-          _songsTabCtrl.nextPage(duration: Duration(milliseconds: 250), curve: Curves.ease);
-        } else {
-          Function f;
-          f = () {
-            print('listener');
-            print(screenState.value);
-            if(screenState.value == SCREEN_VISIBLE) {
-              _blockAnimation = true;
-              _songsTabCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
-              screenState.removeListener(f);
-            }
-          };
-          screenState.addListener(f);
-        }
-        print('movetoN');
-        moveToNextTrack();
-      } else {
-        _blockAnimation = true;
-        _songsTabCtrl.jumpToPage(0);
-        moveToNextTrack();
-      }
+  firstPlay() async {
+    if(!AudioService.connected) {
+      await AudioService.connect();
     }
+
+    Map<String, List<String>> queue = Map<String, List<String>>();
+    queue['name'] = List<String>();
+    queue['artist'] = List<String>();
+    queue['image'] = List<String>();
+    queue['id'] = List<String>();
+    queue['service'] = List<String>();
+    queue['duration'] = List<String>();
+    for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
+      queue['name'].add(me.key.name);
+      queue['artist'].add(me.key.artist);
+      queue['image'].add(me.key.imageUrlLarge);
+      queue['id'].add(me.key.id);
+      queue['service'].add(me.key.serviceName);
+      queue['duration'].add(me.key.totalDuration.value.toString());
+    }
+
+    await AudioService.start(
+      backgroundTaskEntrypoint: _entrypoint
+    );
+    await AudioService.customAction('LAUNCH_QUEUE', {'queue': queue});
   }
 
 
@@ -262,8 +250,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       if (track != null) {
 
         this.selectedTrack.value = track;
-        
-        // this.selectedTrack.value.currentDuration.addListener(positionCheck);
 
         if(queueCreate) {
 
@@ -282,14 +268,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             _blockAnimation = false;
           }
 
+          firstPlay();
+
         } else {
           
           // Next or Previous
 
         }
-
-
-        QueueManager().setTrackPlaying(track, functions: {'skip_next': skipNext, 'skip_previous': skipPrevious, 'track_ended': trackEnded});
 
       } else {
 
@@ -315,7 +300,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             // this.selectedTrack.value.currentDuration.addListener(positionCheck);
           }
 
-          QueueManager().setTrackPlaying(this.selectedTrack.value, functions: {'skip_next': skipNext, 'skip_previous': skipPrevious, 'track_ended': trackEnded});
+          firstPlay();
 
         } else {
           
@@ -325,7 +310,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
       }
 
-    //mainImageColorRetriever();
+    PlayerListener().listen(this.selectedTrack.value, skipNext, skipPrevious);
     
     if(_panelCtrl.isAttached && this.selectedTrack.value.id != null && !_panelCtrl.isPanelShown) {
       _panelCtrl.show();
@@ -360,6 +345,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     _isRepeatOnce = false;
     _isRepeatAlways = false;
     setPlaying(nextTrack, false);
+    AudioService.skipToNext();
   }
 
   void moveToPreviousTrack() {
@@ -375,6 +361,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     _isRepeatAlways = false;
     GlobalQueue().reBuildQueue();
     setPlaying(previousTrack, false);
+    AudioService.skipToPrevious();
   }
 
   tabControllerBuilder() {
