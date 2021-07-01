@@ -385,9 +385,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           seekAllTrackToZero();
           if(_songsTabCtrl.page.round() == 1 && (_tabIndex == GlobalQueue.queue.value.length-1 || _tabIndex == 0)) {
             _tabIndex  = 0;
-            _blockAnimation = false;
+            // _blockAnimation = false;
           }
 
+          print(_blockAnimation);
           if(!_blockAnimation) {
 
             if(_songsTabCtrl.page.round() > _tabIndex) {
@@ -399,7 +400,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               moveToPreviousTrack();
             }
           }
-          _blockAnimation = false;
+          // _blockAnimation = false;
 
       });/*
       _isTrackVisible = List<ValueNotifier<bool>>(GlobalQueue.queue.value.length);
@@ -414,7 +415,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
 
   skipNext() {
-    if(_songsTabCtrl.page.toInt() < GlobalQueue.queue.value.length-1) {
+    if(_songsTabCtrl.page.round() < GlobalQueue.queue.value.length-1) {
       _blockAnimation = true;
       if(screenState.value == SCREEN_VISIBLE) {
         _songsTabCtrl.nextPage(duration: Duration(milliseconds: 250), curve: Curves.ease);
@@ -429,7 +430,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
         };
         screenState.addListener(f);
       }
-      moveToNextTrack();
+      // moveToNextTrack();
     } else {
       _blockAnimation = true;
       _songsTabCtrl.jumpToPage(0);

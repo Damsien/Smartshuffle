@@ -58,19 +58,23 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   @override
   Future<void> onSkipToNext() async {
-    await _playTrack(trackQueue[currentIndex]);
-    AudioServiceBackground.sendCustomEvent('SKIP_NEXT');
+    await AudioService.pause();
     currentIndex++;
-    _queueLoader();
-    return super.onSkipToNext();
+    print(trackQueue[currentIndex]);
+    await _playTrack(trackQueue[currentIndex]);
+    await AudioService.seekTo(Duration.zero);
+    AudioServiceBackground.sendCustomEvent('SKIP_NEXT');
+    // return super.onSkipToNext();
   }
 
   @override
   Future<void> onSkipToPrevious() async {
-    await _playTrack(trackQueue[currentIndex]);
-    AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS');
+    await AudioService.pause();
     currentIndex--;
-    return super.onSkipToPrevious();
+    await _playTrack(trackQueue[currentIndex]);
+    await AudioService.seekTo(Duration.zero);
+    AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS');
+    // return super.onSkipToPrevious();
   }
 
   @override
@@ -174,14 +178,16 @@ class AudioPlayerTask extends BackgroundAudioTask {
     AudioServiceBackground.setMediaItem(mediaItem);
 
     // Play when ready.
-    _player.play();
+    if(!_player.playing) {
+      _player.play();
+    }
     // Start loading something (will play when ready).
-    print(mediaItem.id);
+    print('mediaitem : ${mediaItem.id}');
     await _player.setFilePath(mediaItem.id);
     
     _player.positionStream.listen(
       (position) {
-        if(position.inMilliseconds >= _player.duration.inMilliseconds-900) {
+        if(position.inMilliseconds >= _player.duration.inMilliseconds) {
           AudioService.skipToNext();
         }
       }
@@ -224,7 +230,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
         Track firstTrack = trackQueue.first;
         await _playTrack(firstTrack);
-        currentIndex++;
+        _queueLoader();
 
       } break;
 
@@ -264,8 +270,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
 
   Future<List<MediaItem>> _queueLoader() async {
-    for(int i=currentIndex; i<currentIndex+DEFAULT_LENGTH_QUEUE; i++) {
-      Track track = trackQueue[currentIndex+i];
+    for(int i=0; i<currentIndex+DEFAULT_LENGTH_QUEUE; i++) {
+      Track track = trackQueue[currentIndex+1+i];
 
       if(
         _queue.firstWhere((element) => 
