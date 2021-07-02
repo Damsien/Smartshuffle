@@ -140,7 +140,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   Future<MapEntry<Track, File>> _getFilePath(Track track) async {
     MediaItem searchingItem = _queue.firstWhere((element) => 
-      (element.extras['track_id'] == track.id && element.extras['track_service_name'] == track.serviceName),
+      (element.extras['track_id'] == track.id && element.extras['service_name'] == track.serviceName),
       orElse: () => null);
     if(searchingItem != null) {
       MapEntry<Track, File> me = MapEntry<Track, File>(
@@ -153,9 +153,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
         ),
         File.fromUri(Uri.file(searchingItem.id))
       );
-      Completer c = Completer();
-      c.complete(me);
-      return c.future;
+      return Future<MapEntry<Track, File>>.value(me);
     } else {
       File file = await track.loadFile();
       return MapEntry(track, file);
@@ -275,7 +273,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
       if(
         _queue.firstWhere((element) => 
-        (element.extras['track_id'] == track.id && element.extras['track_service_name'] == track.serviceName),
+        (element.extras['track_id'] == track.id && element.extras['service_name'] == track.serviceName),
         orElse: () => null)
         == null
       ) {

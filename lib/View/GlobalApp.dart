@@ -259,6 +259,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             if(_songsTabCtrl.hasClients) {
               _songsTabCtrl.jumpToPage(0);
               _tabIndex = _songsTabCtrl.page.round();
+              _blockAnimation = false;
             }
           } else {
             GlobalQueue().generateNonPermanentQueue(playlist, false, selectedTrack: track);
@@ -286,6 +287,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             if(_songsTabCtrl.hasClients) {
               _songsTabCtrl.jumpToPage(0);
               _tabIndex = _songsTabCtrl.page.round();
+              _blockAnimation = false;
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
             // this.selectedTrack.value.currentDuration.addListener(positionCheck);
@@ -295,6 +297,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             if(_songsTabCtrl.hasClients) {
               _songsTabCtrl.jumpToPage(0);
               _tabIndex = _songsTabCtrl.page.round();
+              _blockAnimation = false;
             }
             this.selectedTrack.value = GlobalQueue.queue.value[0].key;
             // this.selectedTrack.value.currentDuration.addListener(positionCheck);
@@ -325,7 +328,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     }
   }
 
-  void moveToNextTrack() {
+  Track skipNextFront() {
     Track nextTrack;
     int lastIndex;
     if (GlobalQueue.currentQueueIndex + 1 < GlobalQueue.queue.value.length) {
@@ -341,10 +344,14 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     if(GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].value) {
       GlobalQueue().moveFromPermanentToNoPermanent(lastIndex);
     }
+    return nextTrack;
+  }
+
+  void moveToNextTrack() {
 
     _isRepeatOnce = false;
     _isRepeatAlways = false;
-    setPlaying(nextTrack, false);
+    setPlaying(skipNextFront(), false);
     AudioService.skipToNext();
   }
 
@@ -383,10 +390,10 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       _songsTabCtrl.addListener(() {
 
           seekAllTrackToZero();
-          if(_songsTabCtrl.page.round() == 1 && (_tabIndex == GlobalQueue.queue.value.length-1 || _tabIndex == 0)) {
-            _tabIndex  = 0;
-            // _blockAnimation = false;
-          }
+          // if(_songsTabCtrl.page.round() == 1 && (_tabIndex == GlobalQueue.queue.value.length-1 || _tabIndex == 0)) {
+          //   _tabIndex  = 0;
+          //   _blockAnimation = false;
+          // }
 
           print(_blockAnimation);
           if(!_blockAnimation) {
@@ -400,7 +407,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               moveToPreviousTrack();
             }
           }
-          // _blockAnimation = false;
 
       });/*
       _isTrackVisible = List<ValueNotifier<bool>>(GlobalQueue.queue.value.length);
@@ -414,11 +420,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
 
-  skipNext() {
+  skipNext() async {
     if(_songsTabCtrl.page.round() < GlobalQueue.queue.value.length-1) {
       _blockAnimation = true;
       if(screenState.value == SCREEN_VISIBLE) {
-        _songsTabCtrl.nextPage(duration: Duration(milliseconds: 250), curve: Curves.ease);
+        await _songsTabCtrl.nextPage(duration: Duration(milliseconds: 500), curve: Curves.ease);
+        this.selectedTrack.value = skipNextFront();
+        this.selectedTrack.notifyListeners();
       } else {
         Function f;
         f = () {
@@ -435,9 +443,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       _blockAnimation = true;
       _songsTabCtrl.jumpToPage(0);
       _tabIndex = _songsTabCtrl.page.round();
-      _blockAnimation = false;
       moveToNextTrack();
     }
+    _blockAnimation = false;
   }
 
 
@@ -595,6 +603,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                               _blockAnimation = true;
                               _songsTabCtrl.jumpToPage(index % GlobalQueue.queue.value.length);
                               _tabIndex = _songsTabCtrl.page.toInt();
+                              _blockAnimation = false;
                               // moveToNextTrack();
                             }
                           },
