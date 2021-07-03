@@ -395,7 +395,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           //   _blockAnimation = false;
           // }
 
-          print(_blockAnimation);
           if(!_blockAnimation) {
 
             if(_songsTabCtrl.page.round() > _tabIndex) {
@@ -425,8 +424,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       _blockAnimation = true;
       if(screenState.value == SCREEN_VISIBLE) {
         await _songsTabCtrl.nextPage(duration: Duration(milliseconds: 500), curve: Curves.ease);
-        this.selectedTrack.value = skipNextFront();
-        this.selectedTrack.notifyListeners();
+        GlobalQueue.queue.notifyListeners();
       } else {
         Function f;
         f = () {
@@ -613,6 +611,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                                 int realIndex = index % GlobalQueue.queue.value.length;
 
                                 Track trackUp = queue[realIndex].key;
+                                print('trackup : $trackUp');
                                 _timer?.cancel();
                                 _timer = Timer.periodic(Duration(seconds: 1), (timer) {
                                   _timer = timer;
