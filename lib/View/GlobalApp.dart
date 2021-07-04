@@ -10,7 +10,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
-import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
+import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:spotify_sdk/models/player_state.dart';
@@ -313,7 +313,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
       }
 
-    PlayerListener().listen(this.selectedTrack.value, skipNext, skipPrevious);
+    PlayerListener().listen(this.selectedTrack.value);
     
     if(_panelCtrl.isAttached && this.selectedTrack.value.id != null && !_panelCtrl.isPanelShown) {
       _panelCtrl.show();
@@ -396,7 +396,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
           // }
 
           if(!_blockAnimation) {
-
+            
             if(_songsTabCtrl.page.round() > _tabIndex) {
               _tabIndex = _songsTabCtrl.page.round();
               print('jumpPage');

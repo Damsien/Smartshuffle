@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
-import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
+import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
