@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/services.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
+import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/SearchAlgorithm.dart';
 import 'package:smartshuffle/View/ViewGetter/FormsView.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
@@ -18,16 +19,18 @@ import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
+
 class TabsView {
 
   State state;
   
   static final TabsView _tabsView = TabsView._instance();
 
-  MaterialColor _materialColor;
+  MaterialColor materialColor;
 
-  factory TabsView(State state) {
+  factory TabsView(State state, MaterialColor materialColor) {
     _tabsView.state = state;
+    _tabsView.materialColor = materialColor;
     return _tabsView;
   }
 
@@ -39,14 +42,17 @@ class TabsView {
 
 
 
-  List<Widget> playlistsCreator(Map<ServicesLister, PlatformsController> userPlatforms, List<String> distribution, Function onReorder, Function openPlaylist, MaterialColor materialColor) {
+  List<Widget> playlistsCreator({
+    @required Map<ServicesLister, PlatformsController> userPlatforms,
+    @required List<String> distributions,
+    @required Function openPlaylist
+  }) {
     List elements = new List<Widget>(userPlatforms.length);
-    _materialColor = materialColor;
 
     int i=0;
     for(MapEntry<ServicesLister, PlatformsController> elem in userPlatforms.entries) {
-      if(distribution[i] != TabsView.TracksView)
-        elements[i] = generatePlaylist(i, elem, onReorder, openPlaylist, materialColor);
+      if(distributions[i] != TabsView.TracksView)
+        elements[i] = generatePlaylist(i, platforms: elem, openPlaylist: openPlaylist);
       i++;
     }
     return elements;
@@ -57,8 +63,11 @@ class TabsView {
 
 
 
-  Widget generatePlaylist(int tabIndex, MapEntry<ServicesLister, PlatformsController> elem, Function onReorder, Function openPlaylist, MaterialColor materialColor) {
-    PlatformsController ctrl = elem.value;
+  Widget generatePlaylist(int tabIndex, {
+    @required MapEntry<ServicesLister, PlatformsController> platforms,
+    @required Function openPlaylist
+  }) {
+    PlatformsController ctrl = platforms.value;
 
     return FutureBuilder<List<Playlist>>(
       future: ctrl.getPlaylists(),
@@ -85,7 +94,7 @@ class TabsView {
                 builder: (_, List<Playlist> playlists, __) {
                   return ReorderableListView(
                     onReorder: (int oldIndex, int newIndex) {
-                      onReorder(ctrl, playlists, oldIndex, newIndex);
+                      playlists = ctrl.platform.reorder(oldIndex, newIndex);
                     },
                     header: Container(
                       width: WidgetsBinding.instance.window.physicalSize.width,
@@ -160,9 +169,9 @@ class TabsView {
                                         )
                                       ),
                                       subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" "+AppLocalizations.of(this.state.context).globalTracks),
-                                      onTap: () => openPlaylist(tabIndex, elem, playlists.elementAt(index)),
+                                      onTap: () => openPlaylist(tabIndex, platforms, playlists.elementAt(index)),
                                     ),
-                                    onLongPressStart: (LongPressStartDetails detail) => playlistMainOptions(ctrl, playlists[index], index, detail),
+                                    onLongPressStart: (LongPressStartDetails detail) => playlistMainOptions(playlists[index], ctrl: ctrl, index: index, detail: detail),
                                   )
                                 ),
                                 Flexible(
@@ -210,7 +219,7 @@ class TabsView {
 
 
   // TODO: Fix try catch doesn't work
-  openApp(Platform platform) async {
+  void openApp(Platform platform) async {
     try {
       DeviceApps.openApp(platform.platformInformations['package']);
     } catch (error) {
@@ -239,7 +248,10 @@ class TabsView {
   /*  TRACKS VIEW   */
 
 
-  List<Widget> tracksListGenerator(List<Track> tracks, PlatformsController ctrl, Playlist playlist, Function setPlaying) {
+  List<Widget> tracksListGenerator(List<Track> tracks, {
+    @required PlatformsController ctrl,
+    @required Playlist playlist
+  }) {
     return List.generate(
                     tracks.length,
                     (index) {
@@ -249,7 +261,7 @@ class TabsView {
                           margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
                           child: GestureDetector(
                             onTap: () {
-                              setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
+                              FrontPlayerController().createQueueAndPlay(playlist, track: tracks[index]);
                             },
                             onDoubleTap: () {
                               addToQueue(tracks.elementAt(index));
@@ -270,7 +282,7 @@ class TabsView {
                                 gravity: ToastGravity.BOTTOM,
                               );*/
                             },
-                            onLongPressStart: (LongPressStartDetails detail) => trackMainOptions(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist), detail),
+                            onLongPressStart: (LongPressStartDetails detail) => trackMainOptions(tracks.elementAt(index), ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist), detail: detail),
                             child: Card(
                                 child: ListTile(
                                   title: ValueListenableBuilder(
@@ -302,7 +314,7 @@ class TabsView {
                                   subtitle: Text(tracks.elementAt(index).artist),
                                   trailing: FractionallySizedBox(
                                     heightFactor: 1,
-                                    child: trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
+                                    child: trackMainDialog(tracks.elementAt(index), ctrl:ctrl, index: ctrl.platform.playlists.value.indexOf(playlist)),
                                   ),
                                 )
                               )
@@ -313,12 +325,16 @@ class TabsView {
   }
 
 
-  Widget listTracksBuilder(BuildContext buildContext, int index, List<Track> tracks, PlatformsController ctrl, Playlist playlist, Function setPlaying) {
+  Widget listTracksBuilder(int index, {
+    @required List<Track> tracks,
+    @required PlatformsController ctrl,
+    @required Playlist playlist
+  }) {
     return Container(
         key: ValueKey('ListView:Tracks:$index'),
         child: GestureDetector(
           onTap: () {
-            setPlaying(tracks[index], true, playlist: playlist, platformCtrl: ctrl);
+            FrontPlayerController().createQueueAndPlay(playlist, track: tracks[index]);
           },
           onDoubleTap: () {
             addToQueue(tracks.elementAt(index));
@@ -334,7 +350,7 @@ class TabsView {
               )
             );
           },
-          onLongPressStart: (LongPressStartDetails detail) => trackMainOptions(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist), detail),
+          onLongPressStart: (LongPressStartDetails detail) => trackMainOptions(tracks.elementAt(index), ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist), detail: detail),
           child: Container(
               child: ListTile(
                 title: ValueListenableBuilder(
@@ -366,7 +382,7 @@ class TabsView {
                 subtitle: Text(tracks.elementAt(index).artist),
                 trailing: FractionallySizedBox(
                   heightFactor: 1,
-                  child: trackMainDialog(ctrl, tracks.elementAt(index), ctrl.platform.playlists.value.indexOf(playlist)),
+                  child: trackMainDialog(tracks.elementAt(index), ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist)),
                 ),
               )
             )
@@ -375,7 +391,14 @@ class TabsView {
   }
 
 
-  Widget tracksCreator(int tabIndex, PlatformsController ctrl, Playlist playlist, List<Widget> researchList, bool notResearch, Function setResearch, Function onReorder, Function returnToPlaylist, Function setPlaying, MaterialColor materialColor) {
+  Widget tracksCreator(int tabIndex, {
+    @required PlatformsController ctrl,
+    @required Playlist playlist,
+    @required Function setResearch,
+    @required Function returnToPlaylist,
+    bool notResearch,
+    List<Widget> researchList,
+  }) {
     
     return FutureBuilder<List<Track>>(
       future: ctrl.getTracks(playlist),
@@ -517,7 +540,7 @@ class TabsView {
                                   width: MediaQuery.of(context).size.width/2.5,
                                   margin: EdgeInsets.only(top: 5, bottom: 10),
                                   child: MaterialButton(
-                                    onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: false),
+                                    onPressed: () => FrontPlayerController().createQueueAndPlay(playlist, isShuffle: false),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                       children: [
@@ -540,7 +563,7 @@ class TabsView {
                                   width: MediaQuery.of(context).size.width/2.5,
                                   margin: EdgeInsets.only(top: 5, bottom: 10),
                                   child: MaterialButton(
-                                    onPressed: () => setPlaying(null, true, playlist: playlist, platformCtrl: ctrl, isShuffle: true),
+                                    onPressed: () => FrontPlayerController().createQueueAndPlay(playlist, isShuffle: true),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                       children: [
@@ -571,7 +594,7 @@ class TabsView {
                           child: ListView.builder (
                             controller: scrollCtrl,
                             itemCount: tracks.length,
-                            itemBuilder: (buildContext, index) => listTracksBuilder(buildContext, index, tracks, ctrl, playlist, setPlaying),
+                            itemBuilder: (buildContext, index) => listTracksBuilder(index, tracks: tracks, ctrl: ctrl, playlist: playlist),
                           )
                         )
                       ),
@@ -629,7 +652,13 @@ class TabsView {
 
 
 
-  void trackMainDialogOptions(String value, String name, PlatformsController ctrl, Track track, int index, Function refresh) {
+  void trackMainDialogOptions(String value, {
+    @required Track track,
+    String name,
+    PlatformsController ctrl,
+    int index,
+    Function refresh
+  }) {
     switch(value) {
       case PopupMenuConstants.TRACKSMAINDIALOG_ADDTOQUEUE: {
         ScaffoldMessenger.of(this.state.context).showSnackBar(
@@ -645,13 +674,13 @@ class TabsView {
         addToQueue(track);
       } break;
       case PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST: {
-        addToPlaylist(ctrl, track);
+        addToPlaylist(track, ctrl: ctrl);
       } break;
       case PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST: {
-        removeFromPlaylist(ctrl, track, index, refresh: refresh);
+        removeFromPlaylist(track, ctrl: ctrl, playlistIndex: index, refresh: refresh);
       } break;
       case PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS: {
-        trackInformations(ctrl, track);
+        trackInformations(track, ctrl: ctrl);
       } break;
       case PopupMenuConstants.TRACKSMAINDIALOG_REPORT : {
         openReportForm(track);
@@ -660,7 +689,11 @@ class TabsView {
   }
 
 
-  PopupMenuButton trackMainDialog(PlatformsController ctrl, Track track, int index, {Function refresh}) {
+  PopupMenuButton trackMainDialog(Track track, {
+    @required PlatformsController ctrl,
+    @required int index,
+    Function refresh
+  }) {
     String name = track.name;
 
     return PopupMenuButton(
@@ -674,12 +707,17 @@ class TabsView {
         TracksPopupItemReport().build(context)
       ],
       onSelected: (value) {
-        trackMainDialogOptions(value, name, ctrl, track, index, refresh);
+        trackMainDialogOptions(value, name: name, ctrl: ctrl, track: track, index: index, refresh: refresh);
       },
     );
   }
 
-  void trackMainOptions(PlatformsController ctrl, Track track, int index, LongPressStartDetails detail, {Function refresh}) async {
+  void trackMainOptions(Track track, {
+    @required PlatformsController ctrl,
+    @required int index,
+    @required LongPressStartDetails detail,
+    Function refresh
+  }) async {
     HapticFeedback.lightImpact();
     String name = track.name;
 
@@ -696,13 +734,13 @@ class TabsView {
         ],
         elevation: 8.0,
       ).then((value){
-        trackMainDialogOptions(value, name, ctrl, track, index, refresh);
+        trackMainDialogOptions(value, name: name, ctrl: ctrl, track: track, index: index, refresh: refresh);
       }
     );
   }
 
 
-  addToPlaylist(PlatformsController ctrl, Track track) {
+  void addToPlaylist(Track track, {@required PlatformsController ctrl}) {
     String name = track.name;
     String ctrlName = ctrl.platform.name;
     showDialog(
@@ -718,7 +756,7 @@ class TabsView {
                   child: Text(AppLocalizations.of(this.state.context).tabsViewAddToService+" SmartShuffle", style: TextStyle(color: Colors.white)),
                   onPressed: () {
                     Navigator.pop(dialogContext);
-                    choosePlaylistToAddTrack(PlatformsLister.platforms[ServicesLister.DEFAULT], track);
+                    choosePlaylistToAddTrack(track, ctrl: PlatformsLister.platforms[ServicesLister.DEFAULT]);
                   },
                 ),
               ),
@@ -729,7 +767,7 @@ class TabsView {
                       child: Text(AppLocalizations.of(this.state.context).tabsViewAddToService+" $ctrlName", style: TextStyle(color: Colors.white)),
                       onPressed: () {
                         Navigator.pop(dialogContext);
-                        choosePlaylistToAddTrack(ctrl, track);
+                        choosePlaylistToAddTrack(track, ctrl: ctrl);
                       },
                     ),
                   );
@@ -751,7 +789,7 @@ class TabsView {
   }
 
 
-  choosePlaylistToAddTrack(PlatformsController ctrl, Track track) {
+  void choosePlaylistToAddTrack(Track track, {@required PlatformsController ctrl}) {
     List<Widget> allCards;
     showDialog(
       context: this.state.context,
@@ -840,14 +878,18 @@ class TabsView {
   }
 
 
-  addToQueue(Track track) {
+  void addToQueue(Track track) {
     this.state.setState(() {
       GlobalQueue().addToPermanentQueue(track);
     });
   }
 
 
-  removeFromPlaylist(PlatformsController ctrl, Track track, int playlistIndex, {Function refresh}) {
+  void removeFromPlaylist(Track track, {
+    @required PlatformsController ctrl,
+    @required int playlistIndex,
+    Function refresh
+  }) {
     String name = track.name;
     String playlistName = ctrl.platform.playlists.value[playlistIndex].name;
     showDialog(
@@ -879,7 +921,7 @@ class TabsView {
   }
 
 
-  trackInformations(PlatformsController ctrl, Track track) {
+  void trackInformations(Track track, {@required PlatformsController ctrl}) {
     String name = track.name;
     String artist = track.artist;
     String artist_string = AppLocalizations.of(this.state.context).globalArtist;
@@ -942,7 +984,7 @@ class TabsView {
     Navigator.of(this.state.context)
       .push(
         MaterialPageRoute(
-          builder: (context) => FormReport(materialColor: _materialColor, track: track)
+          builder: (context) => FormReport(materialColor: materialColor, track: track)
         )
       );
   }
@@ -953,7 +995,11 @@ class TabsView {
 
   /*  CRUD PLAYLISTS  */
 
-  void playlistMainOptions(PlatformsController ctrl, Playlist playlist, int index, LongPressStartDetails detail) async {
+  void playlistMainOptions(Playlist playlist, {
+    @required PlatformsController ctrl,
+    @required int index,
+    @required LongPressStartDetails detail
+  }) async {
     HapticFeedback.lightImpact();
     String name = playlist.name;
 
@@ -970,24 +1016,28 @@ class TabsView {
         items: items,
         elevation: 8.0,
       ).then((value){
-        playlistMainDialogOptions(value, ctrl, name, playlist, index);
+        playlistMainDialogOptions(playlist, value, ctrl: ctrl, name: name, index: index);
       }
     );
   }
 
-  void playlistMainDialogOptions(String value, PlatformsController ctrl, String name, Playlist playlist, int index) {
+  void playlistMainDialogOptions(Playlist playlist, String value, {
+    @required PlatformsController ctrl, 
+    @required String name,
+    @required int index
+  }) {
     switch(value) {
       case PopupMenuConstants.PLAYLISTSMAINDIALOG_RENAME: {
         renamePlaylist(playlist);
       } break;
       case PopupMenuConstants.PLAYLISTSMAINDIALOG_CLONE: {
-        clonePlaylist(ctrl, playlist);
+        clonePlaylist(playlist, ctrl: ctrl);
       } break;
       case PopupMenuConstants.PLAYLISTSMAINDIALOG_MERGE: {
-        mergePlaylist(ctrl, playlist);
+        mergePlaylist(playlist, ctrl: ctrl);
       } break;
       case PopupMenuConstants.PLAYLISTSMAINDIALOG_DELETE: {
-        removePlaylist(ctrl, playlist, index);
+        removePlaylist(playlist, ctrl: ctrl, index: index);
       } break;
     }
   }
@@ -1041,7 +1091,10 @@ class TabsView {
   }
 
 
-  void removePlaylist(PlatformsController ctrl, Playlist playlist, int index) {
+  void removePlaylist(Playlist playlist, {
+    @required PlatformsController ctrl,
+    @required int index
+  }) {
     String name = playlist.name;
 
     showDialog(
@@ -1114,7 +1167,7 @@ class TabsView {
     );
   }
 
-  void clonePlaylist(PlatformsController ctrl, Playlist playlist) {
+  void clonePlaylist(Playlist playlist, {@required PlatformsController ctrl}) {
     String name = playlist.name;
     
     showDialog(
@@ -1161,7 +1214,7 @@ class TabsView {
     );
   }
 
-  void mergePlaylist(PlatformsController ctrl, Playlist playlist) {
+  void mergePlaylist(Playlist playlist, {@required PlatformsController ctrl}) {
     String name = playlist.name;
     List<Widget> allCards;
     PlatformsController defaultCtrl = PlatformsLister.platforms[ServicesLister.DEFAULT];

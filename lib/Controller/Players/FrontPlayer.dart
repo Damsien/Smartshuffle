@@ -19,11 +19,11 @@ class FrontPlayerController {
 
 
   //Objects
-  Playlist _currentPlaylist;
-  ValueNotifier<Track> _currentTrack = ValueNotifier<Track>(null);
+  Playlist currentPlaylist;
+  ValueNotifier<Track> currentTrack = ValueNotifier<Track>(null);
 
   // Controllers
-  CustomPageController _pageCtrl = CustomPageController(keepPage: false);
+  CustomPageController pageCtrl = CustomPageController(keepPage: false);
 
 
   // Misc
@@ -46,9 +46,12 @@ class FrontPlayerController {
 
   /// Create queue depending of [playlist], [isShuffle] and potentially [track] and set up all the tabs
   void createQueueAndPlay(Playlist playlist, {
-    @required bool isShuffle,
+    bool isShuffle,
     Track track
   }) {
+    if(isShuffle == null) {
+      isShuffle = this.isShuffle;
+    }
 
     //Init queue
     _createQueue(playlist, isShuffle: isShuffle, track: track);
@@ -57,15 +60,15 @@ class FrontPlayerController {
     if (track != null) {
 
       if(isShuffle) {
-        _pageCtrl.jumpToPage(0);
+        pageCtrl.jumpToPage(0);
       } else {
-        _pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+        pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
       }
       _playTrack(track);
 
     } else {
 
-      _pageCtrl.jumpToPage(0);
+      pageCtrl.jumpToPage(0);
       _playTrack(GlobalQueue.queue.value[0].key);
 
     }
@@ -119,8 +122,8 @@ class FrontPlayerController {
     if(isRepeatAlways != null) this.isRepeatAlways = isRepeatAlways;
 
     if(isShuffle != null && isShuffle != this.isShuffle) {
-      _createQueue(_currentPlaylist, isShuffle: isShuffle, track: _currentTrack.value);
-      _pageCtrl.jumpToPage(0);
+      _createQueue(currentPlaylist, isShuffle: isShuffle, track: currentTrack.value);
+      pageCtrl.jumpToPage(0);
     }
   }
 
@@ -131,7 +134,7 @@ class FrontPlayerController {
   /// Set the current track to [track] and initialize back player listener for it
   void _playTrack(Track track) {
     _seekAllTrackToZero();
-    _currentTrack.value = track;
+    currentTrack.value = track;
     
     //Listen to track changes in the notification back player
     PlayerListener().listen(track);
@@ -172,7 +175,7 @@ class FrontPlayerController {
     @required bool isShuffle,
     Track track
   }) {
-    _currentPlaylist = playlist;
+    currentPlaylist = playlist;
 
     this.isShuffle = isShuffle;
 
@@ -198,13 +201,13 @@ class FrontPlayerController {
   /// Initialize player's tracks in multible tabs form on the frontend side of the app
   void _initPageController() {
     //Listeners
-    _pageCtrl.addListener(() {
-      if(!_pageCtrl.blockNotifier) {
+    pageCtrl.addListener(() {
+      if(!pageCtrl.blockNotifier) {
 
-        if(_pageCtrl.page.round() > GlobalQueue.currentQueueIndex) {
+        if(pageCtrl.page.round() > GlobalQueue.currentQueueIndex) {
           //Next page
           nextTrack(backProvider: false);
-        } else if(_pageCtrl.page.round() < GlobalQueue.currentQueueIndex) {
+        } else if(pageCtrl.page.round() < GlobalQueue.currentQueueIndex) {
           //Previous page
           previousTrack(backProvider: false);
         }

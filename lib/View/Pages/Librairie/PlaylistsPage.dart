@@ -17,10 +17,9 @@ import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 class PlaylistsPage extends StatefulWidget {
 
-  final Function setPlaying;
   final MaterialColor materialColor;
   
-  PlaylistsPage({Key key, this.setPlaying, this.materialColor}) : super(key: key);
+  PlaylistsPage({Key key, this.materialColor}) : super(key: key);
 
   @override
   _PlaylistsPageState createState() => _PlaylistsPageState();
@@ -56,11 +55,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
 
 
-  onReorderPlaylists(PlatformsController ctrl, List<Playlist> playlists, int oldIndex, int newIndex) {
-    playlists = ctrl.platform.reorder(oldIndex, newIndex);
-    this.initialTabIndex.value = _tabController.index;
-  }
-
   openPlaylist(int tabIndex, MapEntry<ServicesLister, PlatformsController> elem, Playlist playlist) {
     setState(() {
       this.distribution[tabIndex] = TabsView.TracksView;
@@ -70,14 +64,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     });
   }
 
-  
 
-  onReorderTracks(PlatformsController ctrl, Playlist playlist, List<Track> tracks, int oldIndex, int newIndex) {
-    setState(() {
-      tracks = playlist.reorder(oldIndex, newIndex);
-      this.initialTabIndex.value = _tabController.index;
-    });
-  }
 
   returnToPlaylist(int tabIndex) {
     setState(() {
@@ -123,21 +110,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       }
       setState(() {
         this.researchList.clear();
-        this.researchList = TabsView(this).tracksListGenerator(temp, ctrl, playlist, this.setPlaying);
+        this.researchList = TabsView(this, widget.materialColor).tracksListGenerator(temp, ctrl: ctrl, playlist: playlist);
       });
     }
-  }
-
-  setPlaying(Track track, bool queueCreate, {Playlist playlist, PlatformsController platformCtrl, bool isShuffle, bool isRepeatOnce, bool isRepeatAlways}) {
-    //setState(() {
-      this.initialTabIndex.value = _tabController.index;
-      widget.setPlaying(track, queueCreate,
-       playlist: playlist,
-       platformCtrl: platformCtrl,
-       isShuffle: isShuffle,
-       isRepeatOnce: isRepeatOnce,
-       isRepeatAlways: isRepeatAlways);
-    //});
   }
 
 
@@ -241,7 +216,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
           body: TabBarView(
             controller: this._tabController,
             children: () {
-              List<Widget> allTabs = TabsView(this).playlistsCreator(this.userPlatforms, this.distribution, onReorderPlaylists, openPlaylist, this.widget.materialColor);
+              List<Widget> allTabs = TabsView(this, widget.materialColor).playlistsCreator(
+                            userPlatforms: this.userPlatforms,
+                            distributions: this.distribution,
+                            openPlaylist: openPlaylist);
               
               for(int i=0; i<allTabs.length; i++) {
                 setState(() {
@@ -262,7 +240,13 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
               for(int i=0; i<this.distribution.length; i++) {
                 if(this.distribution[i] == TabsView.TracksView) {
                   setState(() {
-                    this.tabsView[i] = TabsView(this).tracksCreator(i, this.tracksList[i].key, this.tracksList[i].value, researchList, this.notResearch[i], setResearch, onReorderTracks, returnToPlaylist, setPlaying, this.widget.materialColor);
+                    this.tabsView[i] = TabsView(this, widget.materialColor).tracksCreator(i,
+                      ctrl: this.tracksList[i].key,
+                      playlist: this.tracksList[i].value,
+                      researchList: researchList,
+                      notResearch: this.notResearch[i],
+                      setResearch: setResearch,
+                      returnToPlaylist: returnToPlaylist);
                   });
                 }
               }
