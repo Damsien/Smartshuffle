@@ -36,6 +36,25 @@ import 'Pages/Profile/ProfilePage.dart';
 import 'Pages/Search/SearchPage.dart';
 
 
+class MaterialColorApplication {
+
+  static Map<int, Color> _colorCodes = {
+    50: Colors.yellow[100],
+    100: Colors.yellow[200],
+    200: Colors.yellow[300],
+    300: Colors.yellow[400],
+    400: Colors.yellow[500],
+    500: Colors.yellow[600],
+    600: Colors.yellow[700],
+    700: Colors.yellow[800],
+    800: Colors.yellow[900]
+  };
+
+  static final MaterialColor material_color = MaterialColor(0xFFFDD835, _colorCodes);
+
+}
+
+
 void _entrypoint() => AudioServiceBackground.run(() => AudioPlayerTask());
 class GlobalAppMain extends StatelessWidget {
   @override
@@ -128,23 +147,12 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   void initPage() {
 
-    Map<int, Color> colorCodes = {
-      50: Colors.yellow[100],
-      100: Colors.yellow[200],
-      200: Colors.yellow[300],
-      300: Colors.yellow[400],
-      400: Colors.yellow[500],
-      500: Colors.yellow[600],
-      600: Colors.yellow[700],
-      700: Colors.yellow[800],
-      800: Colors.yellow[900]
-    };
 
-    this.materialColor = MaterialColor(0xFFFDD835, colorCodes);
+    this.materialColor = MaterialColorApplication.material_color;
 
-    Widget playlistsPage = new PlaylistsPage(materialColor: this.materialColor);
+    Widget playlistsPage = new PlaylistsPage();
     Widget searchPage = new SearchPageMain();
-    Widget profilePage = new ProfilePage(materialColor: this.materialColor);
+    Widget profilePage = new ProfilePage();
     setState(() {
       this.pages = [playlistsPage, searchPage, profilePage];
       this.currentPage = this.pages[0];
@@ -194,7 +202,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   onForegroundLost:  () {screenState.value = SCREEN_IDLE;},
                   // onFocusLost:  () {screenState.value = SCREEN_IDLE; print('idle');},
                   onVisibilityLost:   () {screenState.value = SCREEN_IDLE;},
-                  child: FrontPlayerView(materialColor: this.materialColor,)
+                  child: FrontPlayerView()
                 )
               ])
             ),

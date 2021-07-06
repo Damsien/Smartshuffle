@@ -12,14 +12,13 @@ import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/View/GlobalApp.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 
 class PlaylistsPage extends StatefulWidget {
 
-  final MaterialColor materialColor;
-  
-  PlaylistsPage({Key key, this.materialColor}) : super(key: key);
+  final MaterialColor materialColor = MaterialColorApplication.material_color;
 
   @override
   _PlaylistsPageState createState() => _PlaylistsPageState();
@@ -110,7 +109,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       }
       setState(() {
         this.researchList.clear();
-        this.researchList = TabsView(this, widget.materialColor).tracksListGenerator(temp, ctrl: ctrl, playlist: playlist);
+        this.researchList = TabsView(this).tracksListGenerator(temp, ctrl: ctrl, playlist: playlist);
       });
     }
   }
@@ -216,7 +215,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
           body: TabBarView(
             controller: this._tabController,
             children: () {
-              List<Widget> allTabs = TabsView(this, widget.materialColor).playlistsCreator(
+              List<Widget> allTabs = TabsView(this).playlistsCreator(
                             userPlatforms: this.userPlatforms,
                             distributions: this.distribution,
                             openPlaylist: openPlaylist);
@@ -240,7 +239,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
               for(int i=0; i<this.distribution.length; i++) {
                 if(this.distribution[i] == TabsView.TracksView) {
                   setState(() {
-                    this.tabsView[i] = TabsView(this, widget.materialColor).tracksCreator(i,
+                    this.tabsView[i] = TracksCreator(i,
                       ctrl: this.tracksList[i].key,
                       playlist: this.tracksList[i].value,
                       researchList: researchList,

@@ -14,14 +14,13 @@ import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
+import 'package:smartshuffle/View/GlobalApp.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 class FrontPlayerView extends StatefulWidget {
 
-  final MaterialColor materialColor;
-
-  FrontPlayerView({Key key, @required this.materialColor}) : super(key: key);
+  final MaterialColor materialColor = MaterialColorApplication.material_color;
 
   @override
   State<StatefulWidget> createState() => _FrontPlayerViewState();
@@ -342,7 +341,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                                 opacity: _elementsOpacity,
                                                 child: InkWell(
                                                     onTap: () {
-                                                      TabsView(this, widget.materialColor).addToPlaylist(trackUp, ctrl: PlatformsLister.platforms[trackUp.service]);
+                                                      TabsView(this).addToPlaylist(trackUp, ctrl: PlatformsLister.platforms[trackUp.service]);
                                                     },
                                                     child: Icon(
                                                     Icons.add,
@@ -396,7 +395,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                               TracksPopupItemReport().build(context)
                             ],
                             onSelected: (value) {
-                              TabsView(this, widget.materialColor).trackMainDialogOptions(
+                              TabsView(this).trackMainDialogOptions(
                                 value,
                                 name: FrontPlayerController().currentTrack.value.name,
                                 ctrl: PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service],
