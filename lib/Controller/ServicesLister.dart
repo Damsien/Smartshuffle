@@ -27,6 +27,14 @@ class PlatformsLister {
     ServicesLister.YOUTUBE: new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'}))
   } as LinkedHashMap;
 
+  static List<PlatformsController> getAllControllers() {
+    List<PlatformsController> plat = List<PlatformsController>();
+    platforms.forEach((key, value) {
+      plat.add(value);
+    });
+    return plat;
+  }
+
   static ServicesLister nameToService(String name) {
     if(name == "DEFAULT") return ServicesLister.DEFAULT;
     if(name == "SPOTIFY") return ServicesLister.SPOTIFY;

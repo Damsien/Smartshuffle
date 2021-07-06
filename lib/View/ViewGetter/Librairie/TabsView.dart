@@ -21,47 +21,106 @@ import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
 
-class TracksCreator extends StatefulWidget {
+class TabCreator extends StatefulWidget {
 
-  MaterialColor materialColor = MaterialColorApplication.material_color;
-
-  int tabIndex;
   PlatformsController ctrl;
-  Playlist playlist;
-  Function setResearch;
-  Function returnToPlaylist;
-  bool notResearch;
-  List<Widget> researchList;
 
-  TracksCreator(this.tabIndex, {
-    @required this.ctrl, @required this.playlist, @required this.setResearch, @required this.returnToPlaylist, this.notResearch, this.researchList
-  });
+  TabCreator(this.ctrl, {key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _TracksCreatorState();
+  State<StatefulWidget> createState() => _TabCreatorState();
 
 }
 
-class _TracksCreatorState extends State<TracksCreator> {
+class _TabCreatorState extends State<TabCreator> {
 
-  int tabIndex;
-  PlatformsController ctrl;
-  Playlist playlist;
-  Function setResearch;
-  Function returnToPlaylist;
-  bool notResearch;
-  List<Widget> researchList;
+  Widget tab;
+
+  void returnToPlaylist() {
+    setState(() {
+      tab = GeneratePlaylist(ctrl: widget.ctrl, openPlaylist: openPlaylist);
+    });
+  }
+
+  void openPlaylist(Playlist playlist) {
+    setState(() {
+      tab = PlaylistCreator(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist);
+    });
+  }
 
   @override
   void initState() {
-    tabIndex = widget.tabIndex;
+    tab = GeneratePlaylist(ctrl: widget.ctrl, openPlaylist: openPlaylist);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return tab;
+  }
+  
+}
+
+
+class PlaylistCreator extends StatefulWidget {
+
+  MaterialColor materialColor = MaterialColorApplication.material_color;
+
+  PlatformsController ctrl;
+  Playlist playlist;
+  Function returnToPlaylist;
+
+  PlaylistCreator({
+    Key key,
+    @required this.ctrl,
+    @required this.playlist,
+    @required this.returnToPlaylist
+  }) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _PlaylistCreatorState();
+
+}
+
+class _PlaylistCreatorState extends State<PlaylistCreator> {
+
+  PlatformsController ctrl;
+  Playlist playlist;
+  Function returnToPlaylist;
+
+  List<Track> _tracks;
+
+  Widget generateTrack(int index) {
+    Widget track;
+    track = GenerateTrack(_tracks[index], index, ctrl: ctrl, playlist: playlist);
+    return track;
+  }
+
+  void setResearch(String value) {
+    if(value != '') {
+      List<Track> temp = List<Track>();
+      for(Track track in playlist.getTracks) {
+        if(track.name.contains(value) || track.name.toLowerCase().contains(value)
+        || track.artist.contains(value) || track.artist.toLowerCase().contains(value)) {
+          temp.add(track);
+        }
+      }
+      setState(() {
+        _tracks = temp;
+      });
+    } else {
+      setState(() {
+        _tracks = playlist.getTracks;
+      });
+    }
+  }
+
+  @override
+  void initState() {
     ctrl = widget.ctrl;
     playlist = widget.playlist;
-    print(widget.playlist);
-    setResearch = widget.setResearch;
     returnToPlaylist = widget.returnToPlaylist;
-    notResearch = widget.notResearch;
-    researchList = widget.researchList;
+    _tracks = playlist.getTracks;
     super.initState();
   }
 
@@ -106,7 +165,7 @@ class _TracksCreatorState extends State<TracksCreator> {
                                   child: Row(
                                     children: [
                                       InkWell(
-                                        onTap: () => returnToPlaylist(tabIndex),
+                                        onTap: () => returnToPlaylist(),
                                         child: Container(
                                           child: Icon(Icons.arrow_back, size: 30),
                                           margin: EdgeInsets.all(5),
@@ -176,7 +235,7 @@ class _TracksCreatorState extends State<TracksCreator> {
                                     filled: true,
                                   ),
                                   onChanged: (val) {
-                                    setResearch(ctrl, playlist, val, tracks);
+                                    setResearch(val);
                                   },
                                 )
                               ),
@@ -254,25 +313,12 @@ class _TracksCreatorState extends State<TracksCreator> {
                           ),
                         ]
                       ),
-                      Visibility(
-                        visible: notResearch,
-                        child: Container(
-                          height: 80*tracks.length.toDouble(),
-                          child: ListView.builder (
-                            controller: scrollCtrl,
-                            itemCount: tracks.length,
-                            itemBuilder: (buildContext, index) => GenerateTrack(tracks[index], index, ctrl: ctrl, playlist: playlist),
-                          )
-                        )
-                      ),
-                      Visibility(
-                        visible: !notResearch,
-                        child: Container(
-                          height: 80*researchList.length.toDouble(),
-                          child: ListView(
-                            controller: scrollCtrl,
-                            children: researchList,
-                          )
+                      Container(
+                        height: 80*tracks.length.toDouble(),
+                        child: ListView.builder (
+                          controller: scrollCtrl,
+                          itemCount: tracks.length,
+                          itemBuilder: (buildContext, index) => generateTrack(index),
                         )
                       )
                     ]
@@ -281,11 +327,11 @@ class _TracksCreatorState extends State<TracksCreator> {
               )
             ),
             onWillPop: () async {
-              if(!notResearch) {
-                setResearch(null, null, '', null);
+              if(_tracks.length != playlist.getTracks.length) {
+                setResearch('');
                 return false;
               } else {
-                returnToPlaylist(tabIndex);
+                returnToPlaylist();
                 return false;
               }
             },
@@ -316,6 +362,7 @@ class _TracksCreatorState extends State<TracksCreator> {
 
 class GenerateTrack extends StatefulWidget {
   
+  Key key;
   int index;
   Track track;
   PlatformsController ctrl;
@@ -323,7 +370,7 @@ class GenerateTrack extends StatefulWidget {
 
   MaterialColor materialColor = MaterialColorApplication.material_color;
 
-  GenerateTrack(this.track, this.index, {@required this.ctrl, @required this.playlist});
+  GenerateTrack(this.track, this.index, {Key key, @required this.ctrl, @required this.playlist}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _GenerateTrackState();
@@ -343,75 +390,71 @@ class _GenerateTrackState extends State<GenerateTrack> {
     track = widget.track;
     playlist = widget.playlist;
     ctrl = widget.ctrl;
+    print('initState : $track');
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-    key: ValueKey('ListView:Tracks:$index'),
-    margin: EdgeInsets.only(left: 20, right: 20, bottom: 0),
-    child: GestureDetector(
-      onTap: () {
-        FrontPlayerController().createQueueAndPlay(playlist, track: widget.track);
-      },
-      onDoubleTap: () {
-        TabsView(this).addToQueue(track);
-        String trackName = track.name;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            action: SnackBarAction(
-              label: AppLocalizations.of(context).cancel,
-              onPressed: () => GlobalQueue().removeLastPermanent()
-            ),
-            duration: Duration(seconds: 1),
-            content: Text("$trackName " + AppLocalizations.of(context).tabsViewAddedToQueue),
+        key: ValueKey('ListView:Tracks:$index'),
+        child: GestureDetector(
+          onTap: () {
+            FrontPlayerController().createQueueAndPlay(playlist, track: track);
+          },
+          onDoubleTap: () {
+            TabsView(this).addToQueue(track);
+            String trackName = track.name;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                action: SnackBarAction(
+                  label: AppLocalizations.of(context).cancel,
+                  onPressed: () => GlobalQueue().removeLastPermanent(),
+                ),
+                duration: Duration(seconds: 1),
+                content: Text("$trackName "+AppLocalizations.of(context).tabsViewAddedToQueue),
+              )
+            );
+          },
+          onLongPressStart: (LongPressStartDetails detail) => TabsView(this).trackMainOptions(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist), detail: detail),
+          child: Container(
+              child: ListTile(
+                title: ValueListenableBuilder(
+                  valueListenable: track.isSelected,
+                  builder: (_, value, __) {
+                    return Text(
+                      track.name,
+                      style: (value ?
+                        TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
+                      )
+                    );
+                  }
+                ),
+                leading: FractionallySizedBox(
+                  heightFactor: 0.8,
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      decoration: new BoxDecoration(
+                        image: new DecorationImage(
+                          fit: BoxFit.cover,
+                          alignment: FractionalOffset.center,
+                          image: NetworkImage(track.imageUrlLittle),
+                        )
+                      ),
+                    )
+                  )
+                ),
+                subtitle: Text(track.artist),
+                trailing: FractionallySizedBox(
+                  heightFactor: 1,
+                  child: TabsView(this).trackMainDialog(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist)),
+                ),
+              )
+            )
           )
         );
-        /*Fluttertoast.showToast(
-          msg: "$trackName ajouté à la file d'attente",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-        );*/
-      },
-      onLongPressStart: (LongPressStartDetails detail) => TabsView(this).trackMainOptions(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist), detail: detail),
-      child: Card(
-          child: ListTile(
-            title: ValueListenableBuilder(
-              valueListenable: track.isSelected,
-              builder: (_, value, __) {
-                return Text(
-                  track.name,
-                  style: (value ?
-                    TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
-                  )
-                );
-              }
-            ),
-            leading: FractionallySizedBox(
-              heightFactor: 0.8,
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Container(
-                  decoration: new BoxDecoration(
-                    image: new DecorationImage(
-                      fit: BoxFit.fitHeight,
-                      alignment: FractionalOffset.center,
-                      image: NetworkImage(track.imageUrlLittle),
-                    )
-                  ),
-                )
-              )
-            ),
-            subtitle: Text(track.artist),
-            trailing: FractionallySizedBox(
-              heightFactor: 1,
-              child: TabsView(this).trackMainDialog(track, ctrl:ctrl, index: ctrl.platform.playlists.value.indexOf(playlist)),
-            ),
-          )
-        )
-      )
-    );
+
   }
   
 }
@@ -419,13 +462,12 @@ class _GenerateTrackState extends State<GenerateTrack> {
 
 class GeneratePlaylist extends StatefulWidget {
 
-  int tabIndex;
-  MapEntry<ServicesLister, PlatformsController> platforms;
+  PlatformsController ctrl;
   Function openPlaylist;
 
   MaterialColor materialColor = MaterialColorApplication.material_color;
 
-  GeneratePlaylist(this.tabIndex, {@required this.platforms, @required this.openPlaylist});
+  GeneratePlaylist({Key key, @required this.ctrl, @required this.openPlaylist}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _GeneratePlaylistState();
@@ -436,7 +478,7 @@ class _GeneratePlaylistState extends State<GeneratePlaylist> {
 
   @override
   Widget build(BuildContext context) {
-    PlatformsController ctrl = widget.platforms.value;
+    PlatformsController ctrl = widget.ctrl;
 
     return FutureBuilder<List<Playlist>>(
       future: ctrl.getPlaylists(),
@@ -538,7 +580,7 @@ class _GeneratePlaylistState extends State<GeneratePlaylist> {
                                         )
                                       ),
                                       subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" "+AppLocalizations.of(context).globalTracks),
-                                      onTap: () => widget.openPlaylist(widget.tabIndex, widget.platforms, playlists.elementAt(index)),
+                                      onTap: () => widget.openPlaylist(playlists[index]),
                                     ),
                                     onLongPressStart: (LongPressStartDetails detail) => TabsView(this).playlistMainOptions(playlists[index], ctrl: ctrl, index: index, detail: detail),
                                   )
@@ -611,25 +653,6 @@ class TabsView {
 
 
 
-  List<Widget> playlistsCreator({
-    @required Map<ServicesLister, PlatformsController> userPlatforms,
-    @required List<String> distributions,
-    @required Function openPlaylist
-  }) {
-    List elements = new List<Widget>(userPlatforms.length);
-
-    int i=0;
-    for(MapEntry<ServicesLister, PlatformsController> elem in userPlatforms.entries) {
-      if(distributions[i] != TabsView.TracksView)
-        elements[i] = GeneratePlaylist(i, platforms: elem, openPlaylist: openPlaylist);
-      i++;
-    }
-    return elements;
-  }
-
-
-
-
   
   // TODO: Fix try catch doesn't work
   void openApp(Platform platform) async {
@@ -655,25 +678,6 @@ class TabsView {
       );
     }
   }
-
-
-  /*  TRACKS VIEW   */
-
-
-  List<Widget> tracksListGenerator(List<Track> tracks, {
-    @required PlatformsController ctrl,
-    @required Playlist playlist
-  }) {
-    return List.generate(
-      tracks.length,
-      (index) {
-        return GenerateTrack(tracks[index], index, ctrl: ctrl, playlist: playlist);
-      }
-    );
-  }
-
-
-
 
 
   /* CRUD TRACKS  */
