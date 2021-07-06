@@ -53,14 +53,16 @@ class _TracksCreatorState extends State<TracksCreator> {
   List<Widget> researchList;
 
   @override
-  void init() {
+  void initState() {
     tabIndex = widget.tabIndex;
     ctrl = widget.ctrl;
     playlist = widget.playlist;
+    print(widget.playlist);
     setResearch = widget.setResearch;
     returnToPlaylist = widget.returnToPlaylist;
     notResearch = widget.notResearch;
     researchList = widget.researchList;
+    super.initState();
   }
 
   @override
@@ -336,11 +338,12 @@ class _GenerateTrackState extends State<GenerateTrack> {
   PlatformsController ctrl;
 
   @override
-  void init() {
+  void initState() {
     index = widget.index;
     track = widget.track;
     playlist = widget.playlist;
     ctrl = widget.ctrl;
+    super.initState();
   }
 
   @override
