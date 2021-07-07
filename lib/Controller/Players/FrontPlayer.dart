@@ -45,6 +45,8 @@ class FrontPlayerController {
   bool isRepeatOnce = false;
   bool isRepeatAlways = false;
 
+  State viewState;
+
 
   // PUBLIC
 
@@ -55,6 +57,10 @@ class FrontPlayerController {
 
   void onBuildPage() {
 
+  }
+
+  void setViewState(State state) {
+    viewState = state;
   }
 
   /* ============================================ */
@@ -75,16 +81,20 @@ class FrontPlayerController {
     if (track != null) {
 
       _playTrack(track);
-      if(isShuffle) {
-        pageCtrl.jumpToPage(0);
-      } else {
-        pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+      if(pageCtrl.hasClients) {
+        if(isShuffle) {
+          pageCtrl.jumpToPage(0);
+        } else {
+          pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+        }
       }
 
     } else {
 
       _playTrack(GlobalQueue.queue.value[0].key);
-      pageCtrl.jumpToPage(0);
+      if(pageCtrl.hasClients) {
+        pageCtrl.jumpToPage(0);
+      }
 
     }
 
@@ -152,7 +162,9 @@ class FrontPlayerController {
     currentTrack.value = track;
     
     //Listen to track changes in the notification back player
-    PlayerListener().listen(track);
+    viewState.setState(() {
+      PlayerListener().listen(track);
+    });
   }
 
   /// Transfer current [frontQueue] to the back player notification

@@ -16,9 +16,7 @@ class CustomPageController extends PageController {
   void jumpToPage(int page) {
     blockNotifier = true;
     // tempIndex = page;
-    if(this.hasClients) {
-      super.jumpToPage(page);
-    }
+    super.jumpToPage(page);
     blockNotifier = false;
   }
 

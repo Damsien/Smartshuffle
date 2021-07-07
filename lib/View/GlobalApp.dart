@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
+import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
 import 'package:smartshuffle/View/ViewGetter/FrontPlayerView.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';

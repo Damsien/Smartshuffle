@@ -37,9 +37,6 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
   // Queue panel is locked when _panelCtrl is close
   ValueNotifier<bool> _isPanelQueueDraggable = ValueNotifier<bool>(true);
 
-  Track _currentTrack;
-
-
   /* =========================== */
   
   // Global frontend strucutre variables;
@@ -128,12 +125,6 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
     FrontPlayerController().onInitPage();
     _initAudioService();
 
-    FrontPlayerController().currentTrack.addListener(() {
-      setState(() {
-        _currentTrack = FrontPlayerController().currentTrack.value;
-      });
-    });
-
     super.initState();
   }
 
@@ -145,6 +136,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
 
   @override
   Widget build(BuildContext context) {
+    FrontPlayerController().setViewState(this);
     FrontPlayerController().onBuildPage();
     
     _constantBuilder();
@@ -172,7 +164,14 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
               minHeight: _botbar_height+10,
               maxHeight: _screen_height,
               panelBuilder: (scrollCtrl) {
-                if(FrontPlayerController().currentTrack.value.id == null) _panelCtrl.hide();
+                if(FrontPlayerController().currentTrack.value.id == null) {
+                  _panelCtrl.hide();
+                }
+
+                if(_panelCtrl.isAttached && FrontPlayerController().currentTrack.value.id != null && !_panelCtrl.isPanelShown) {
+                  _panelCtrl.show();
+                }
+
                 return GestureDetector(
                   onTap: () => _panelCtrl.panelPosition < 0.3 ? _panelCtrl.open() : null,
                   child: Stack(
