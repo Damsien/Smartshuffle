@@ -25,39 +25,56 @@ class TabCreator extends StatefulWidget {
 
   PlatformsController ctrl;
 
-  TabCreator(this.ctrl, {key}) : super(key: key);
+  TabCreator(this.ctrl, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TabCreatorState();
 
 }
 
-class _TabCreatorState extends State<TabCreator> {
+class _TabCreatorState extends State<TabCreator> with AutomaticKeepAliveClientMixin {
 
   Widget tab;
+  bool _isPlaylistOpen;
 
   void returnToPlaylist() {
     setState(() {
+      _isPlaylistOpen = false;
       tab = GeneratePlaylist(ctrl: widget.ctrl, openPlaylist: openPlaylist);
     });
   }
 
   void openPlaylist(Playlist playlist) {
     setState(() {
+      _isPlaylistOpen = true;
       tab = PlaylistCreator(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist);
     });
   }
 
   @override
   void initState() {
+    _isPlaylistOpen = false;
     tab = GeneratePlaylist(ctrl: widget.ctrl, openPlaylist: openPlaylist);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return tab;
+    return WillPopScope(
+      child: tab,
+      onWillPop: () async {
+        if(_isPlaylistOpen) {
+          returnToPlaylist();
+          return false;
+        } else {
+          return true;
+        }
+      },
+    );
   }
+
+  @override
+  bool get wantKeepAlive => true;
   
 }
 
@@ -390,7 +407,6 @@ class _GenerateTrackState extends State<GenerateTrack> {
     track = widget.track;
     playlist = widget.playlist;
     ctrl = widget.ctrl;
-    print('initState : $track');
     super.initState();
   }
 
@@ -400,7 +416,9 @@ class _GenerateTrackState extends State<GenerateTrack> {
         key: ValueKey('ListView:Tracks:$index'),
         child: GestureDetector(
           onTap: () {
-            FrontPlayerController().createQueueAndPlay(playlist, track: track);
+            setState(() {
+              FrontPlayerController().createQueueAndPlay(playlist, track: track);
+            });
           },
           onDoubleTap: () {
             TabsView(this).addToQueue(track);

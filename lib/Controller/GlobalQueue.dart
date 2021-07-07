@@ -134,7 +134,7 @@ class GlobalQueue {
 
   void _resetNoPermanentQueue() {
     noPermanentQueue.value.clear();
-    setCurrentQueueIndex(0);
+    // setCurrentQueueIndex(0);
     //reBuildQueue();
   }
 

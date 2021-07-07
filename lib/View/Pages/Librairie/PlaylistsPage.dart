@@ -130,13 +130,21 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
             ),
             foregroundColor: this.widget.materialColor.shade300,
           ),
-          body: TabBarView(
-            children: List.generate(_tabController.length, (index) {
-              return Container(
-                key: PageStorageKey(PlatformsLister.getAllControllers()[index].platform.name),
-                child: TabCreator(PlatformsLister.getAllControllers()[index]),
-              );
-            }),
+          body: WillPopScope(
+            child: TabBarView(
+              controller: _tabController,
+              children: List.generate(_tabController.length, (index) {
+                return Container(
+                  key: PageStorageKey(PlatformsLister.getAllControllers()[index].platform.name),
+                  child: TabCreator(PlatformsLister.getAllControllers()[index]),
+                );
+              }),
+            ),
+            onWillPop: () async {
+              if(this._tabController.index == 0) exitDialog();
+              else this._tabController.animateTo(0);
+              return false;
+            },
           )
         )
         )

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
+import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/page_controller.dart';
@@ -19,8 +20,21 @@ class FrontPlayerController {
 
 
   //Objects
-  Playlist currentPlaylist;
-  ValueNotifier<Track> currentTrack = ValueNotifier<Track>(null);
+  Playlist currentPlaylist = Playlist(
+    ownerId: '',
+    service: null,
+    id: null,
+    name: ''
+  );
+  ValueNotifier<Track> currentTrack = ValueNotifier<Track>(Track(
+    service: ServicesLister.DEFAULT,
+    artist: '',
+    name: '',
+    id: null,
+    imageUrlLittle: '',
+    imageUrlLarge: '',)
+  );
+
 
   // Controllers
   CustomPageController pageCtrl = CustomPageController(keepPage: false);
@@ -36,6 +50,7 @@ class FrontPlayerController {
 
   void onInitPage() {
     _initPageController();
+    GlobalQueue.queue.value.add(MapEntry(currentTrack.value, false));
   }
 
   void onBuildPage() {
@@ -59,17 +74,17 @@ class FrontPlayerController {
     //Play track
     if (track != null) {
 
+      _playTrack(track);
       if(isShuffle) {
         pageCtrl.jumpToPage(0);
       } else {
         pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
       }
-      _playTrack(track);
 
     } else {
 
-      pageCtrl.jumpToPage(0);
       _playTrack(GlobalQueue.queue.value[0].key);
+      pageCtrl.jumpToPage(0);
 
     }
 

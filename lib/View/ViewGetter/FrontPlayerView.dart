@@ -37,6 +37,8 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
   // Queue panel is locked when _panelCtrl is close
   ValueNotifier<bool> _isPanelQueueDraggable = ValueNotifier<bool>(true);
 
+  Track _currentTrack;
+
 
   /* =========================== */
   
@@ -123,8 +125,15 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
 
   @override
   void initState() {
-    FrontPlayerController().onBuildPage();
+    FrontPlayerController().onInitPage();
     _initAudioService();
+
+    FrontPlayerController().currentTrack.addListener(() {
+      setState(() {
+        _currentTrack = FrontPlayerController().currentTrack.value;
+      });
+    });
+
     super.initState();
   }
 
@@ -136,11 +145,12 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
 
   @override
   Widget build(BuildContext context) {
+    FrontPlayerController().onBuildPage();
     
     _constantBuilder();
     _sizeBuilder();
 
-    if(FrontPlayerController().currentTrack != null) {
+    // if(FrontPlayerController().currentTrack.value != null) {
       return Stack(
         children: [
           WillPopScope(
@@ -162,7 +172,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
               minHeight: _botbar_height+10,
               maxHeight: _screen_height,
               panelBuilder: (scrollCtrl) {
-                if(FrontPlayerController().currentTrack.value == null) _panelCtrl.hide();
+                if(FrontPlayerController().currentTrack.value.id == null) _panelCtrl.hide();
                 return GestureDetector(
                   onTap: () => _panelCtrl.panelPosition < 0.3 ? _panelCtrl.open() : null,
                   child: Stack(
@@ -790,7 +800,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                                       header: Container(
                                                         margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
                                                         child: Text(
-                                                          AppLocalizations.of(context).globalAppPlaylistNextFrom + FrontPlayerController().currentPlaylist.name,
+                                                          AppLocalizations.of(context).globalAppPlaylistNextFrom + " " + FrontPlayerController().currentPlaylist.name,
                                                           textAlign: TextAlign.center,
                                                           style: TextStyle(
                                                             fontSize: 20
@@ -845,13 +855,13 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
 
 
 
-    } else {
+    // } else {
 
 
-      return Container();
+    //   return Container();
 
       
-    }
+    // }
   }
 
 }
