@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
+import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
+import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -69,7 +70,7 @@ class PlatformSpotifyController extends PlatformsController {
   Future<List<Track>> getTracks(Playlist playlist) async {
     List<Track> finalTracks = List<Track>();
 
-    if (playlist.getTracks.length == 0) {
+    if (playlist.getTracks.isEmpty) {
       List<Track> tracks = await spController.getPlaylistSongs(playlist);
       for (Track track in playlist.getTracks) {
         for (int i = 0; i < tracks.length; i++) {
@@ -82,11 +83,10 @@ class PlatformSpotifyController extends PlatformsController {
       for (Track track in tracks) {
         finalTracks.add(track);
       }
-    } else {
-      finalTracks = playlist.getTracks;
+      playlist.setTracks(finalTracks);
     }
 
-    return playlist.setTracks(finalTracks);
+    return playlist.getTracks;
   }
 
   @override
@@ -113,8 +113,8 @@ class PlatformSpotifyController extends PlatformsController {
   @override
   Playlist addPlaylist(
       {Playlist playlist,
-      @required String name,
-      @required String ownerId,
+      String name,
+      String ownerId,
       String ownerName,
       String imageUrl,
       String playlistUri,

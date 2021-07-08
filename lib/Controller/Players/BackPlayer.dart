@@ -8,6 +8,7 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart' as SM;
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
@@ -315,10 +316,8 @@ class PlayerListener {
     return _instance;
   }
 
-  void listen(Track track, Function skipToNext, Function skipToPrevious) {
+  void listen(Track track) {
     _track = track;
-    _skipToNext = skipToNext;
-    _skipToPrevious = skipToPrevious;
 
     for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
       me.key.setIsPlaying(false);
@@ -346,72 +345,17 @@ class PlayerListener {
 
 
           case 'SKIP_NEXT' : {
-            _skipToNext.call();
+            FrontPlayerController().nextTrack(backProvider: true);
           } break;
 
 
           case 'SKIP_PREVIOUS' : {
-            _skipToPrevious.call();
+            FrontPlayerController().previousTrack(backProvider: true);
           } break;
 
         }
       }
     );
-  }
-
-}
-
-
-
-class YoutubeRetriever {
-
-  YoutubeRetriever._singleton();
-
-  static final YoutubeRetriever _instance = YoutubeRetriever._singleton();
-
-  YoutubeExplode _yt = YoutubeExplode();
-  AudioPlayer _player = AudioPlayer();
-
-  AudioPlayer get player => _player;
-
-  factory YoutubeRetriever() {
-    return _instance;
-  }
-
-  Future<MapEntry<Track, File>> streamByName(Track track) async {
-    Track tr = await SearchAlgorithm().search(tArtist: track.artist, tTitle: track.name, tDuration: track.totalDuration.value);
-    return MapEntry(tr, await streamById(tr.id));
-  }
-
-  Future<File> streamById(String id) async {
-    StreamManifest manifest = await _yt.videos.streamsClient.getManifest(id);
-    AudioOnlyStreamInfo streamInfo = manifest.audioOnly.withHighestBitrate();
-
-    File file;
-    if (streamInfo != null) {
-      // Get the actual stream
-      var stream = _yt.videos.streamsClient.get(streamInfo);
-      
-      // Open a file for writing.
-      final Directory directory = await getTemporaryDirectory();
-      String path = '${directory.path}/$id.mp3';
-      print('Path : $path');
-      file = File(path);
-      var fileStream = file.openWrite();
-
-      // Pipe all the content of the stream into the file.
-      try {
-        await stream.pipe(fileStream);
-      } catch(e) {
-        print(e);
-      }
-
-      // Close the file.
-      await fileStream.flush();
-      await fileStream.close();
-    }
-    
-    return file;
   }
 
 }

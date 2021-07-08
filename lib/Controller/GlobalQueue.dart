@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:smartshuffle/Controller/Players/Youtube/MainPlayer.dart';
+import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
@@ -21,7 +21,24 @@ class GlobalQueue {
   GlobalQueue._instance();
 
   void setCurrentQueueIndex(int value) {
-    currentQueueIndex = value;
+    if(value < 0) {
+      currentQueueIndex = queue.value.length-1;
+    } else if(value >= queue.value.length) {
+      currentQueueIndex = 0;
+    } else {
+      currentQueueIndex = value;
+    }
+
+    //Is inevitably next track
+    //If is in permanent queue is true
+    if(queue.value[currentQueueIndex].value) {
+      //Move last track from permanent queue to no permanent queue
+      if(value < 0) {
+        GlobalQueue().moveFromPermanentToNoPermanent(queue.value.length-1);
+      } else {
+        GlobalQueue().moveFromPermanentToNoPermanent(value-1);
+      }
+    }
   }
 
   void reBuildQueue() {
@@ -117,7 +134,7 @@ class GlobalQueue {
 
   void _resetNoPermanentQueue() {
     noPermanentQueue.value.clear();
-    setCurrentQueueIndex(0);
+    // setCurrentQueueIndex(0);
     //reBuildQueue();
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/View/GlobalApp.dart';
 import 'package:smartshuffle/View/ViewGetter/FormsView.dart';
 import 'package:smartshuffle/View/ViewGetter/Profiles/ProfileView.dart';
 
@@ -10,9 +11,9 @@ import 'package:smartshuffle/View/ViewGetter/Profiles/ProfileView.dart';
 class ProfilePage extends StatefulWidget {
 
   final String title;
-  final MaterialColor materialColor;
+  final MaterialColor materialColor = MaterialColorApplication.material_color;
   
-  ProfilePage({Key key, this.title, this.materialColor}) : super(key: key);
+  ProfilePage({Key key, this.title}) : super(key: key);
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
