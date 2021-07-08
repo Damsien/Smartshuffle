@@ -118,8 +118,10 @@ class FrontPlayerController {
     GlobalQueue().setCurrentQueueIndex(GlobalQueue.currentQueueIndex+1);
     //Get the next track
     nextTrack = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key;
-
-    _playTrack(nextTrack);
+    //Move to the next page
+    pageCtrl.nextPage(duration: Duration(milliseconds: 500), curve: Curves.easeIn).then((value) {
+      _playTrack(nextTrack);
+    });
 
     if(!backProvider) {
       AudioService.skipToNext();
@@ -137,8 +139,10 @@ class FrontPlayerController {
     GlobalQueue().setCurrentQueueIndex(GlobalQueue.currentQueueIndex-1);
     //Get the previous track
     previousTrack = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key;
-    
-    _playTrack(previousTrack);
+    //Move to the previous page
+    pageCtrl.previousPage(duration: Duration(milliseconds: 500), curve: Curves.easeIn).then((value) {
+      _playTrack(previousTrack);
+    });
 
     if(!backProvider) {
       AudioService.skipToPrevious();
