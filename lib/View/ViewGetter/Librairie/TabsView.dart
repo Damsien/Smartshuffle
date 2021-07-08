@@ -37,6 +37,10 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
   Widget tab;
   bool _isPlaylistOpen;
 
+  void refresh() {
+    setState(() {});
+  }
+
   void returnToPlaylist() {
     setState(() {
       _isPlaylistOpen = false;
@@ -47,7 +51,7 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
   void openPlaylist(Playlist playlist) {
     setState(() {
       _isPlaylistOpen = true;
-      tab = TracksView(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist);
+      tab = TracksView(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist, notifyParent: refresh,);
     });
   }
 
@@ -60,6 +64,7 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return WillPopScope(
       child: tab,
       onWillPop: () async {
@@ -81,15 +86,17 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
 
 class TracksView extends StatefulWidget {
 
-  PlatformsController ctrl;
-  Playlist playlist;
-  Function returnToPlaylist;
+  final PlatformsController ctrl;
+  final Playlist playlist;
+  final Function returnToPlaylist;
+  final Function notifyParent;
 
   TracksView({
     Key key,
     @required this.ctrl,
     @required this.playlist,
-    @required this.returnToPlaylist
+    @required this.returnToPlaylist,
+    this.notifyParent
   }) : super(key: key);
 
   @override
@@ -99,289 +106,296 @@ class TracksView extends StatefulWidget {
 
 class _TracksViewState extends State<TracksView> {
 
-  final MaterialColor materialColor = MaterialColorApplication.material_color;
-  PlatformsController ctrl;
-  Playlist playlist;
-  Function returnToPlaylist;
+  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  PlatformsController _ctrl;
+  Playlist _playlist;
+  Function _returnToPlaylist;
+
+  ScrollController _scrollCtrl;
 
   List<Track> _tracks;
 
+  String _searchValue;
   void setResearch(String value) {
-    if(value != '') {
-      List<Track> temp = List<Track>();
-      for(Track track in playlist.getTracks) {
-        if(track.name.contains(value) || track.name.toLowerCase().contains(value)
-        || track.artist.contains(value) || track.artist.toLowerCase().contains(value)) {
-          temp.add(track);
+    if(_searchValue != value) {
+      print("             setResss");
+      if(value != '') {
+        List<Track> temp = List<Track>();
+        for(Track track in _playlist.getTracks) {
+          if(track.name.contains(value) || track.name.toLowerCase().contains(value)
+          || track.artist.contains(value) || track.artist.toLowerCase().contains(value)) {
+            temp.add(track);
+          }
         }
+        setState(() {
+          _tracks = temp;
+          print(_tracks);
+        });
+      } else {
+        setState(() {
+          _tracks = _playlist.getTracks;
+        });
       }
-      setState(() {
-        _tracks = temp;
-      });
-    } else {
-      setState(() {
-        _tracks = playlist.getTracks;
-      });
+      _searchValue = value;
     }
   }
 
   @override
   void initState() {
-    ctrl = widget.ctrl;
-    playlist = widget.playlist;
-    returnToPlaylist = widget.returnToPlaylist;
-    // ctrl.getTracks(playlist).then((value) => _tracks = value);
+    _ctrl = widget.ctrl;
+    _playlist = widget.playlist;
+    _returnToPlaylist = widget.returnToPlaylist;
+    _tracks = _playlist.getTracks;
+    _scrollCtrl = ScrollController();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Track>>(
-      future: ctrl.getTracks(playlist),
-      builder: (BuildContext context, AsyncSnapshot<List<Track>> snapshot) {
-        Widget finalWidget;
 
-        if(snapshot.hasData) {
+    Widget tracksList = _TracksLister(ctrl: _ctrl, playlist: _playlist, scrollController: _scrollCtrl, tracks: _tracks,);
 
-          List<Track> tracks = snapshot.data;
-          if(_tracks == null || _tracks.isEmpty) {
-            _tracks = tracks;
-          }
-
-          ScrollController scrollCtrl = ScrollController();
-          
-
-          finalWidget = WillPopScope(
-            child: Theme(
-              data: ThemeData(
-                brightness: Brightness.dark,
-                canvasColor: Colors.transparent
-              ),
-              child: Container(
-                color: Colors.black54,
-                child: SingleChildScrollView(
-                  controller: scrollCtrl,
-                  padding: EdgeInsets.only(bottom: 100),
-                  child: Column(
-                    children: [
-                      Column(
+    return WillPopScope(
+      child: Theme(
+        data: ThemeData(
+          brightness: Brightness.dark,
+          canvasColor: Colors.transparent
+        ),
+        child: Container(
+          color: Colors.black54,
+          child: SingleChildScrollView(
+            controller: _scrollCtrl,
+            padding: EdgeInsets.only(bottom: 100),
+            child: Column(
+              children: [
+                Column(
+                  children: [
+                    Container(
+                      width: WidgetsBinding.instance.window.physicalSize.width,
+                      height: 165,
+                      margin: EdgeInsets.only(left: 10, right: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            width: WidgetsBinding.instance.window.physicalSize.width,
-                            height: 165,
-                            margin: EdgeInsets.only(left: 10, right: 10),
+                            margin: EdgeInsets.only(top: 30, bottom: 20),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Container(
-                                  margin: EdgeInsets.only(top: 30, bottom: 20),
-                                  child: Row(
-                                    children: [
-                                      InkWell(
-                                        onTap: () => returnToPlaylist(),
-                                        child: Container(
-                                          child: Icon(Icons.arrow_back, size: 30),
-                                          margin: EdgeInsets.all(5),
-                                        ),
-                                      ),
-                                      Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Container(
-                                            width: MediaQuery.of(context).size.width/2,
-                                            child: InkWell(
-                                              onTap: () => TabsView(this).renamePlaylist(playlist),
-                                              child: Text(
-                                                playlist.name, 
-                                                style: ((300/playlist.name.length+5) > 30 ?
-                                                  TextStyle(fontSize: 30) :
-                                                  TextStyle(fontSize: (300/playlist.name.length+5).toDouble())
-                                                ),
-                                              )
-                                            )
-                                          ),
-                                          Container(
-                                            width: MediaQuery.of(context).size.width/2,
-                                            child: Text(
-                                              playlist.ownerName, 
-                                              style: ((300/playlist.ownerName.length+5) > 30 ?
-                                                TextStyle(fontSize: 20) :
-                                                TextStyle(fontSize: (200/playlist.ownerName.length+5).toDouble())
-                                              ),
-                                            )
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  )
-                                ),
                                 InkWell(
-                                  onTap: () => {  },
-                                  child: FractionallySizedBox(
-                                    heightFactor: 0.5,
-                                    child: AspectRatio(
-                                      aspectRatio: 1,
-                                      child: new Container(
-                                        decoration: new BoxDecoration(
-                                          image: new DecorationImage(
-                                            fit: BoxFit.cover,
-                                            alignment: FractionalOffset.center,
-                                            image: NetworkImage(playlist.imageUrl),
-                                          )
-                                        ),
-                                      ),
-                                    )
-                                  )
-                                ),
-                              ]
-                            ),
-                          ),
-                          Container(
-                            width: WidgetsBinding.instance.window.physicalSize.width,
-                            child: ListTile(
-                              subtitle: Container(
-                                height: 45,
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-                                    labelText: AppLocalizations.of(context).search+"..",
-                                    filled: true,
+                                  onTap: () => _returnToPlaylist(),
+                                  child: Container(
+                                    child: Icon(Icons.arrow_back, size: 30),
+                                    margin: EdgeInsets.all(5),
                                   ),
-                                  onChanged: (val) {
-                                    setResearch(val);
-                                  },
-                                )
-                              ),
-                              trailing: InkWell(
-                                child: PopupMenuButton(
-                                  icon: Icon(Icons.sort),
-                                  tooltip: AppLocalizations.of(context).tabsViewSort,
-                                  itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                                    SortPopupItemLastAdded(playlist).build(context),
-                                    SortPopupItemTitle(playlist).build(context),
-                                    SortPopupItemArtist(playlist).build(context)
+                                ),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: MediaQuery.of(context).size.width/2,
+                                      child: InkWell(
+                                        onTap: () => TabsView(this).renamePlaylist(_playlist),
+                                        child: Text(
+                                          _playlist.name, 
+                                          style: ((300/_playlist.name.length+5) > 30 ?
+                                            TextStyle(fontSize: 30) :
+                                            TextStyle(fontSize: (300/_playlist.name.length+5).toDouble())
+                                          ),
+                                        )
+                                      )
+                                    ),
+                                    Container(
+                                      width: MediaQuery.of(context).size.width/2,
+                                      child: Text(
+                                        _playlist.ownerName, 
+                                        style: ((300/_playlist.ownerName.length+5) > 30 ?
+                                          TextStyle(fontSize: 20) :
+                                          TextStyle(fontSize: (200/_playlist.ownerName.length+5).toDouble())
+                                        ),
+                                      )
+                                    ),
                                   ],
-                                  onSelected: (value) {
-                                    setState(() {
-                                      _tracks = playlist.sort(value);
-                                    });
-                                  },
                                 )
+                              ],
+                            )
+                          ),
+                          InkWell(
+                            onTap: () => {  },
+                            child: FractionallySizedBox(
+                              heightFactor: 0.5,
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: new Container(
+                                  decoration: new BoxDecoration(
+                                    image: new DecorationImage(
+                                      fit: BoxFit.cover,
+                                      alignment: FractionalOffset.center,
+                                      image: NetworkImage(_playlist.imageUrl),
+                                    )
+                                  ),
+                                ),
                               )
                             )
                           ),
-                          Container(
-                            margin: EdgeInsets.only(left: 17, right: 17),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  width: MediaQuery.of(context).size.width/2.5,
-                                  margin: EdgeInsets.only(top: 5, bottom: 10),
-                                  child: MaterialButton(
-                                    onPressed: () => FrontPlayerController().createQueueAndPlay(playlist, isShuffle: false),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Icon(Icons.play_arrow),
-                                        Text(AppLocalizations.of(context).tabsViewPlayingSimple,
-                                          style: TextStyle(
-                                            fontSize: 17,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    shape: ContinuousRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5),
-                                      side: BorderSide(color: materialColor.shade700)
-                                    ),
-                                  )
-                                ),
-                                Container(
-                                  width: MediaQuery.of(context).size.width/2.5,
-                                  margin: EdgeInsets.only(top: 5, bottom: 10),
-                                  child: MaterialButton(
-                                    onPressed: () => FrontPlayerController().createQueueAndPlay(playlist, isShuffle: true),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Icon(Icons.shuffle),
-                                        Text(AppLocalizations.of(context).tabsViewPlayingShuffle,
-                                          style: TextStyle(
-                                            fontSize: 17,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    shape: ContinuousRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5),
-                                      side: BorderSide(color: materialColor.shade700)
-                                    ),
-                                  )
-                                ),
-                              ],
-                            ),
-                          ),
                         ]
                       ),
-                      Container(
-                        height: 80*_tracks.length.toDouble(),
-                        child: ListView.builder (
-                          controller: scrollCtrl,
-                          itemCount: _tracks.length,
-                          itemBuilder: (buildContext, index) => TrackView(_tracks[index], index, ctrl: ctrl, playlist: playlist),
+                    ),
+                    Container(
+                      width: WidgetsBinding.instance.window.physicalSize.width,
+                      child: ListTile(
+                        subtitle: Container(
+                          height: 45,
+                          child: TextField(
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+                              labelText: AppLocalizations.of(context).search+"..",
+                              filled: true,
+                            ),
+                            onChanged: (val) {
+                              setResearch(val);
+                            },
+                          )
+                        ),
+                        trailing: InkWell(
+                          child: PopupMenuButton(
+                            icon: Icon(Icons.sort),
+                            tooltip: AppLocalizations.of(context).tabsViewSort,
+                            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                              SortPopupItemLastAdded(_playlist).build(context),
+                              SortPopupItemTitle(_playlist).build(context),
+                              SortPopupItemArtist(_playlist).build(context)
+                            ],
+                            onSelected: (value) {
+                              setState(() {
+                                _tracks = _playlist.sort(value);
+                              });
+                            },
+                          )
                         )
                       )
-                    ]
-                  )
+                    ),
+                    Container(
+                      margin: EdgeInsets.only(left: 17, right: 17),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: MediaQuery.of(context).size.width/2.5,
+                            margin: EdgeInsets.only(top: 5, bottom: 10),
+                            child: MaterialButton(
+                              onPressed: () => FrontPlayerController().createQueueAndPlay(_playlist, isShuffle: false),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Icon(Icons.play_arrow),
+                                  Text(AppLocalizations.of(context).tabsViewPlayingSimple,
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              shape: ContinuousRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                                side: BorderSide(color: _materialColor.shade700)
+                              ),
+                            )
+                          ),
+                          Container(
+                            width: MediaQuery.of(context).size.width/2.5,
+                            margin: EdgeInsets.only(top: 5, bottom: 10),
+                            child: MaterialButton(
+                              onPressed: () => FrontPlayerController().createQueueAndPlay(_playlist, isShuffle: true),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Icon(Icons.shuffle),
+                                  Text(AppLocalizations.of(context).tabsViewPlayingShuffle,
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              shape: ContinuousRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                                side: BorderSide(color: _materialColor.shade700)
+                              ),
+                            )
+                          ),
+                        ],
+                      ),
+                    ),
+                  ]
+                ),
+                Container(
+                  height: 80*_tracks.length.toDouble(),
+                  child: tracksList
                 )
-              )
-            ),
-            onWillPop: () async {
-              if(_tracks.length != playlist.getTracks.length) {
-                setResearch('');
-                return false;
-              } else {
-                returnToPlaylist();
-                return false;
-              }
-            },
-          );
-
-
+              ]
+            )
+          )
+        )
+      ),
+      onWillPop: () async {
+        if(_tracks.length != _playlist.getTracks.length) {
+          setResearch('');
+          return false;
         } else {
-
-
-          finalWidget = Container(
-                  color: Colors.black54,
-                  alignment: Alignment.center,
-                  child: CircularProgressIndicator()
-                );
-             
-
+          _returnToPlaylist();
+          return false;
         }
-
-
-
-        return finalWidget;
-      }
+      },
     );
   }
   
 }
 
 
-class TrackView extends StatefulWidget {
-  
-  Key key;
-  int index;
-  Track track;
-  PlatformsController ctrl;
-  Playlist playlist;
+class _TracksLister extends StatefulWidget {
 
-  TrackView(this.track, this.index, {Key key, @required this.ctrl, @required this.playlist}) : super(key: key);
+  final List<Track> tracks;
+  final ScrollController scrollController;
+  final PlatformsController ctrl;
+  final Playlist playlist;
+
+  _TracksLister({Key key, @required this.tracks, @required this.scrollController, @required this.ctrl, @required this.playlist}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _TrackListerState();
+
+}
+
+class _TrackListerState extends State<_TracksLister> {
+
+  @override
+  Widget build(BuildContext context) {
+    List<Track> tracks = widget.tracks;
+    ScrollController scrollController = widget.scrollController;
+    PlatformsController ctrl = widget.ctrl;
+    Playlist playlist = widget.playlist;
+
+
+    return ListView.builder(
+      controller: scrollController,
+      itemCount: tracks.length,
+      itemBuilder: (BuildContext context, int index) => TrackView(tracks[index], ctrl: ctrl, playlist: playlist)
+    );
+
+  }
+
+}
+
+
+class TrackView extends StatefulWidget {
+
+  final Track track;
+  final PlatformsController ctrl;
+  final Playlist playlist;
+
+  TrackView(this.track, {Key key, @required this.ctrl, @required this.playlist}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TrackViewState();
@@ -390,84 +404,73 @@ class TrackView extends StatefulWidget {
 
 class _TrackViewState extends State<TrackView> {
 
-  final MaterialColor materialColor = MaterialColorApplication.material_color;
-
-  int index;
-  Track track;
-  Playlist playlist;
-  PlatformsController ctrl;
-
-  @override
-  void initState() {
-    index = widget.index;
-    track = widget.track;
-    playlist = widget.playlist;
-    ctrl = widget.ctrl;
-    super.initState();
-  }
+  final MaterialColor _materialColor = MaterialColorApplication.material_color;
 
   @override
   Widget build(BuildContext context) {
+    Track track = widget.track;
+    Playlist playlist = widget.playlist;
+    PlatformsController ctrl = widget.ctrl;
+
     return Container(
-        key: ValueKey('ListView:Tracks:$index'),
-        child: GestureDetector(
-          onTap: () {
-            setState(() {
-              FrontPlayerController().createQueueAndPlay(playlist, track: track);
-            });
-          },
-          onDoubleTap: () {
-            TabsView(this).addToQueue(track);
-            String trackName = track.name;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                action: SnackBarAction(
-                  label: AppLocalizations.of(context).cancel,
-                  onPressed: () => GlobalQueue().removeLastPermanent(),
-                ),
-                duration: Duration(seconds: 1),
-                content: Text("$trackName "+AppLocalizations.of(context).tabsViewAddedToQueue),
-              )
-            );
-          },
-          onLongPressStart: (LongPressStartDetails detail) => TabsView(this).trackMainOptions(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist), detail: detail),
-          child: Container(
-              child: ListTile(
-                title: ValueListenableBuilder(
-                  valueListenable: track.isSelected,
-                  builder: (_, value, __) {
-                    return Text(
-                      track.name,
-                      style: (value ?
-                        TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
-                      )
-                    );
-                  }
-                ),
-                leading: FractionallySizedBox(
-                  heightFactor: 0.8,
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: Container(
-                      decoration: new BoxDecoration(
-                        image: new DecorationImage(
-                          fit: BoxFit.cover,
-                          alignment: FractionalOffset.center,
-                          image: NetworkImage(track.imageUrlLittle),
-                        )
-                      ),
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            FrontPlayerController().createQueueAndPlay(playlist, track: track);
+          });
+        },
+        onDoubleTap: () {
+          TabsView(this).addToQueue(track);
+          String trackName = track.name;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              action: SnackBarAction(
+                label: AppLocalizations.of(context).cancel,
+                onPressed: () => GlobalQueue().removeLastPermanent(),
+              ),
+              duration: Duration(seconds: 1),
+              content: Text("$trackName "+AppLocalizations.of(context).tabsViewAddedToQueue),
+            )
+          );
+        },
+        onLongPressStart: (LongPressStartDetails detail) => TabsView(this).trackMainOptions(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist), detail: detail),
+        child: Container(
+            child: ListTile(
+              title: ValueListenableBuilder(
+                valueListenable: track.isSelected,
+                builder: (_, value, __) {
+                  return Text(
+                    track.name,
+                    style: (value ?
+                      TextStyle(color: Colors.cyanAccent) : TextStyle(color: Colors.white)
                     )
+                  );
+                }
+              ),
+              leading: FractionallySizedBox(
+                heightFactor: 0.8,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Container(
+                    decoration: new BoxDecoration(
+                      image: new DecorationImage(
+                        fit: BoxFit.cover,
+                        alignment: FractionalOffset.center,
+                        image: NetworkImage(track.imageUrlLittle),
+                      )
+                    ),
                   )
-                ),
-                subtitle: Text(track.artist),
-                trailing: FractionallySizedBox(
-                  heightFactor: 1,
-                  child: TabsView(this).trackMainDialog(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist)),
-                ),
-              )
+                )
+              ),
+              subtitle: Text(track.artist),
+              trailing: FractionallySizedBox(
+                heightFactor: 1,
+                child: TabsView(this).trackMainDialog(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist)),
+              ),
             )
           )
-        );
+        )
+      );
 
   }
   
@@ -476,8 +479,8 @@ class _TrackViewState extends State<TrackView> {
 
 class PlaylistsView extends StatefulWidget {
 
-  PlatformsController ctrl;
-  Function openPlaylist;
+  final PlatformsController ctrl;
+  final Function openPlaylist;
 
   PlaylistsView({Key key, @required this.ctrl, @required this.openPlaylist}) : super(key: key);
 
@@ -487,7 +490,7 @@ class PlaylistsView extends StatefulWidget {
 
 class _PlaylistsViewState extends State<PlaylistsView> {
 
-  final MaterialColor materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = MaterialColorApplication.material_color;
 
   @override
   Widget build(BuildContext context) {
@@ -659,9 +662,6 @@ class TabsView {
   }
 
   TabsView._instance();
-
-  static final String TracksView = 'Tracks';
-  static final String PlaylistsView = 'Playlists';
 
 
 
@@ -1231,7 +1231,7 @@ class TabsView {
                 Navigator.pop(dialogContext);
                 Playlist play;
                 this.state.setState(() {
-                  play = PlatformsLister.platforms[ServicesLister.DEFAULT].addPlaylist(playlist: playlist);
+                  play = PlatformsLister.platforms[ServicesLister.DEFAULT].addPlaylist(playlist: playlist,);
                 });
                 if(play == null) {
                   showDialog(

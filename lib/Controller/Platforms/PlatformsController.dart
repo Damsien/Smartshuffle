@@ -107,8 +107,8 @@ abstract class PlatformsController {
   //Add the track to the app's playlist
   Playlist addPlaylist(
       {Playlist playlist,
-      @required String name,
-      @required String ownerId,
+      String name,
+      String ownerId,
       String ownerName,
       String imageUrl,
       String playlistUri,
