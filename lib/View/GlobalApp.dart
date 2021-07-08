@@ -104,7 +104,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   int selectedIndex;
   Widget currentPage;
 
-  MaterialColor materialColor;
+  final MaterialColor materialColor = MaterialColorApplication.material_color;
 
   // void fakers() {
   //   PlatformsController ctrl =
@@ -135,6 +135,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   //   }
   // }
 
+  void refresh() {
+    setState(() {});
+  }
 
   @override
   void initState() {
@@ -147,9 +150,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   }
 
   void initPage() {
-
-
-    this.materialColor = MaterialColorApplication.material_color;
 
     Widget playlistsPage = new PlaylistsPage();
     Widget searchPage = new SearchPageMain();
@@ -178,8 +178,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
 
-    const double _botbar_height = 56;
-
     return MaterialApp(
         theme: ThemeData(
           brightness: Brightness.dark,
@@ -203,12 +201,12 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   onForegroundLost:  () {screenState.value = SCREEN_IDLE;},
                   // onFocusLost:  () {screenState.value = SCREEN_IDLE; print('idle');},
                   onVisibilityLost:   () {screenState.value = SCREEN_IDLE;},
-                  child: FrontPlayerView()
+                  child: FrontPlayerView(notifyParent: refresh,)
                 )
               ])
             ),
             bottomNavigationBar: Container(
-              height: _botbar_height,
+              height: FrontPlayerController().botBarHeight,
               child:  BottomNavigationBar(
                 selectedItemColor: this.materialColor.shade300,
                 items: <BottomNavigationBarItem>[

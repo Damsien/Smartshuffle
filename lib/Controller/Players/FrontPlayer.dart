@@ -47,6 +47,9 @@ class FrontPlayerController {
 
   State viewState;
 
+  double botBarHeight;
+  final double bot_bar_height = 56;
+
 
   // PUBLIC
 
@@ -55,12 +58,14 @@ class FrontPlayerController {
     GlobalQueue.queue.value.add(MapEntry(currentTrack.value, false));
   }
 
-  void onBuildPage() {
-
+  void onBuildPage({State view}) {
+    if(view != null) {
+      setView(view);
+    }
   }
 
-  void setViewState(State state) {
-    viewState = state;
+  void setView(State view) {
+    viewState = view;
   }
 
   /* ============================================ */

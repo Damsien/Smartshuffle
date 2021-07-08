@@ -21,18 +21,18 @@ import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
 
-class TabCreator extends StatefulWidget {
+class TabView extends StatefulWidget {
 
   PlatformsController ctrl;
 
-  TabCreator(this.ctrl, {Key key}) : super(key: key);
+  TabView(this.ctrl, {Key key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _TabCreatorState();
+  State<StatefulWidget> createState() => _TabViewState();
 
 }
 
-class _TabCreatorState extends State<TabCreator> with AutomaticKeepAliveClientMixin {
+class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
 
   Widget tab;
   bool _isPlaylistOpen;
@@ -40,21 +40,21 @@ class _TabCreatorState extends State<TabCreator> with AutomaticKeepAliveClientMi
   void returnToPlaylist() {
     setState(() {
       _isPlaylistOpen = false;
-      tab = GeneratePlaylist(ctrl: widget.ctrl, openPlaylist: openPlaylist);
+      tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist);
     });
   }
 
   void openPlaylist(Playlist playlist) {
     setState(() {
       _isPlaylistOpen = true;
-      tab = PlaylistCreator(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist);
+      tab = TracksView(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist);
     });
   }
 
   @override
   void initState() {
     _isPlaylistOpen = false;
-    tab = GeneratePlaylist(ctrl: widget.ctrl, openPlaylist: openPlaylist);
+    tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist);
     super.initState();
   }
 
@@ -79,15 +79,13 @@ class _TabCreatorState extends State<TabCreator> with AutomaticKeepAliveClientMi
 }
 
 
-class PlaylistCreator extends StatefulWidget {
-
-  MaterialColor materialColor = MaterialColorApplication.material_color;
+class TracksView extends StatefulWidget {
 
   PlatformsController ctrl;
   Playlist playlist;
   Function returnToPlaylist;
 
-  PlaylistCreator({
+  TracksView({
     Key key,
     @required this.ctrl,
     @required this.playlist,
@@ -95,23 +93,18 @@ class PlaylistCreator extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _PlaylistCreatorState();
+  State<StatefulWidget> createState() => _TracksViewState();
 
 }
 
-class _PlaylistCreatorState extends State<PlaylistCreator> {
+class _TracksViewState extends State<TracksView> {
 
+  final MaterialColor materialColor = MaterialColorApplication.material_color;
   PlatformsController ctrl;
   Playlist playlist;
   Function returnToPlaylist;
 
   List<Track> _tracks;
-
-  Widget generateTrack(int index) {
-    Widget track;
-    track = GenerateTrack(_tracks[index], index, ctrl: ctrl, playlist: playlist);
-    return track;
-  }
 
   void setResearch(String value) {
     if(value != '') {
@@ -137,7 +130,7 @@ class _PlaylistCreatorState extends State<PlaylistCreator> {
     ctrl = widget.ctrl;
     playlist = widget.playlist;
     returnToPlaylist = widget.returnToPlaylist;
-    _tracks = playlist.getTracks;
+    // ctrl.getTracks(playlist).then((value) => _tracks = value);
     super.initState();
   }
 
@@ -151,6 +144,9 @@ class _PlaylistCreatorState extends State<PlaylistCreator> {
         if(snapshot.hasData) {
 
           List<Track> tracks = snapshot.data;
+          if(_tracks == null || _tracks.isEmpty) {
+            _tracks = tracks;
+          }
 
           ScrollController scrollCtrl = ScrollController();
           
@@ -267,7 +263,7 @@ class _PlaylistCreatorState extends State<PlaylistCreator> {
                                   ],
                                   onSelected: (value) {
                                     setState(() {
-                                      tracks = playlist.sort(value);
+                                      _tracks = playlist.sort(value);
                                     });
                                   },
                                 )
@@ -298,7 +294,7 @@ class _PlaylistCreatorState extends State<PlaylistCreator> {
                                     ),
                                     shape: ContinuousRectangleBorder(
                                       borderRadius: BorderRadius.circular(5),
-                                      side: BorderSide(color: widget.materialColor.shade700)
+                                      side: BorderSide(color: materialColor.shade700)
                                     ),
                                   )
                                 ),
@@ -321,7 +317,7 @@ class _PlaylistCreatorState extends State<PlaylistCreator> {
                                     ),
                                     shape: ContinuousRectangleBorder(
                                       borderRadius: BorderRadius.circular(5),
-                                      side: BorderSide(color: widget.materialColor.shade700)
+                                      side: BorderSide(color: materialColor.shade700)
                                     ),
                                   )
                                 ),
@@ -331,11 +327,11 @@ class _PlaylistCreatorState extends State<PlaylistCreator> {
                         ]
                       ),
                       Container(
-                        height: 80*tracks.length.toDouble(),
+                        height: 80*_tracks.length.toDouble(),
                         child: ListView.builder (
                           controller: scrollCtrl,
-                          itemCount: tracks.length,
-                          itemBuilder: (buildContext, index) => generateTrack(index),
+                          itemCount: _tracks.length,
+                          itemBuilder: (buildContext, index) => TrackView(_tracks[index], index, ctrl: ctrl, playlist: playlist),
                         )
                       )
                     ]
@@ -377,7 +373,7 @@ class _PlaylistCreatorState extends State<PlaylistCreator> {
 }
 
 
-class GenerateTrack extends StatefulWidget {
+class TrackView extends StatefulWidget {
   
   Key key;
   int index;
@@ -385,16 +381,16 @@ class GenerateTrack extends StatefulWidget {
   PlatformsController ctrl;
   Playlist playlist;
 
-  MaterialColor materialColor = MaterialColorApplication.material_color;
-
-  GenerateTrack(this.track, this.index, {Key key, @required this.ctrl, @required this.playlist}) : super(key: key);
+  TrackView(this.track, this.index, {Key key, @required this.ctrl, @required this.playlist}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _GenerateTrackState();
+  State<StatefulWidget> createState() => _TrackViewState();
 
 }
 
-class _GenerateTrackState extends State<GenerateTrack> {
+class _TrackViewState extends State<TrackView> {
+
+  final MaterialColor materialColor = MaterialColorApplication.material_color;
 
   int index;
   Track track;
@@ -478,21 +474,20 @@ class _GenerateTrackState extends State<GenerateTrack> {
 }
 
 
-class GeneratePlaylist extends StatefulWidget {
+class PlaylistsView extends StatefulWidget {
 
   PlatformsController ctrl;
   Function openPlaylist;
 
-  MaterialColor materialColor = MaterialColorApplication.material_color;
-
-  GeneratePlaylist({Key key, @required this.ctrl, @required this.openPlaylist}) : super(key: key);
+  PlaylistsView({Key key, @required this.ctrl, @required this.openPlaylist}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _GeneratePlaylistState();
+  State<StatefulWidget> createState() => _PlaylistsViewState();
 }
 
-class _GeneratePlaylistState extends State<GeneratePlaylist> {
+class _PlaylistsViewState extends State<PlaylistsView> {
 
+  final MaterialColor materialColor = MaterialColorApplication.material_color;
 
   @override
   Widget build(BuildContext context) {

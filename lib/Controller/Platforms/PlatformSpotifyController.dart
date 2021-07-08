@@ -70,7 +70,7 @@ class PlatformSpotifyController extends PlatformsController {
   Future<List<Track>> getTracks(Playlist playlist) async {
     List<Track> finalTracks = List<Track>();
 
-    if (playlist.getTracks.length == 0) {
+    if (playlist.getTracks.isEmpty) {
       List<Track> tracks = await spController.getPlaylistSongs(playlist);
       for (Track track in playlist.getTracks) {
         for (int i = 0; i < tracks.length; i++) {
@@ -83,11 +83,10 @@ class PlatformSpotifyController extends PlatformsController {
       for (Track track in tracks) {
         finalTracks.add(track);
       }
-    } else {
-      finalTracks = playlist.getTracks;
+      playlist.setTracks(finalTracks);
     }
 
-    return playlist.setTracks(finalTracks);
+    return playlist.getTracks;
   }
 
   @override
