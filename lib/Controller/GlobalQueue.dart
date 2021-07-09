@@ -58,7 +58,7 @@ class GlobalQueue {
 
     queue.notifyListeners();
 
-    /*
+    
     print("==== Queue ====");
     int i=0;
     for(MapEntry me in queue.value) {
@@ -69,7 +69,7 @@ class GlobalQueue {
       i++;
     }
     print("==== End Q ====");
-    */
+    
     
 
 

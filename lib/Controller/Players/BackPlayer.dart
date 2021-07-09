@@ -57,23 +57,30 @@ class AudioPlayerTask extends BackgroundAudioTask {
     return super.onStart(params);
   }
 
-  @override
-  Future<void> onSkipToNext() async {
+  Future<void> _nextTrack() async {
     await AudioService.pause();
     currentIndex++;
-    print(trackQueue[currentIndex]);
     await _playTrack(trackQueue[currentIndex]);
-    await AudioService.seekTo(Duration.zero);
+  }
+
+  @override
+  Future<void> onSkipToNext() async {
+    await _nextTrack();
     AudioServiceBackground.sendCustomEvent('SKIP_NEXT');
     // return super.onSkipToNext();
   }
 
-  @override
-  Future<void> onSkipToPrevious() async {
+  Future<void> _previousTrack() async {
     await AudioService.pause();
     currentIndex--;
     await _playTrack(trackQueue[currentIndex]);
-    await AudioService.seekTo(Duration.zero);
+  }
+
+  @override
+  Future<void> onSkipToPrevious() async {
+    if(_player.position.inSeconds <= 2) {
+      await _previousTrack();
+    }
     AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS');
     // return super.onSkipToPrevious();
   }
@@ -182,6 +189,9 @@ class AudioPlayerTask extends BackgroundAudioTask {
     }
     // Start loading something (will play when ready).
     print('mediaitem : ${mediaItem.id}');
+    if (AudioService.playbackState != null) {
+      await AudioService.seekTo(Duration.zero);
+    }
     await _player.setFilePath(mediaItem.id);
     
     _player.positionStream.listen(
@@ -261,6 +271,18 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
       } break;
 
+
+      case 'SKIP_NEXT' : {
+        await _nextTrack();
+        
+      } break;
+
+
+      case 'SKIP_PREVIOUS' : {
+        await _previousTrack();
+        
+      } break;
+
     }
     
 
@@ -307,32 +329,17 @@ class PlayerListener {
 
   static final PlayerListener _instance = PlayerListener._singleton();
   Track _track;
-  Function _skipToNext;
-  Function _skipToPrevious;
 
-  PlayerListener._singleton();
-  
-  factory PlayerListener() {
-    return _instance;
-  }
-
-  void listen(Track track) {
-    _track = track;
-
-    for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
-      me.key.setIsPlaying(false);
-    }
-    track.setIsPlaying(true);
-
+  PlayerListener._singleton() {
     AudioService.playbackStateStream.listen(
       (data) {        
-        if(data.playing == true && !track.isPlaying.value) track.resumeOnly();
-        else if(data.playing == false && track.isPlaying.value) track.pauseOnly();
+        if(data.playing == true && !_track.isPlaying.value) _track.resumeOnly();
+        else if(data.playing == false && _track.isPlaying.value) _track.pauseOnly();
       }
     );
     AudioService.positionStream.listen(
       (data) {
-        track.seekTo(data, false);
+        _track.seekTo(data, false);
       }
     );
     AudioService.customEventStream.listen(
@@ -350,12 +357,26 @@ class PlayerListener {
 
 
           case 'SKIP_PREVIOUS' : {
-            FrontPlayerController().previousTrack(backProvider: true);
+            FrontPlayerController().previousTrack(backProvider: true, isSeekToZero: true);
           } break;
 
         }
       }
     );
+  }
+  
+  factory PlayerListener() {
+    return _instance;
+  }
+
+  void listen(Track track) {
+    _track = track;
+
+    for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
+      me.key.setIsPlaying(false);
+    }
+    track.setIsPlaying(true);
+    
   }
 
 }

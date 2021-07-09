@@ -119,34 +119,45 @@ class FrontPlayerController {
     //Get the next track
     nextTrack = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key;
     //Move to the next page
-    pageCtrl.nextPage(duration: Duration(milliseconds: 500), curve: Curves.easeIn).then((value) {
-      _playTrack(nextTrack);
-    });
+    pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+
+    _playTrack(nextTrack);
 
     if(!backProvider) {
-      AudioService.skipToNext();
+      AudioService.customAction('SKIP_NEXT');
     }
   }
 
   /// Skip page and current track to play previous track and change audio source if isn't [backProvider]
-  void previousTrack({@required bool backProvider}) {
-    Track previousTrack;
+  /// Seek position to zero if the current position is less or equal than 2 seconds and is [isSeekToZero]
+  void previousTrack({@required bool backProvider, @required bool isSeekToZero}) {
 
-    isRepeatOnce = false;
-    isRepeatAlways = false;
+    if(isSeekToZero && currentTrack.value.currentDuration.value.inSeconds > 2) {
 
-    //Update index of queue
-    GlobalQueue().setCurrentQueueIndex(GlobalQueue.currentQueueIndex-1);
-    //Get the previous track
-    previousTrack = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key;
-    //Move to the previous page
-    pageCtrl.previousPage(duration: Duration(milliseconds: 500), curve: Curves.easeIn).then((value) {
+      currentTrack.value.seekTo(Duration.zero, true);
+
+    } else {
+
+      Track previousTrack;
+
+      isRepeatOnce = false;
+      isRepeatAlways = false;
+
+      //Update index of queue
+      GlobalQueue().setCurrentQueueIndex(GlobalQueue.currentQueueIndex-1);
+      //Get the previous track
+      previousTrack = GlobalQueue.queue.value[GlobalQueue.currentQueueIndex].key;
+      //Move to the previous page
+      pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+
       _playTrack(previousTrack);
-    });
 
-    if(!backProvider) {
-      AudioService.skipToPrevious();
+      if(!backProvider) {
+        AudioService.customAction('SKIP_PREVIOUS');
+      }
+
     }
+
   }
 
   /// Set [isRepeatOnce] and [isRepeatAlways]
@@ -234,18 +245,20 @@ class FrontPlayerController {
     }
   }
 
-  /// Initialize player's tracks in multible tabs form on the frontend side of the app
+  /// Initialize player's tracks in multiple tabs form on the frontend side of the app
   void _initPageController() {
     //Listeners
     pageCtrl.addListener(() {
-      if(!pageCtrl.blockNotifier) {
 
+      //If is the finger sliding action only
+      if(!pageCtrl.blockNotifier) {
+        print('pass');
         if(pageCtrl.page.round() > GlobalQueue.currentQueueIndex) {
           //Next page
           nextTrack(backProvider: false);
         } else if(pageCtrl.page.round() < GlobalQueue.currentQueueIndex) {
           //Previous page
-          previousTrack(backProvider: false);
+          previousTrack(backProvider: false, isSeekToZero: false);
         }
 
       }

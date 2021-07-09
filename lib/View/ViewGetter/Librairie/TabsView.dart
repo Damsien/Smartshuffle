@@ -118,7 +118,6 @@ class _TracksViewState extends State<TracksView> {
   String _searchValue;
   void setResearch(String value) {
     if(_searchValue != value) {
-      print("             setResss");
       if(value != '') {
         List<Track> temp = List<Track>();
         for(Track track in _playlist.getTracks) {

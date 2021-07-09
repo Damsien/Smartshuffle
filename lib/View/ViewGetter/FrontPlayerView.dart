@@ -188,19 +188,19 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                           extents: 3, 
                           physics: _panelCtrl.panelPosition < 1 && _panelCtrl.panelPosition > 0.01 ? NeverScrollableScrollPhysics() : PageScrollPhysics(),
                           //itemCount: GlobalQueue.queue.value.length,
-                          onPageChanged: (index) {
-                            if(index >= GlobalQueue.queue.value.length) {
-                              FrontPlayerController().pageCtrl.jumpToPage(index % GlobalQueue.queue.value.length);
-                              FrontPlayerController().nextTrack(backProvider: false);
-                            }
-                          },
+                          // onPageChanged: (index) {
+                          //   if(index >= GlobalQueue.queue.value.length) {
+                          //     FrontPlayerController().pageCtrl.jumpToPage(index % GlobalQueue.queue.value.length);
+                          //     FrontPlayerController().nextTrack(backProvider: false);
+                          //   }
+                          // },
                           controller: FrontPlayerController().pageCtrl,
                           itemBuilder: (buildContext, index) {
 
                                 int realIndex = index % GlobalQueue.queue.value.length;
 
                                 Track trackUp = queue[realIndex].key;
-                                print('trackup : $trackUp');
+                                // print('trackup : $trackUp');
                                 // _timer?.cancel();
                                 // _timer = Timer.periodic(Duration(seconds: 1), (timer) {
                                 //   _timer = timer;
@@ -454,7 +454,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                       child: Opacity(
                         opacity: _elementsOpacity,
                         child: InkWell(
-                            onTap: () => FrontPlayerController().previousTrack(backProvider: false),
+                            onTap: () => FrontPlayerController().previousTrack(backProvider: false, isSeekToZero: true),
                             child: Icon(
                             Icons.skip_previous,
                             size: _playButtonSize,
