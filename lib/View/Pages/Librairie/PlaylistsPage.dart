@@ -18,13 +18,17 @@ import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 class PlaylistsPage extends StatefulWidget {
 
-  final MaterialColor materialColor = MaterialColorApplication.material_color;
+  final ThemeData themeData;
+
+  PlaylistsPage({Key key, @required this.themeData}) : super(key: key);
 
   @override
   _PlaylistsPageState createState() => _PlaylistsPageState();
 }
 
 class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+
+  final MaterialColor _materialColor = MaterialColorApplication.material_color;
 
   Key key = UniqueKey();
   Key tabKey = UniqueKey();
@@ -72,7 +76,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     }
     return TabBar(
       controller: this._tabController,
-      indicatorColor: this.widget.materialColor.shade300,
+      indicatorColor: _materialColor.shade300,
       tabs: elements,
     );
   }
@@ -101,12 +105,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
 
     return MaterialApp(
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: this.widget.materialColor,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        accentColor: this.widget.materialColor.shade100
-      ),
+      theme: widget.themeData,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: [
         AppLocalizations.delegate, // Add this line
@@ -118,37 +117,35 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
         const Locale('fr', ''),
         const Locale('en', ''),
       ],
-      home: Container(
+      home: Scaffold(
         key: this.tabKey,
-        child: Scaffold(
-          resizeToAvoidBottomInset: false,
-          appBar: AppBar(
-            title: TabBar(
-              controller: _tabController,
-              indicatorColor: this.widget.materialColor.shade300,
-              tabs: elements
-            ),
-            foregroundColor: this.widget.materialColor.shade300,
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(
+          title: TabBar(
+            controller: _tabController,
+            indicatorColor: _materialColor.shade300,
+            tabs: elements
           ),
-          body: WillPopScope(
-            child: TabBarView(
-              controller: _tabController,
-              children: List.generate(_tabController.length, (index) {
-                return Container(
-                  key: PageStorageKey(PlatformsLister.getAllControllers()[index].platform.name),
-                  child: TabView(PlatformsLister.getAllControllers()[index]),
-                );
-              }),
-            ),
-            onWillPop: () async {
-              if(this._tabController.index == 0) exitDialog();
-              else this._tabController.animateTo(0);
-              return false;
-            },
-          )
+          foregroundColor: _materialColor.shade300,
+        ),
+        body: WillPopScope(
+          child: TabBarView(
+            controller: _tabController,
+            children: List.generate(_tabController.length, (index) {
+              return Container(
+                key: PageStorageKey(PlatformsLister.getAllControllers()[index].platform.name),
+                child: TabView(PlatformsLister.getAllControllers()[index]),
+              );
+            }),
+          ),
+          onWillPop: () async {
+            if(this._tabController.index == 0) exitDialog();
+            else this._tabController.animateTo(0);
+            return false;
+          },
         )
-        )
-      );
+      )
+    );
     
   }
 }

@@ -40,15 +40,16 @@ import 'Pages/Search/SearchPage.dart';
 class MaterialColorApplication {
 
   static Map<int, Color> _colorCodes = {
-    50: Colors.yellow[100],
-    100: Colors.yellow[200],
-    200: Colors.yellow[300],
-    300: Colors.yellow[400],
-    400: Colors.yellow[500],
-    500: Colors.yellow[600],
-    600: Colors.yellow[700],
-    700: Colors.yellow[800],
-    800: Colors.yellow[900]
+    50: Colors.deepPurple[50],
+    100: Colors.deepPurpleAccent[100],
+    200: Colors.deepPurple[200],
+    300: Colors.deepPurple[300],
+    400: Colors.deepPurpleAccent[400],
+    500: Colors.deepPurple[500],
+    600: Colors.deepPurple[600],
+    700: Colors.deepPurpleAccent[700],
+    800: Colors.deepPurple[800],
+    900: Colors.deepPurple[900]
   };
 
   static final MaterialColor material_color = MaterialColor(0xFFFDD835, _colorCodes);
@@ -104,6 +105,8 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   int selectedIndex;
   Widget currentPage;
 
+  ThemeData _themeData;
+
   final MaterialColor materialColor = MaterialColorApplication.material_color;
 
   // void fakers() {
@@ -151,7 +154,16 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   void initPage() {
 
-    Widget playlistsPage = new PlaylistsPage();
+    _themeData = ThemeData(
+      brightness: Brightness.dark,
+      primarySwatch: materialColor,
+      accentColor: materialColor.shade100,
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+      focusColor: materialColor.shade400,
+      canvasColor: Colors.transparent
+    );
+
+    Widget playlistsPage = new PlaylistsPage(themeData: _themeData,);
     Widget searchPage = new SearchPageMain();
     Widget profilePage = new ProfilePage();
     setState(() {
@@ -179,12 +191,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
 
     return MaterialApp(
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          primarySwatch: this.materialColor,
-          accentColor: materialColor.shade100,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
+        theme: _themeData,
         debugShowCheckedModeBanner: false,
         home: Scaffold(
             body: AudioServiceWidget(
@@ -206,6 +213,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
               ])
             ),
             bottomNavigationBar: Container(
+              color: Colors.grey[900],
               height: FrontPlayerController().botBarHeight,
               child:  BottomNavigationBar(
                 selectedItemColor: this.materialColor.shade300,

@@ -42,11 +42,6 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: MaterialButton(
-        onPressed: () {
-        },
-        child: Text('oui', style: TextStyle(color: Colors.red),),
-      )
     );
     
   }

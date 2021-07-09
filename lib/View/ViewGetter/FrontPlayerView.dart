@@ -14,6 +14,7 @@ import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
+import 'package:smartshuffle/View/GlobalApp.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
@@ -30,6 +31,8 @@ class FrontPlayerView extends StatefulWidget {
 
 
 class _FrontPlayerViewState extends State<FrontPlayerView> {
+
+  final MaterialColor _materialColor = MaterialColorApplication.material_color;
 
   // Controllers
   PanelController _panelCtrl = PanelController();
@@ -139,7 +142,12 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
   Widget build(BuildContext context) {
     FrontPlayerController().onBuildPage(view: this);
 
-    if(_panelCtrl.isAttached && FrontPlayerController().currentTrack.value.id != null && !_panelCtrl.isPanelShown) {
+    if (
+     _panelCtrl.isAttached
+     && FrontPlayerController().currentTrack.value.id != null
+     && !_panelCtrl.isPanelShown
+     && FrontPlayerController().isPlayerReady
+    ) {
       _panelCtrl.show();
     }
     
@@ -180,8 +188,8 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                       valueListenable: GlobalQueue.queue,
                       builder: (_, List<MapEntry<Track, bool>> queue ,__) {
 
-                        FrontPlayerController().currentTrack.value = queue[GlobalQueue.currentQueueIndex].key;
-                        FrontPlayerController().currentTrack.value.seekTo(Duration.zero, false);
+                        // FrontPlayerController().currentTrack.value = queue[GlobalQueue.currentQueueIndex].key;
+                        // FrontPlayerController().currentTrack.value.seekTo(Duration.zero, false);
                         // FrontPlayerController().currentTrack.value.currentDuration.addListener(positionCheck);
                         
                         return ExtentsPageView.extents(
@@ -254,7 +262,6 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                       ValueListenableBuilder(
                                         valueListenable: trackUp.currentDuration,
                                         builder: (BuildContext context, Duration duration, __) {
-                                          // print(duration);
                                           return Stack(
                                             children: [
                                               Positioned(
@@ -292,7 +299,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                                       },
                                                       min: 0,
                                                       max: 1,
-                                                      activeColor: Colors.cyanAccent,
+                                                      activeColor: _materialColor.shade300,
                                                     )
                                                   )
                                                 )
@@ -490,8 +497,8 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                             }.call(),
                             color: () {
                               if(!FrontPlayerController().isRepeatOnce && !FrontPlayerController().isRepeatAlways) return Colors.white;
-                              else if(FrontPlayerController().isRepeatOnce && !FrontPlayerController().isRepeatAlways) return Colors.cyanAccent;
-                              else if(FrontPlayerController().isRepeatAlways && !FrontPlayerController().isRepeatOnce) return Colors.cyanAccent;
+                              else if(FrontPlayerController().isRepeatOnce && !FrontPlayerController().isRepeatAlways) return _materialColor.shade300;
+                              else if(FrontPlayerController().isRepeatAlways && !FrontPlayerController().isRepeatOnce) return _materialColor.shade300;
                             }.call(),
                             size: _playButtonSize - 30,
                           )
@@ -516,7 +523,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                             child: Icon(
                             Icons.shuffle,
                             color: () {
-                              if(FrontPlayerController().isShuffle) return Colors.cyanAccent;
+                              if(FrontPlayerController().isShuffle) return _materialColor.shade300;
                               else return Colors.white;
                             }.call(),
                             size: _playButtonSize - 30,

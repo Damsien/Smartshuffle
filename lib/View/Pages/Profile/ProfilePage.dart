@@ -11,7 +11,6 @@ import 'package:smartshuffle/View/ViewGetter/Profiles/ProfileView.dart';
 class ProfilePage extends StatefulWidget {
 
   final String title;
-  final MaterialColor materialColor = MaterialColorApplication.material_color;
   
   ProfilePage({Key key, this.title}) : super(key: key);
 
@@ -20,6 +19,9 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientMixin {
+  
+  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+
   Key key = UniqueKey();
 
   @override
@@ -63,8 +65,8 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
       key: this.key,
       theme: ThemeData(
         brightness: Brightness.dark,
-        primarySwatch: this.widget.materialColor,
-        accentColor: this.widget.materialColor.shade100,
+        primarySwatch: _materialColor,
+        accentColor: _materialColor.shade100,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       debugShowCheckedModeBanner: false,
@@ -117,7 +119,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                     )
                   ),
                   Text(AppLocalizations.of(context).profileTellUs, style: TextStyle(fontSize: 17)),
-                  FormSuggestion(materialColor: this.widget.materialColor),
+                  FormSuggestion(),
                   Padding(
                     padding: EdgeInsets.only(top: 30, bottom: 40),
                     child: Container(

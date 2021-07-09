@@ -151,7 +151,6 @@ class Track {
 
   void seekTo(Duration position, bool influence) {
     _currentDuration.value = position;
-    _currentDuration.notifyListeners();
     if(influence) {
       PlatformsController ctrl = PlatformsLister.platforms[_service];
       ctrl.seekTo(position);

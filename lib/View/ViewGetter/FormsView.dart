@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/View/GlobalApp.dart';
 
 
 
@@ -49,11 +50,10 @@ class _EmailSender {
 class _SubmitButton extends StatelessWidget {
 
   Function _sendingFunction;
-  MaterialColor _materialColor;
+  final MaterialColor _materialColor = MaterialColorApplication.material_color;
 
-  _SubmitButton(Function sendingFunction, MaterialColor materialColor) {
+  _SubmitButton(Function sendingFunction) {
     _sendingFunction = sendingFunction;
-    _materialColor = materialColor;
   }
 
   @override
@@ -78,10 +78,9 @@ class _SubmitButton extends StatelessWidget {
 
 class FormReport extends StatefulWidget {
 
-  final MaterialColor materialColor;
   final Track track;
 
-  FormReport({Key key, @required this.materialColor, @required this.track}) : super(key: key);
+  FormReport({Key key, @required this.track}) : super(key: key);
 
   @override
   _FormReport createState() => _FormReport();
@@ -89,6 +88,8 @@ class FormReport extends StatefulWidget {
 }
 
 class _FormReport extends State<FormReport> {
+
+  final MaterialColor _materialColor = MaterialColorApplication.material_color;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -162,7 +163,7 @@ class _FormReport extends State<FormReport> {
                   maxLines: 10,
                 )
               : Container()),
-              _SubmitButton(sendEmail, this.widget.materialColor)
+              _SubmitButton(sendEmail)
             ],
           ),
         )
@@ -176,10 +177,6 @@ class _FormReport extends State<FormReport> {
 
 
 class FormSuggestion extends StatefulWidget {
-
-  final MaterialColor materialColor;
-
-  FormSuggestion({Key key, this.materialColor}) : super(key: key);
 
   @override
   _FormSuggestionState createState() {
@@ -287,7 +284,7 @@ class _FormSuggestionState extends State<FormSuggestion> {
             minLines: 5,
             maxLines: 10,
           ),
-          _SubmitButton(sendEmail, this.widget.materialColor)
+          _SubmitButton(sendEmail)
         ],
       )
     );

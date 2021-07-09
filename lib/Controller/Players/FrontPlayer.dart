@@ -46,6 +46,7 @@ class FrontPlayerController {
   bool isRepeatAlways = false;
 
   State viewState;
+  bool isPlayerReady = false;
 
   double botBarHeight;
   final double bot_bar_height = 56;
@@ -213,6 +214,11 @@ class FrontPlayerController {
       backgroundTaskEntrypoint: _entrypoint
     );
     await AudioService.customAction('LAUNCH_QUEUE', {'queue': queue});
+
+    //Front player can be displayed when the back player is completely initialized
+    isPlayerReady = true;
+    //Reload front player state to show it
+    viewState.setState(() {});
   }
 
   /// Create queue depending of [playlist] selected
