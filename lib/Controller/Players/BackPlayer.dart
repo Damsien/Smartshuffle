@@ -25,6 +25,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
   List<Track> trackQueue = List<Track>();
   int currentIndex = 0;
 
+  bool _isTrackDone = false;
+
   @override
   Future<void> onStart(Map<String, dynamic> params) async {
     // Listen to state changes on the player...
@@ -67,6 +69,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
   Future<void> onSkipToNext() async {
     await _nextTrack();
     AudioServiceBackground.sendCustomEvent('SKIP_NEXT');
+    _queueLoader();
     // return super.onSkipToNext();
   }
 
@@ -80,6 +83,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
   Future<void> onSkipToPrevious() async {
     if(_player.position.inSeconds <= 2) {
       await _previousTrack();
+    } else {
+      AudioService.seekTo(Duration.zero);
     }
     AudioServiceBackground.sendCustomEvent('SKIP_PREVIOUS');
     // return super.onSkipToPrevious();
@@ -129,23 +134,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
     return super.onSeekTo(position);
   }
   
-  
-  Future<Color> _getImagePalette (ImageProvider imageProvider) async {
-    final PaletteGenerator paletteGenerator = await PaletteGenerator
-      .fromImageProvider(imageProvider);
-    return paletteGenerator.dominantColor?.color;
-  }
-
-  String _colorToHexString(Color color) {
-    if(color != null)
-      return '0xFF${color.value.toRadixString(16).substring(2, 8)}';
-    else return null;
-  }
-
-  Future<int> _getMainImageColor(String imageUrl) async {
-    return int.parse(_colorToHexString(await _getImagePalette(NetworkImage(imageUrl))));
-  }
-
   Future<MapEntry<Track, File>> _getFilePath(Track track) async {
     MediaItem searchingItem = _queue.firstWhere((element) => 
       (element.extras['track_id'] == track.id && element.extras['service_name'] == track.serviceName),
@@ -169,38 +157,55 @@ class AudioPlayerTask extends BackgroundAudioTask {
   }
 
   Future<void> _playTrack(Track track) async {
+    print('_playTrack');
+
     // int notificationColor = await _getMainImageColor(track.imageUrlLarge);
     MapEntry<Track, File> foundTrack = await _getFilePath(track);
 
-    // await AudioService.stop();
-    final mediaItem = MediaItem(
-      id: foundTrack.value.path,
-      album: track.artist,
-      title: track.name,
-      artUri: Uri.parse(track.imageUrlLarge),
-      duration: foundTrack.key.totalDuration.value
-    );
-    // Tell the UI and media notification what we're playing.
-    AudioServiceBackground.setMediaItem(mediaItem);
+    if(foundTrack.key.id != null) {
 
-    // Play when ready.
-    if(!_player.playing) {
-      _player.play();
-    }
-    // Start loading something (will play when ready).
-    print('mediaitem : ${mediaItem.id}');
-    if (AudioService.playbackState != null) {
-      await AudioService.seekTo(Duration.zero);
-    }
-    await _player.setFilePath(mediaItem.id);
-    
-    _player.positionStream.listen(
-      (position) {
-        if(position.inMilliseconds >= _player.duration.inMilliseconds) {
-          AudioService.skipToNext();
-        }
+      print(foundTrack.key);
+
+      // await AudioService.stop();
+      final mediaItem = MediaItem(
+        id: foundTrack.value.path,
+        album: track.artist,
+        title: track.name,
+        artUri: Uri.parse(track.imageUrlLarge),
+        duration: foundTrack.key.totalDuration.value
+      );
+      // Tell the UI and media notification what we're playing.
+      AudioServiceBackground.setMediaItem(mediaItem);
+
+      // Play when ready.
+      if(!_player.playing) {
+        _player.play();
       }
-    );
+
+      // Start loading something (will play when ready).
+      print('mediaitem : ${mediaItem.id}');
+      if (AudioService.playbackState != null) {
+        await AudioService.seekTo(Duration.zero);
+      }
+      await _player.setFilePath(mediaItem.id);
+      _isTrackDone = false;
+      
+      _player.positionStream.listen(
+        (position) {
+          if(position.inMilliseconds >= _player.duration.inMilliseconds) {
+            if(!_isTrackDone) {
+              AudioService.skipToNext();
+            }
+            _isTrackDone = true;
+          }
+        }
+      );
+
+    } else {
+
+      AudioService.skipToNext();
+
+    }
 
   }
 
@@ -235,6 +240,12 @@ class AudioPlayerTask extends BackgroundAudioTask {
             service: PlatformsLister.nameToService(arguments['queue']['service'][i]),
             totalDuration: _parseDuration(arguments['queue']['duration'][i])
           ));
+        }
+
+        
+        print('queue');
+        for(Track track in trackQueue) {
+          print(track);
         }
 
         Track firstTrack = trackQueue.first;
@@ -291,7 +302,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
 
   Future<List<MediaItem>> _queueLoader() async {
-    for(int i=0; i<currentIndex+DEFAULT_LENGTH_QUEUE; i++) {
+    for(int i=0; i<DEFAULT_LENGTH_QUEUE; i++) {
       Track track = trackQueue[currentIndex+1+i];
 
       if(

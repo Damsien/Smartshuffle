@@ -18,6 +18,10 @@ class FrontPlayerController {
 
   static final FrontPlayerController _instance = FrontPlayerController._singleton();
 
+  static const String SCREEN_VISIBLE = "screen_visible";
+  static const String SCREEN_IDLE = "screen_idle";
+
+  ValueNotifier<String> screenState = ValueNotifier<String>(SCREEN_VISIBLE);
 
   //Objects
   Playlist currentPlaylist = Playlist(
@@ -56,6 +60,9 @@ class FrontPlayerController {
 
   void onInitPage() {
     _initPageController();
+    _screenStateListener();
+
+    // Fake track to avoid panel controller error on first app runtime
     GlobalQueue.queue.value.add(MapEntry(currentTrack.value, false));
   }
 
@@ -251,6 +258,22 @@ class FrontPlayerController {
     }
   }
 
+  /// Listen to screen state update
+  void _screenStateListener() {
+    String lastScreenState = SCREEN_VISIBLE;
+    
+    screenState.addListener(() {
+      print(screenState);
+      if(lastScreenState == SCREEN_IDLE && screenState.value == SCREEN_VISIBLE) {
+        int index = AudioService.browseMediaChildren.indexOf(AudioService.currentMediaItem);
+        GlobalQueue().setCurrentQueueIndex(index);
+        currentTrack.value = GlobalQueue.queue.value[index].key;
+        viewState.setState(() {});
+      }
+      lastScreenState = screenState.value;
+    });
+  }
+
   /// Initialize player's tracks in multiple tabs form on the frontend side of the app
   void _initPageController() {
     //Listeners
@@ -258,7 +281,7 @@ class FrontPlayerController {
 
       //If is the finger sliding action only
       if(!pageCtrl.blockNotifier) {
-        print('pass');
+        
         if(pageCtrl.page.round() > GlobalQueue.currentQueueIndex) {
           //Next page
           nextTrack(backProvider: false);

@@ -91,10 +91,6 @@ class _GlobalApp extends StatefulWidget {
 }
 
 class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
-  static const String SCREEN_VISIBLE = "screen_visible";
-  static const String SCREEN_IDLE = "screen_idle";
-
-  ValueNotifier<String> screenState = ValueNotifier<String>(SCREEN_VISIBLE);
 
   PageController pageController;
   List<Widget> pages;
@@ -201,15 +197,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
                   physics: NeverScrollableScrollPhysics(),
                   children: this.pages,
                 ),
-                FocusDetector(
-                  onVisibilityGained: () {screenState.value = SCREEN_VISIBLE;},
-                  onFocusGained: ()  {screenState.value = SCREEN_VISIBLE;},
-                  onForegroundGained: ()  {screenState.value = SCREEN_VISIBLE;},
-                  onForegroundLost:  () {screenState.value = SCREEN_IDLE;},
-                  // onFocusLost:  () {screenState.value = SCREEN_IDLE; print('idle');},
-                  onVisibilityLost:   () {screenState.value = SCREEN_IDLE;},
-                  child: FrontPlayerView(notifyParent: refresh,)
-                )
+                FrontPlayerView(notifyParent: refresh)
               ])
             ),
             bottomNavigationBar: Container(
