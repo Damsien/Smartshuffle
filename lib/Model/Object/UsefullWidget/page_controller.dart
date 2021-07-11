@@ -14,6 +14,7 @@ class CustomPageController extends PageController {
 
   @override
   void jumpToPage(int page) {
+    print('jumpTopage');
     blockNotifier = true;
     // tempIndex = page;
     super.jumpToPage(page);

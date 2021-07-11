@@ -21,6 +21,8 @@ class GlobalQueue {
   GlobalQueue._instance();
 
   void setCurrentQueueIndex(int value) {
+    int lastIndex = currentQueueIndex;
+
     if(value < 0) {
       currentQueueIndex = queue.value.length-1;
     } else if(value >= queue.value.length) {
@@ -30,13 +32,15 @@ class GlobalQueue {
     }
 
     //Is inevitably next track
-    //If is in permanent queue is true
-    if(queue.value[currentQueueIndex].value) {
-      //Move last track from permanent queue to no permanent queue
-      if(value < 0) {
-        GlobalQueue().moveFromPermanentToNoPermanent(queue.value.length-1);
-      } else {
-        GlobalQueue().moveFromPermanentToNoPermanent(value-1);
+    for(int i=lastIndex; i<(currentQueueIndex-lastIndex); i++) {
+      //If is in permanent queue is true
+      if(queue.value[i].value) {
+        //Move last track from permanent queue to no permanent queue
+        // if(value < 0) {
+        //   GlobalQueue().moveFromPermanentToNoPermanent(queue.value.length-1);
+        // } else {
+          GlobalQueue().moveFromPermanentToNoPermanent(i);
+        // }
       }
     }
   }

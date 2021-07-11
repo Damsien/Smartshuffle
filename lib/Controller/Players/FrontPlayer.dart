@@ -49,7 +49,7 @@ class FrontPlayerController {
   bool isRepeatOnce = false;
   bool isRepeatAlways = false;
 
-  State viewState;
+  Map<String, State> views = Map<String, State>();
   bool isPlayerReady = false;
 
   double botBarHeight;
@@ -68,12 +68,12 @@ class FrontPlayerController {
 
   void onBuildPage({State view}) {
     if(view != null) {
-      setView(view);
+      addView('player' ,view);
     }
   }
 
-  void setView(State view) {
-    viewState = view;
+  void addView(String name, State view) {
+    views['player'] = view;
   }
 
   /* ============================================ */
@@ -190,7 +190,7 @@ class FrontPlayerController {
     currentTrack.value = track;
     
     //Listen to track changes in the notification back player
-    viewState.setState(() {
+    views['player'].setState(() {
       PlayerListener().listen(track);
     });
   }
@@ -225,7 +225,7 @@ class FrontPlayerController {
     //Front player can be displayed when the back player is completely initialized
     isPlayerReady = true;
     //Reload front player state to show it
-    viewState.setState(() {});
+    views['player'].setState(() {});
   }
 
   /// Create queue depending of [playlist] selected
@@ -260,15 +260,32 @@ class FrontPlayerController {
 
   /// Listen to screen state update
   void _screenStateListener() {
-    String lastScreenState = SCREEN_VISIBLE;
+    String lastScreenState = SCREEN_IDLE;
     
     screenState.addListener(() {
       print(screenState);
-      if(lastScreenState == SCREEN_IDLE && screenState.value == SCREEN_VISIBLE) {
-        int index = AudioService.browseMediaChildren.indexOf(AudioService.currentMediaItem);
-        GlobalQueue().setCurrentQueueIndex(index);
-        currentTrack.value = GlobalQueue.queue.value[index].key;
-        viewState.setState(() {});
+      if(lastScreenState == SCREEN_IDLE && screenState.value == SCREEN_VISIBLE && isPlayerReady) {
+        print('        ca pasee');
+        MediaItem mediaItem = AudioService.currentMediaItem;
+        print('mediaaa : $mediaItem');
+        var track = GlobalQueue.queue.value.firstWhere(
+          (element) => element.key.id == mediaItem.extras['track_id'] && element.key.serviceName == mediaItem.extras['service_name'],
+          orElse: null
+        );
+        print(track.key);
+
+        if(currentTrack.value.id != track.key.id || currentTrack.value.serviceName != track.key.serviceName) {
+          int index = GlobalQueue.queue.value.indexOf(track);
+          print('index');
+          print(index);
+          GlobalQueue().setCurrentQueueIndex(index);
+          pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+          _playTrack(GlobalQueue.queue.value[index].key);
+
+          views.forEach((key, value) {
+            value.setState(() {});
+          });
+        }
       }
       lastScreenState = screenState.value;
     });

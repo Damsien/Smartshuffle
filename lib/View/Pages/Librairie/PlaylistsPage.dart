@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 
@@ -44,6 +45,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
   @override
   void initState() {
+    FrontPlayerController().addView('playlist', this);
     super.initState();
   }
 

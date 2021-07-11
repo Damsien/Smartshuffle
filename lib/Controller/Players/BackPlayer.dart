@@ -167,13 +167,20 @@ class AudioPlayerTask extends BackgroundAudioTask {
       print(foundTrack.key);
 
       // await AudioService.stop();
-      final mediaItem = MediaItem(
-        id: foundTrack.value.path,
-        album: track.artist,
-        title: track.name,
-        artUri: Uri.parse(track.imageUrlLarge),
-        duration: foundTrack.key.totalDuration.value
-      );
+      MediaItem mediaItem;
+      if(_queue.isEmpty) {
+        mediaItem = MediaItem(
+          id: foundTrack.value.path,
+          album: track.artist,
+          title: track.name,
+          artUri: Uri.parse(track.imageUrlLarge),
+          duration: foundTrack.key.totalDuration.value,
+          extras: {'track_id': track.id, 'service_name': track.serviceName}
+        );
+      } else {
+        mediaItem = _queue[currentIndex-1];
+      }
+      
       // Tell the UI and media notification what we're playing.
       AudioServiceBackground.setMediaItem(mediaItem);
 
@@ -243,10 +250,10 @@ class AudioPlayerTask extends BackgroundAudioTask {
         }
 
         
-        print('queue');
-        for(Track track in trackQueue) {
-          print(track);
-        }
+        // print('queue');
+        // for(Track track in trackQueue) {
+        //   print(track);
+        // }
 
         Track firstTrack = trackQueue.first;
         await _playTrack(firstTrack);
