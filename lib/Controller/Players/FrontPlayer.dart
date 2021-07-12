@@ -43,7 +43,7 @@ class FrontPlayerController {
 
   // Controllers
   CustomPageController pageCtrl = CustomPageController(keepPage: false);
-  PanelController panelCtrl = PanelController();
+  // PanelController panelCtrl = PanelController();
 
   // Misc
   bool isShuffle = true;
@@ -269,14 +269,14 @@ class FrontPlayerController {
       print(screenState);
       if(lastScreenState == SCREEN_IDLE && screenState.value == SCREEN_VISIBLE && isPlayerReady) {
 
-        if (
-          panelCtrl.isAttached
-          && FrontPlayerController().currentTrack.value.id != null
-          && !panelCtrl.isPanelShown
-          && FrontPlayerController().isPlayerReady
-        ) {
-          panelCtrl.show();
-        }
+        // if (
+        //   panelCtrl.isAttached
+        //   && FrontPlayerController().currentTrack.value.id != null
+        //   && !panelCtrl.isPanelShown
+        //   && FrontPlayerController().isPlayerReady
+        // ) {
+        //   panelCtrl.show();
+        // }
 
         await AudioService.customAction('INDEX_QUEUE_REQUEST');
         var track = GlobalQueue.queue.value[backIndex];
