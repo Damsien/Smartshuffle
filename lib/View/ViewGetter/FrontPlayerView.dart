@@ -36,7 +36,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
   final MaterialColor _materialColor = MaterialColorApplication.material_color;
 
   // Controllers
-  PanelController _panelCtrl = PanelController();
+  PanelController _panelCtrl = FrontPlayerController().panelCtrl;
   PanelController _panelQueueCtrl = PanelController();
 
   // Queue panel is locked when _panelCtrl is close

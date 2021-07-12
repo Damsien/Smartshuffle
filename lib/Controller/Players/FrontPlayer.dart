@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
@@ -42,7 +43,7 @@ class FrontPlayerController {
 
   // Controllers
   CustomPageController pageCtrl = CustomPageController(keepPage: false);
-
+  PanelController panelCtrl = PanelController();
 
   // Misc
   bool isShuffle = true;
@@ -54,6 +55,8 @@ class FrontPlayerController {
 
   double botBarHeight;
   final double bot_bar_height = 56;
+
+  int backIndex = 0;
 
 
   // PUBLIC
@@ -262,22 +265,24 @@ class FrontPlayerController {
   void _screenStateListener() {
     String lastScreenState = SCREEN_IDLE;
     
-    screenState.addListener(() {
+    screenState.addListener(() async {
       print(screenState);
       if(lastScreenState == SCREEN_IDLE && screenState.value == SCREEN_VISIBLE && isPlayerReady) {
-        print('        ca pasee');
-        MediaItem mediaItem = AudioService.currentMediaItem;
-        print('mediaaa : $mediaItem');
-        var track = GlobalQueue.queue.value.firstWhere(
-          (element) => element.key.id == mediaItem.extras['track_id'] && element.key.serviceName == mediaItem.extras['service_name'],
-          orElse: null
-        );
-        print(track.key);
+
+        if (
+          panelCtrl.isAttached
+          && FrontPlayerController().currentTrack.value.id != null
+          && !panelCtrl.isPanelShown
+          && FrontPlayerController().isPlayerReady
+        ) {
+          panelCtrl.show();
+        }
+
+        await AudioService.customAction('INDEX_QUEUE_REQUEST');
+        var track = GlobalQueue.queue.value[backIndex];
 
         if(currentTrack.value.id != track.key.id || currentTrack.value.serviceName != track.key.serviceName) {
           int index = GlobalQueue.queue.value.indexOf(track);
-          print('index');
-          print(index);
           GlobalQueue().setCurrentQueueIndex(index);
           pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
           _playTrack(GlobalQueue.queue.value[index].key);

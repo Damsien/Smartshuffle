@@ -62,6 +62,10 @@ class AudioPlayerTask extends BackgroundAudioTask {
   Future<void> _nextTrack() async {
     await AudioService.pause();
     currentIndex++;
+
+    if(currentIndex >= trackQueue.length) {
+      currentIndex = 0;
+    }
     await _playTrack(trackQueue[currentIndex]);
   }
 
@@ -81,7 +85,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   @override
   Future<void> onSkipToPrevious() async {
-    if(_player.position.inSeconds <= 2) {
+    if(_player.position.inSeconds <= 2 && (currentIndex-1) >= 0) {
       await _previousTrack();
     } else {
       AudioService.seekTo(Duration.zero);
@@ -167,19 +171,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
       print(foundTrack.key);
 
       // await AudioService.stop();
-      MediaItem mediaItem;
-      if(_queue.isEmpty) {
-        mediaItem = MediaItem(
-          id: foundTrack.value.path,
-          album: track.artist,
-          title: track.name,
-          artUri: Uri.parse(track.imageUrlLarge),
-          duration: foundTrack.key.totalDuration.value,
-          extras: {'track_id': track.id, 'service_name': track.serviceName}
-        );
-      } else {
-        mediaItem = _queue[currentIndex-1];
-      }
+      final MediaItem mediaItem = _queue[currentIndex];
       
       // Tell the UI and media notification what we're playing.
       AudioServiceBackground.setMediaItem(mediaItem);
@@ -237,6 +229,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
     switch(type) {
 
       case 'LAUNCH_QUEUE' : {
+        currentIndex = 0;
         trackQueue.clear();
         for(int i=0; i<arguments['queue']['id'].length; i++) {
           trackQueue.add(Track(
@@ -249,11 +242,19 @@ class AudioPlayerTask extends BackgroundAudioTask {
           ));
         }
 
+        Track track = trackQueue[0];
+        MapEntry<Track, File> foundTrack = await _getFilePath(track);
         
-        // print('queue');
-        // for(Track track in trackQueue) {
-        //   print(track);
-        // }
+        final MediaItem mediaItem = MediaItem(
+          id: foundTrack.value.path,
+          album: track.artist,
+          title: track.name,
+          artUri: Uri.parse(track.imageUrlLarge),
+          duration: foundTrack.key.totalDuration.value,
+          extras: {'track_id': track.id, 'service_name': track.serviceName}
+        );
+
+        _queue.add(mediaItem);
 
         Track firstTrack = trackQueue.first;
         await _playTrack(firstTrack);
@@ -301,6 +302,12 @@ class AudioPlayerTask extends BackgroundAudioTask {
         
       } break;
 
+
+      case 'INDEX_QUEUE_REQUEST' : {
+        AudioServiceBackground.sendCustomEvent({'INDEX': currentIndex});
+
+      } break;
+
     }
     
 
@@ -310,26 +317,31 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   Future<List<MediaItem>> _queueLoader() async {
     for(int i=0; i<DEFAULT_LENGTH_QUEUE; i++) {
-      Track track = trackQueue[currentIndex+1+i];
 
-      if(
-        _queue.firstWhere((element) => 
-        (element.extras['track_id'] == track.id && element.extras['service_name'] == track.serviceName),
-        orElse: () => null)
-        == null
-      ) {
-        File file = await track.loadFile();
+      if((currentIndex+1+i)<trackQueue.length) {
 
-        MediaItem mi = MediaItem(
-          id: file.path,
-          album: track.artist,
-          title: track.name,
-          artUri: Uri.parse(track.imageUrlLarge),
-          duration: Duration(seconds: track.totalDuration.value.inSeconds),
-          extras: {'track_id': track.id, 'service_name': track.serviceName}
-        );
+        Track track = trackQueue[currentIndex+1+i];
 
-        _queue.add(mi);
+        if(
+          _queue.firstWhere((element) => 
+          (element.extras['track_id'] == track.id && element.extras['service_name'] == track.serviceName),
+          orElse: () => null)
+          == null
+        ) {
+          File file = await track.loadFile();
+
+          MediaItem mi = MediaItem(
+            id: file.path,
+            album: track.artist,
+            title: track.name,
+            artUri: Uri.parse(track.imageUrlLarge),
+            duration: Duration(seconds: track.totalDuration.value.inSeconds),
+            extras: {'track_id': track.id, 'service_name': track.serviceName}
+          );
+
+          _queue.add(mi);
+        }
+
       }
 
     }
@@ -378,7 +390,14 @@ class PlayerListener {
             FrontPlayerController().previousTrack(backProvider: true, isSeekToZero: true);
           } break;
 
+
         }
+
+        if(data['INDEX'] != null) {
+          FrontPlayerController().backIndex = data['INDEX'];
+        }
+
+
       }
     );
   }
