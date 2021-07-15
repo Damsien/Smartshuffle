@@ -61,119 +61,107 @@ class SearchAlgorithm {
   Future<Track> search({@required String tArtist, @required String tTitle, @required Duration tDuration}) async {
     // _youtubeApi = await login();
     String query = '$tArtist $tTitle';
-    // print('Query : $query');
+    print('Query : $query');
+
+    final jsonBody = jsonEncode(
+      {
+        "context": {
+          "client": {
+            "hl": 'en', //Platform.localeName.substring(3,5).toLowerCase(),
+            "gl": 'FR', //Platform.localeName.substring(3,5),
+            "deviceMake":"",
+            "deviceModel":"",
+            "clientName":"WEB_REMIX",
+            "clientVersion":"1.20210712.00.00",
+            "originalUrl":"https://music.youtube.com/",
+            "clientFormFactor":"UNKNOWN_FORM_FACTOR",
+            "screenWidthPoints":623,"screenHeightPoints":722,"screenPixelDensity":1,"screenDensityFloat":1.25,"utcOffsetMinutes":120,
+            "userInterfaceTheme":"USER_INTERFACE_THEME_DARK",
+            "musicAppInfo": {
+              "pwaInstallabilityStatus":"PWA_INSTALLABILITY_STATUS_UNKNOWN",
+              "webDisplayMode":"WEB_DISPLAY_MODE_BROWSER",
+              "musicActivityMasterSwitch":"MUSIC_ACTIVITY_MASTER_SWITCH_INDETERMINATE",
+              "musicLocationMasterSwitch":"MUSIC_LOCATION_MASTER_SWITCH_INDETERMINATE"
+            }
+          },
+          "user": {"lockedSafetyMode":false},
+          "request":{
+            "useSsl":true,
+            "internalExperimentFlags":[{"key":"force_route_music_watch_next_ads_to_ywfe","value":"true"}],
+            "consistencyTokenJars":[]
+          }
+        },
+        "query": query,
+        "suggestStats": {
+          "validationStatus":"VALID",
+          "parameterValidationStatus":"VALID_PARAMETERS",
+          "clientName":"youtube-music",
+          "searchMethod":"ENTER_KEY",
+          "inputMethod":"KEYBOARD",
+          "originalQuery": query,
+          "availableSuggestions":[
+            {"index":0,"type":0},
+            {"index":1,"type":0},
+            {"index":2,"type":0},
+            {"index":3,"type":0},
+            {"index":4,"type":0},
+            {"index":5,"type":0},
+            {"index":6,"type":0}
+          ],
+          "zeroPrefixEnabled":true,"firstEditTimeMsec":5821,"lastEditTimeMsec":14828
+        }
+      }
+    );
 
     try {
-      http.Response response = await http.get(
-        Uri.https('youtube.googleapis.com', '/youtube/v3/search',
+      http.Response response = await http.post(
+        Uri.https('music.youtube.com', '/youtubei/v1/search',
           {
-            'part': 'snippet',
-            'maxResults': '10',
-            'q': query,
-            'key': 'AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM'  // Google himself api key
+            'key': 'AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'  // Google himself api key
           }
         ),
+        body: jsonBody,
         headers: {
-          HttpHeaders.refererHeader: 'https://explorer.apis.google.com',
+          HttpHeaders.refererHeader: 'https://music.youtube.com/',
+          HttpHeaders.contentTypeHeader: 'application/json'
         },
       );
-      
-      YTB.SearchListResponse searchList = YTB.SearchListResponse.fromJson(jsonDecode(response.body));
 
-      // YTB.SearchListResponse searchList = await _youtubeApi.search.list(
-      //   ['snippet'],
-      //   maxResults: 10,
-        // eventType: 'completed',
-        // safeSearch: 'none',
-        // order: 'viewCount',
-        // topicId: '/m/04rlf',
-        // type: ['video, channel, playlist'],
-      //   q: query
-      // );
+      Map jsonResponse = jsonDecode(response.body);
 
-      List<YTB.SearchResult> asr = searchList.items;
-      YTB.SearchResult rsr = asr[0];
-      
-      Duration lastSrDuration;
-      Duration srDuration;
-      Duration finalDuration;
+      String videoId;
+      String songIdType
+      = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+        ['flexColumns'][0]['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
 
-      int i = 0;
-      for(YTB.SearchResult sr in asr) {
-
-        if(i < 3 || (
-          sr.snippet.title.contains(tTitle) ||
-          sr.snippet.title.contains(tTitle.toLowerCase()) ||
-          sr.snippet.title.contains(tTitle.toUpperCase())
-        ))
-        {
-          if(sr.id.videoId != null) {
-
-            // http.Response response = await http.get(
-            //   Uri.https('youtube.googleapis.com', '/youtube/v3/videos',
-            //     {
-            //       'part': 'contentDetails',
-            //       'id': sr.id.videoId,
-            //       'key': 'AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM'  // Google himself api key
-            //     }
-            //   ),
-            //   headers: {
-            //     HttpHeaders.refererHeader: 'https://explorer.apis.google.com',
-            //   },
-            // );
-            
-            // YTB.VideoListResponse videoList = YTB.VideoListResponse.fromJson(jsonDecode(response.body));
-
-            // srDuration = _toDuration(videoList.items[0].contentDetails.duration);
-
-            Video video = await _ytbE.videos.get(VideoId(sr.id.videoId));
-            srDuration = video.duration;
-
-            if(srDuration.compareTo(tDuration) == 0)
-            {
-              rsr = sr;
-              finalDuration = srDuration;
-              break;
-            }
-
-            if(lastSrDuration != null) {
-              if((srDuration.inSeconds-tDuration.inSeconds).abs() < (lastSrDuration.inSeconds-tDuration.inSeconds).abs()) {
-                rsr = sr;
-                finalDuration = srDuration;
-                lastSrDuration = video.duration;
-              }
-            } else {
-              lastSrDuration = video.duration;
-            }
-          }
-        }
-
-        i++;
+      if(songIdType == 'Song') {
+        videoId
+        = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+        ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+        ['videoId'];
+      } else {
+        videoId
+        = jsonResponse['contents']['sectionListRenderer']['contents'][1]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+        ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+        ['videoId'];
       }
 
+      Video video = await _ytbE.videos.get(videoId);
 
-      if(finalDuration == null) {
-        Video video = await _ytbE.videos.get(asr[0].id.videoId);
-        finalDuration = video.duration;
-      }
-
-
-
-      String name = rsr.snippet.title;
-      String artist = rsr.snippet.channelTitle;
+      String name = video.title;
+      String artist = video.author;
       if(artist.contains(' - Topic')) artist = artist.split(' - Topic')[0];
       // print('Track found : $name $artist');
 
-      String id = rsr.id.videoId;
-      String imageUrlLittle = rsr.snippet.thumbnails.high.url;
+      String id = videoId;
+      String imageUrlLittle = video.thumbnails.highResUrl;
       String imageUrlLarge;
       try {
-        imageUrlLarge = rsr.snippet.thumbnails.maxres.url;
+        imageUrlLarge = video.thumbnails.maxResUrl;
       } catch(e) {
         imageUrlLarge = 'https://source.unsplash.com/random';
       }
-
-      Duration duration = finalDuration;
+      Duration duration = video.duration;
 
       Track track = Track(
         id: id,
@@ -187,8 +175,9 @@ class SearchAlgorithm {
 
       return track;
 
-    } catch(e) {
+    } catch(e, trace) {
       print(e);
+      print(trace);
     }
     
     return Track(id: null);
