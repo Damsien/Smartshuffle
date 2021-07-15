@@ -129,22 +129,51 @@ class SearchAlgorithm {
 
       Map jsonResponse = jsonDecode(response.body);
 
-      String videoId;
-      String songIdType
-      = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
-        ['flexColumns'][0]['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
+      print(jsonResponse['contents']);
 
-      if(songIdType == 'Song') {
-        videoId
-        = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
-        ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
-        ['videoId'];
+      String videoId;
+      String songIdType;
+
+      if(jsonResponse['contents']['sectionListRenderer'] != null) {
+        songIdType = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+          ['flexColumns'][1]['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
+
+        print("songtype: $songIdType");
+        if(songIdType == 'Song') {
+          videoId
+          = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+          ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+          ['videoId'];
+        } else {
+          videoId
+          = jsonResponse['contents']['sectionListRenderer']['contents'][1]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+          ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+          ['videoId'];
+        }
+
       } else {
-        videoId
-        = jsonResponse['contents']['sectionListRenderer']['contents'][1]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
-        ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
-        ['videoId'];
+        songIdType = jsonResponse['contents']['tabbedSearchResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']
+          ['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+          ['flexColumns'][1]['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
+
+        print("songtype: $songIdType");
+        if(songIdType == 'Song') {
+          videoId
+          = jsonResponse['contents']['tabbedSearchResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']
+          ['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+          ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+          ['videoId'];
+        } else {
+          videoId
+          = jsonResponse['contents']['tabbedSearchResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']
+          ['contents'][1]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+          ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+          ['videoId'];
+        }
+
       }
+
+      
 
       Video video = await _ytbE.videos.get(videoId);
 
