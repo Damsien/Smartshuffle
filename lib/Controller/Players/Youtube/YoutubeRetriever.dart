@@ -31,34 +31,44 @@ class YoutubeRetriever {
   }
 
   Future<File> streamById(String id) async {
-    StreamManifest manifest = await _yt.videos.streamsClient.getManifest(id);
-    AudioOnlyStreamInfo streamInfo = manifest.audioOnly.withHighestBitrate();
 
-    File file;
-    if (streamInfo != null) {
-      // Get the actual stream
-      var stream = _yt.videos.streamsClient.get(streamInfo);
-      
-      // Open a file for writing.
-      final Directory directory = await getTemporaryDirectory();
-      String path = '${directory.path}/$id.mp3';
-      print('Path : $path');
-      file = File(path);
-      var fileStream = file.openWrite();
+    try {
 
-      // Pipe all the content of the stream into the file.
-      try {
-        await stream.pipe(fileStream);
-      } catch(e) {
-        print(e);
+      StreamManifest manifest = await _yt.videos.streamsClient.getManifest(id);
+      AudioOnlyStreamInfo streamInfo = manifest.audioOnly.withHighestBitrate();
+
+      File file;
+      if (streamInfo != null) {
+        // Get the actual stream
+        var stream = _yt.videos.streamsClient.get(streamInfo);
+        
+        // Open a file for writing.
+        final Directory directory = await getTemporaryDirectory();
+        String path = '${directory.path}/$id.mp3';
+        print('Path : $path');
+        file = File(path);
+        var fileStream = file.openWrite();
+
+        // Pipe all the content of the stream into the file.
+        try {
+          await stream.pipe(fileStream);
+        } catch(e) {
+          print(e);
+        }
+
+        // Close the file.
+        await fileStream.flush();
+        await fileStream.close();
       }
+      
+      return file;
 
-      // Close the file.
-      await fileStream.flush();
-      await fileStream.close();
+    } catch(e) {
+      print('e');
+      print(e);
+      return null;
     }
     
-    return file;
   }
 
 }

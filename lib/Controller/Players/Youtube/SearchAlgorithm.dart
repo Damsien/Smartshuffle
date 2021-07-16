@@ -22,7 +22,7 @@ class SearchAlgorithm {
     return _instance;
   }
 
-  Future<YTB.YouTubeApi> login() async {
+  Future<YTB.YouTubeApi> _login() async {
     Map<dynamic, dynamic> infos = await APIAuth.loginWithoutAllScopes();
     var _httpClient = infos.entries.first.key;
     return YTB.YouTubeApi(_httpClient);
@@ -129,26 +129,37 @@ class SearchAlgorithm {
 
       Map jsonResponse = jsonDecode(response.body);
 
-      print(jsonResponse['contents']);
-
       String videoId;
+      String videoTitle;
       String songIdType;
 
+      //TODO Check title if it's a 'Song' type and if isn't the same, go to 'video' type
       if(jsonResponse['contents']['sectionListRenderer'] != null) {
         songIdType = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
           ['flexColumns'][1]['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
 
-        print("songtype: $songIdType");
         if(songIdType == 'Song') {
           videoId
           = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
           ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
           ['videoId'];
         } else {
-          videoId
+          videoTitle
           = jsonResponse['contents']['sectionListRenderer']['contents'][1]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
-          ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
-          ['videoId'];
+          ['flexColumns'][0]['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
+
+          if(videoTitle.contains(tTitle) || videoTitle.contains(tTitle.toLowerCase()) || videoTitle.contains(tTitle.toUpperCase())) {
+            videoId
+            = jsonResponse['contents']['sectionListRenderer']['contents'][1]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+            ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+            ['videoId'];
+          } else {
+            videoId
+            = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+            ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+            ['videoId'];
+          }
+
         }
 
       } else {
@@ -156,7 +167,6 @@ class SearchAlgorithm {
           ['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
           ['flexColumns'][1]['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
 
-        print("songtype: $songIdType");
         if(songIdType == 'Song') {
           videoId
           = jsonResponse['contents']['tabbedSearchResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']
@@ -164,11 +174,25 @@ class SearchAlgorithm {
           ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
           ['videoId'];
         } else {
-          videoId
+          videoTitle
           = jsonResponse['contents']['tabbedSearchResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']
           ['contents'][1]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
-          ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
-          ['videoId'];
+          ['flexColumns']['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
+
+          if(videoTitle.contains(tTitle) || videoTitle.contains(tTitle.toLowerCase()) || videoTitle.contains(tTitle.toUpperCase())) {
+            videoId
+            = jsonResponse['contents']['tabbedSearchResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']
+            ['contents'][1]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+            ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+            ['videoId'];
+          } else {
+            videoId
+            = jsonResponse['contents']['tabbedSearchResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']
+            ['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
+            ['overlay']['musicItemThumbnailOverlayRenderer']['content']['musicPlayButtonRenderer']['playNavigationEndpoint']['watchEndpoint']
+            ['videoId'];
+          }
+
         }
 
       }

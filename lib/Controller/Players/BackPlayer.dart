@@ -330,16 +330,25 @@ class AudioPlayerTask extends BackgroundAudioTask {
         ) {
           File file = await track.loadFile();
 
-          MediaItem mi = MediaItem(
-            id: file.path,
-            album: track.artist,
-            title: track.name,
-            artUri: Uri.parse(track.imageUrlLarge),
-            duration: Duration(seconds: track.totalDuration.value.inSeconds),
-            extras: {'track_id': track.id, 'service_name': track.serviceName}
-          );
+          if(file != null) {
 
-          _queue.add(mi);
+            MediaItem mi = MediaItem(
+              id: file.path,
+              album: track.artist,
+              title: track.name,
+              artUri: Uri.parse(track.imageUrlLarge),
+              duration: Duration(seconds: track.totalDuration.value.inSeconds),
+              extras: {'track_id': track.id, 'service_name': track.serviceName}
+            );
+
+            _queue.add(mi);
+
+          } else {
+            
+            trackQueue.removeAt(currentIndex+1+i);
+          
+          }
+
         }
 
       }
