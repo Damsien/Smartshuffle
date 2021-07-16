@@ -32,13 +32,13 @@ class _EmailSender {
     try {
       SmtpServer smtpServer = gmail('dn.smartshuffle@gmail.com', 'damiennicolas');
       await send(message, smtpServer);
-      ScaffoldMessenger.of(context)
+      SnackBarController()
           .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).formMessageSent)));
     } on SocketException catch (error) {
-      ScaffoldMessenger.of(context)
+      SnackBarController()
           .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).formMessageNotSentNetwork)));
     } catch (error) {
-      ScaffoldMessenger.of(context)
+      SnackBarController()
           .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).formMessageNotSent)));
     }
   }

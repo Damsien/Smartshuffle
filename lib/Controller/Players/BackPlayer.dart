@@ -229,8 +229,11 @@ class AudioPlayerTask extends BackgroundAudioTask {
     switch(type) {
 
       case 'LAUNCH_QUEUE' : {
+        await AudioService.pause();
+
         currentIndex = 0;
         trackQueue.clear();
+
         for(int i=0; i<arguments['queue']['id'].length; i++) {
           trackQueue.add(Track(
             id: arguments['queue']['id'][i],
@@ -266,13 +269,32 @@ class AudioPlayerTask extends BackgroundAudioTask {
       case 'INSERT_ITEM' : {
         Track tr = Track(
           id: arguments['track']['id'],
-          name: arguments['queue']['id'],
-          artist: arguments['queue']['artist'],
-          imageUrlLarge: arguments['queue']['image'],
-          service: PlatformsLister.nameToService(arguments['queue']['service'])
+          name: arguments['track']['name'],
+          artist: arguments['track']['artist'],
+          imageUrlLarge: arguments['track']['image'],
+          service: PlatformsLister.nameToService(arguments['track']['service'])
         );
         trackQueue.insert(arguments['index'], tr);
-        _queueLoader();
+        MapEntry<Track, File> me = await _getFilePath(tr);
+        final MediaItem mi = MediaItem(
+          id: me.value.path,
+          album: tr.artist,
+          title: tr.name,
+          artUri: Uri.parse(tr.imageUrlLarge),
+          duration: Duration(seconds: tr.totalDuration.value.inSeconds),
+          extras: {'track_id': tr.id, 'service_name': tr.serviceName}
+        );
+        _queue.insert(arguments['index'], mi);
+        
+      } break;
+
+
+      case 'REMOVE_ITEM' : {
+        _queue.removeWhere((element) => 
+          element.extras['track_id'] == trackQueue[arguments['index']].id
+          && element.extras['service_name'] == trackQueue[arguments['index']].serviceName
+        );
+        trackQueue.removeAt(arguments['index']);
 
       } break;
 

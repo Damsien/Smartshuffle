@@ -9,6 +9,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:googleapis/cloudbuild/v1.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
@@ -56,6 +57,26 @@ class MaterialColorApplication {
 
 }
 
+class SnackBarController {
+
+  GlobalKey<ScaffoldState> _scaffoldKey;
+  
+  SnackBarController._singleton();
+  factory SnackBarController() {
+    return _instance;
+  }
+
+  static final SnackBarController _instance = SnackBarController._singleton();
+
+  set key(GlobalKey<ScaffoldState> scaffoldKey) => _scaffoldKey = scaffoldKey;
+
+  void showSnackBar(SnackBar snackBar) {
+    ScaffoldMessenger.of(_scaffoldKey.currentContext).showSnackBar(snackBar);
+  }
+  
+
+}
+
 
 void _entrypoint() => AudioServiceBackground.run(() => AudioPlayerTask());
 class GlobalAppMain extends StatelessWidget {
@@ -92,6 +113,7 @@ class _GlobalApp extends StatefulWidget {
 
 class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   PageController pageController;
   List<Widget> pages;
 
@@ -185,44 +207,46 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    SnackBarController().key = _scaffoldKey;
 
     return MaterialApp(
         theme: _themeData,
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-            body: AudioServiceWidget(
-              child: Stack(children: [
-                PageView(
-                  controller: this.pageController,
-                  physics: NeverScrollableScrollPhysics(),
-                  children: this.pages,
-                ),
-                FrontPlayerView(notifyParent: refresh)
-              ])
-            ),
-            bottomNavigationBar: Container(
-              color: Colors.grey[900],
-              height: FrontPlayerController().botBarHeight,
-              child:  BottomNavigationBar(
-                selectedItemColor: this.materialColor.shade300,
-                items: <BottomNavigationBarItem>[
-                  BottomNavigationBarItem(
-                      icon: Icon(Icons.library_music),
-                      label: AppLocalizations.of(context).globalTitleLibrairie,
-                      backgroundColor: Colors.black),
-                  BottomNavigationBarItem(
-                      icon: Icon(Icons.search),
-                      label: AppLocalizations.of(context).globalTitleSearch,
-                      backgroundColor: Colors.black),
-                  BottomNavigationBarItem(
-                      icon: Icon(Icons.account_circle),
-                      label: AppLocalizations.of(context).globalTitleProfile,
-                      backgroundColor: Colors.black),
-                ],
-                currentIndex: this.selectedIndex,
-                onTap: this.onItemTapped,
-              )
+          key: _scaffoldKey,
+          body: AudioServiceWidget(
+            child: Stack(children: [
+              PageView(
+                controller: this.pageController,
+                physics: NeverScrollableScrollPhysics(),
+                children: this.pages,
+              ),
+              FrontPlayerView(notifyParent: refresh)
+            ])
+          ),
+          bottomNavigationBar: Container(
+            color: Colors.grey[900],
+            height: FrontPlayerController().botBarHeight,
+            child:  BottomNavigationBar(
+              selectedItemColor: this.materialColor.shade300,
+              items: <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.library_music),
+                    label: AppLocalizations.of(context).globalTitleLibrairie,
+                    backgroundColor: Colors.black),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.search),
+                    label: AppLocalizations.of(context).globalTitleSearch,
+                    backgroundColor: Colors.black),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.account_circle),
+                    label: AppLocalizations.of(context).globalTitleProfile,
+                    backgroundColor: Colors.black),
+              ],
+              currentIndex: this.selectedIndex,
+              onTap: this.onItemTapped,
             )
+          )
         ),
       localizationsDelegates: [
         AppLocalizations.delegate, // Add this line

@@ -1,3 +1,4 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
@@ -108,6 +109,22 @@ class GlobalQueue {
   void addToPermanentQueue(Track track) {
     permanentQueue.value.add(track);
     reBuildQueue();
+    
+    //Insert into back player queue
+    int lastPermanentIndex = 1;
+    for(int i=0; i<queue.value.length; i++) {
+      if(queue.value[i].value) lastPermanentIndex = i;
+    }
+    AudioService.customAction('INSERT_ITEM', {
+      'index': lastPermanentIndex,
+      'track': {
+        'id': queue.value[lastPermanentIndex].key.id,
+        'name': queue.value[lastPermanentIndex].key.name,
+        'artist': queue.value[lastPermanentIndex].key.artist,
+        'image': queue.value[lastPermanentIndex].key.imageUrlLarge,
+        'service': queue.value[lastPermanentIndex].key.serviceName
+      }
+    });
   }
 
   void insertInPermanentQueue(int index, Track track) {
@@ -134,6 +151,15 @@ class GlobalQueue {
   void removeLastPermanent() {
     permanentQueue.value.removeAt(0);
     reBuildQueue();
+
+    //Remove into back player queue
+    int lastPermanentIndex = 1;
+    for(int i=0; i<queue.value.length; i++) {
+      if(queue.value[i].value) lastPermanentIndex = i;
+    }
+    AudioService.customAction('REMOVE_ITEM', {
+      'index': lastPermanentIndex
+    });
   }
 
   void _resetNoPermanentQueue() {
@@ -149,6 +175,11 @@ class GlobalQueue {
   }
 
   void reorder(int oldIndex, int oldList, int newIndex, int newList) {
+
+    //Back player reorder variables
+    int bOldIndex;
+    int bNewIndex;
+
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
@@ -158,10 +189,14 @@ class GlobalQueue {
           case 0: {
             Track track = permanentQueue.value.removeAt(oldIndex);
             permanentQueue.value.insert(newIndex, track);
+            bOldIndex = oldIndex;
+            bNewIndex = newIndex;
           } break;
           case 1: {
             Track track = permanentQueue.value.removeAt(oldIndex);
             noPermanentQueue.value.insert(newIndex+currentQueueIndex+1-permanentQueue.value.length, track);
+            bOldIndex = oldIndex;
+            bNewIndex = permanentQueue.value.length+newIndex;
           } break;
         }
       } break;
@@ -170,15 +205,25 @@ class GlobalQueue {
           case 0: {
             Track track = noPermanentQueue.value.removeAt(oldIndex+currentQueueIndex+1-permanentQueue.value.length);
             permanentQueue.value.insert(newIndex, track);
+            bOldIndex = permanentQueue.value.length+oldIndex;
+            bNewIndex = newIndex;
           } break;
           case 1: {
             Track track = noPermanentQueue.value.removeAt(oldIndex+currentQueueIndex+1-permanentQueue.value.length);
             noPermanentQueue.value.insert(newIndex+currentQueueIndex+1-permanentQueue.value.length, track);
+            bOldIndex = permanentQueue.value.length+oldIndex;
+            bNewIndex = permanentQueue.value.length+newIndex;
           } break;
         }
       } break;
     }
     reBuildQueue();
+
+    //Back player reorder variables
+    AudioService.customAction('REORDER_ITEM', {
+      'old_index': bOldIndex,
+      'new_index': bNewIndex
+    });
   }
 
   

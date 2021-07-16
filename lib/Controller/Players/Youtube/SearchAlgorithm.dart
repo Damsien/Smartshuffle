@@ -133,7 +133,6 @@ class SearchAlgorithm {
       String videoTitle;
       String songIdType;
 
-      //TODO Check title if it's a 'Song' type and if isn't the same, go to 'video' type
       if(jsonResponse['contents']['sectionListRenderer'] != null) {
         songIdType = jsonResponse['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
           ['flexColumns'][1]['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
@@ -177,7 +176,7 @@ class SearchAlgorithm {
           videoTitle
           = jsonResponse['contents']['tabbedSearchResultsRenderer']['tabs'][0]['tabRenderer']['content']['sectionListRenderer']
           ['contents'][1]['musicShelfRenderer']['contents'][0]['musicResponsiveListItemRenderer']
-          ['flexColumns']['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
+          ['flexColumns'][0]['musicResponsiveListItemFlexColumnRenderer']['text']['runs'][0]['text'];
 
           if(videoTitle.contains(tTitle) || videoTitle.contains(tTitle.toLowerCase()) || videoTitle.contains(tTitle.toUpperCase())) {
             videoId

@@ -414,7 +414,7 @@ class _TrackViewState extends State<TrackView> {
         onDoubleTap: () {
           TabsView(this).addToQueue(track);
           String trackName = track.name;
-          ScaffoldMessenger.of(context).showSnackBar(
+          SnackBarController().showSnackBar(
             SnackBar(
               action: SnackBarAction(
                 label: AppLocalizations.of(context).cancel,
@@ -700,7 +700,7 @@ class TabsView {
   }) {
     switch(value) {
       case PopupMenuConstants.TRACKSMAINDIALOG_ADDTOQUEUE: {
-        ScaffoldMessenger.of(this.state.context).showSnackBar(
+        SnackBarController().showSnackBar(
           SnackBar(
             action: SnackBarAction(
               label: AppLocalizations.of(this.state.context).cancel,
