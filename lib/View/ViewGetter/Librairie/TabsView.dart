@@ -107,6 +107,7 @@ class TracksView extends StatefulWidget {
 class _TracksViewState extends State<TracksView> {
 
   final MaterialColor _materialColor = MaterialColorApplication.material_color;
+
   PlatformsController _ctrl;
   Playlist _playlist;
   Function _returnToPlaylist;
@@ -187,7 +188,7 @@ class _TracksViewState extends State<TracksView> {
                                   Container(
                                     width: MediaQuery.of(context).size.width/2,
                                     child: InkWell(
-                                      onTap: () => TabsView(this).renamePlaylist(_playlist),
+                                      onTap: () => TabsView(objectState: this).renamePlaylist(_playlist),
                                       child: Text(
                                         _playlist.name, 
                                         style: ((300/_playlist.name.length+5) > 30 ?
@@ -412,7 +413,7 @@ class _TrackViewState extends State<TrackView> {
           });
         },
         onDoubleTap: () {
-          TabsView(this).addToQueue(track);
+          TabsView(objectState: this).addToQueue(track);
           String trackName = track.name;
           SnackBarController().showSnackBar(
             SnackBar(
@@ -425,7 +426,7 @@ class _TrackViewState extends State<TrackView> {
             )
           );
         },
-        onLongPressStart: (LongPressStartDetails detail) => TabsView(this).trackMainOptions(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist), detail: detail),
+        onLongPressStart: (LongPressStartDetails detail) => TabsView(objectState: this).trackMainOptions(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist), detail: detail),
         child: Container(
             child: ListTile(
               title: ValueListenableBuilder(
@@ -455,10 +456,14 @@ class _TrackViewState extends State<TrackView> {
                 )
               ),
               subtitle: Text(track.artist),
-              trailing: FractionallySizedBox(
-                heightFactor: 1,
-                child: TabsView(this).trackMainDialog(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist)),
-              ),
+              trailing: Builder(
+                builder: (BuildContext bContext) {
+                  return FractionallySizedBox(
+                    heightFactor: 1,
+                    child: TabsView(objectState: this).trackMainDialog(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist))
+                  );
+                }
+              )
             )
           )
         )
@@ -534,7 +539,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                               Container(
                                 child: MaterialButton(
                                   shape: ContinuousRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-                                  onPressed: () => TabsView(this).createPlaylist(ctrl),
+                                  onPressed: () => TabsView(objectState: this).createPlaylist(ctrl),
                                   colorBrightness: Brightness.dark,
                                   color: Colors.grey[800],
                                   child: Wrap(
@@ -549,7 +554,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                             ]
                           ),
                           InkWell(
-                            onTap: () => TabsView(this).openApp(ctrl.platform),
+                            onTap: () => TabsView(objectState: this).openApp(ctrl.platform),
                             child: FractionallySizedBox(
                               heightFactor: 0.5,
                               child: Image(image: AssetImage(ctrl.platform.platformInformations['logo']))
@@ -592,7 +597,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                                       subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" "+AppLocalizations.of(context).globalTracks),
                                       onTap: () => widget.openPlaylist(playlists[index]),
                                     ),
-                                    onLongPressStart: (LongPressStartDetails detail) => TabsView(this).playlistMainOptions(playlists[index], ctrl: ctrl, index: index, detail: detail),
+                                    onLongPressStart: (LongPressStartDetails detail) => TabsView(objectState: this).playlistMainOptions(playlists[index], ctrl: ctrl, index: index, detail: detail),
                                   )
                                 ),
                                 Flexible(
@@ -644,14 +649,31 @@ class _PlaylistsViewState extends State<PlaylistsView> {
 
 class TabsView {
 
+  GlobalKey<ScaffoldState> scaffold;
+  State objectState;
+
+  BuildContext context;
   State state;
   
   static final TabsView _tabsView = TabsView._instance();
 
   final MaterialColor materialColor = MaterialColorApplication.material_color;
 
-  factory TabsView(State state) {
-    _tabsView.state = state;
+  factory TabsView({GlobalKey<ScaffoldState> scaffoldKey, State objectState}) {
+    _tabsView.scaffold = scaffoldKey;
+    _tabsView.objectState = objectState;
+    
+    if(scaffoldKey != null) {
+      _tabsView.state = scaffoldKey.currentState;
+      _tabsView.context = scaffoldKey.currentContext;
+    }
+
+    if(objectState != null) {
+      _tabsView.state = objectState;
+      _tabsView.context = objectState.context;
+    }
+
+
     return _tabsView;
   }
 
@@ -667,15 +689,15 @@ class TabsView {
       DeviceApps.openApp(platform.platformInformations['package']);
     } catch (error) {
       showDialog(
-        context: this.state.context,
+        context: context,
         builder: (dialogContext) {
           return AlertDialog(
-            title: Text(AppLocalizations.of(this.state.context).globalNotFoundApp, style: TextStyle(color: Colors.white)),
-            content: Text(AppLocalizations.of(this.state.context).globalNotFoundAppDesc),
+            title: Text(AppLocalizations.of(context).globalNotFoundApp, style: TextStyle(color: Colors.white)),
+            content: Text(AppLocalizations.of(context).globalNotFoundAppDesc),
             contentTextStyle: TextStyle(color: Colors.white),
             actions: [
               FlatButton(
-                child: Text(AppLocalizations.of(this.state.context).ok, style: TextStyle(color: Colors.white)),
+                child: Text(AppLocalizations.of(context).ok, style: TextStyle(color: Colors.white)),
                 onPressed: () => Navigator.pop(dialogContext),
               )
             ],
@@ -703,11 +725,11 @@ class TabsView {
         SnackBarController().showSnackBar(
           SnackBar(
             action: SnackBarAction(
-              label: AppLocalizations.of(this.state.context).cancel,
+              label: AppLocalizations.of(context).cancel,
               onPressed: () => GlobalQueue().removeLastPermanent()
             ),
             duration: Duration(seconds: 1),
-            content: Text("$name "+AppLocalizations.of(this.state.context).tabsViewAddedToQueue),
+            content: Text("$name "+AppLocalizations.of(context).tabsViewAddedToQueue),
           )
         );
         addToQueue(track);
@@ -737,7 +759,7 @@ class TabsView {
 
     return PopupMenuButton(
       icon: Icon(Icons.more_vert),
-      tooltip: AppLocalizations.of(this.state.context).options,
+      tooltip: AppLocalizations.of(context).options,
       itemBuilder: (BuildContext context) => <PopupMenuEntry>[
         TracksPopupItemAddToQueue().build(context),
         TracksPopupItemAddToAnotherPlaylist().build(context),
@@ -761,15 +783,15 @@ class TabsView {
     String name = track.name;
 
     await showMenu(
-        context: this.state.context,
+        context: context,
         position: RelativeRect.fromLTRB(detail.globalPosition.dx, detail.globalPosition.dy,
-         MediaQuery.of(this.state.context).size.width - detail.globalPosition.dx, MediaQuery.of(this.state.context).size.height - detail.globalPosition.dy),
+         MediaQuery.of(context).size.width - detail.globalPosition.dx, MediaQuery.of(context).size.height - detail.globalPosition.dy),
         items: [
-          TracksPopupItemAddToQueue().build(this.state.context),
-          TracksPopupItemAddToAnotherPlaylist().build(this.state.context),
-          TracksPopupItemRemoveFromPlaylist().build(this.state.context),
-          TracksPopupItemInformations().build(this.state.context),
-          TracksPopupItemReport().build(this.state.context)
+          TracksPopupItemAddToQueue().build(context),
+          TracksPopupItemAddToAnotherPlaylist().build(context),
+          TracksPopupItemRemoveFromPlaylist().build(context),
+          TracksPopupItemInformations().build(context),
+          TracksPopupItemReport().build(context)
         ],
         elevation: 8.0,
       ).then((value){
@@ -783,7 +805,7 @@ class TabsView {
     String name = track.name;
     String ctrlName = ctrl.platform.name;
     showDialog(
-      context: this.state.context,
+      context: context,
       builder: (dialogContext) {
         return AlertDialog(
           title: Text('$name', style: TextStyle(color: Colors.white)),
@@ -792,7 +814,7 @@ class TabsView {
             children: [
               Container(
                 child: FlatButton(
-                  child: Text(AppLocalizations.of(this.state.context).tabsViewAddToService+" SmartShuffle", style: TextStyle(color: Colors.white)),
+                  child: Text(AppLocalizations.of(context).tabsViewAddToService+" SmartShuffle", style: TextStyle(color: Colors.white)),
                   onPressed: () {
                     Navigator.pop(dialogContext);
                     choosePlaylistToAddTrack(track, ctrl: PlatformsLister.platforms[ServicesLister.DEFAULT]);
@@ -803,7 +825,7 @@ class TabsView {
                 if(ctrl.platform.name != PlatformsLister.platforms[ServicesLister.DEFAULT].platform.name) {
                   return Container(
                     child: FlatButton(
-                      child: Text(AppLocalizations.of(this.state.context).tabsViewAddToService+" $ctrlName", style: TextStyle(color: Colors.white)),
+                      child: Text(AppLocalizations.of(context).tabsViewAddToService+" $ctrlName", style: TextStyle(color: Colors.white)),
                       onPressed: () {
                         Navigator.pop(dialogContext);
                         choosePlaylistToAddTrack(track, ctrl: ctrl);
@@ -815,7 +837,7 @@ class TabsView {
               }.call(),
               Container(
                 child: FlatButton(
-                  child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
+                  child: Text(AppLocalizations.of(context).cancel, style: TextStyle(color: Colors.white)),
                   onPressed: () => Navigator.pop(dialogContext),
                 ),
               ),
@@ -831,10 +853,10 @@ class TabsView {
   void choosePlaylistToAddTrack(Track track, {@required PlatformsController ctrl}) {
     List<Widget> allCards;
     showDialog(
-      context: this.state.context,
+      context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).tabsViewChooseAPlaylist, style: TextStyle(color: Colors.white)),
+          title: Text(AppLocalizations.of(context).tabsViewChooseAPlaylist, style: TextStyle(color: Colors.white)),
           contentPadding: EdgeInsets.all(0),
           content: SingleChildScrollView(
             child: Column(
@@ -862,26 +884,26 @@ class TabsView {
                                     ),
                                   )
                                 ),
-                                subtitle: Text(ctrl.platform.playlists.value[index].getTracks.length.toString() + " "+AppLocalizations.of(this.state.context).globalTracks),
+                                subtitle: Text(ctrl.platform.playlists.value[index].getTracks.length.toString() + " "+AppLocalizations.of(context).globalTracks),
                                 onTap: () {
                                   Navigator.pop(dialogContext);
                                   String id = ctrl.addTrackToPlaylist(index, track, false);
                                   if(id == null) {
                                     showDialog(
-                                      context: this.state.context,
+                                      context: context,
                                       builder: (dialogContext) {
                                         return AlertDialog(
-                                          title: Text(AppLocalizations.of(this.state.context).tabsViewTrackAlreadyExists, style: TextStyle(color: Colors.white)),
+                                          title: Text(AppLocalizations.of(context).tabsViewTrackAlreadyExists, style: TextStyle(color: Colors.white)),
                                           actions: [
                                             FlatButton(
-                                              child: Text(AppLocalizations.of(this.state.context).no, style: TextStyle(color: Colors.white)),
+                                              child: Text(AppLocalizations.of(context).no, style: TextStyle(color: Colors.white)),
                                               onPressed: () => Navigator.pop(dialogContext),
                                             ),
                                             FlatButton(
-                                              child: Text(AppLocalizations.of(this.state.context).yes, style: TextStyle(color: Colors.white)),
+                                              child: Text(AppLocalizations.of(context).yes, style: TextStyle(color: Colors.white)),
                                               onPressed: () {
                                                 Navigator.pop(dialogContext);
-                                                this.state.setState(() {
+                                                state.setState(() {
                                                   ctrl.addTrackToPlaylist(index, track, true);
                                                 });
                                               },
@@ -901,7 +923,7 @@ class TabsView {
                 allCards.add(
                   Container(
                     child: FlatButton(
-                      child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
+                      child: Text(AppLocalizations.of(context).cancel, style: TextStyle(color: Colors.white)),
                       onPressed: () => Navigator.pop(dialogContext),
                     ),
                   ),
@@ -918,7 +940,7 @@ class TabsView {
 
 
   void addToQueue(Track track) {
-    this.state.setState(() {
+    state.setState(() {
       GlobalQueue().addToPermanentQueue(track);
     });
   }
@@ -932,21 +954,21 @@ class TabsView {
     String name = track.name;
     String playlistName = ctrl.platform.playlists.value[playlistIndex].name;
     showDialog(
-      context: this.state.context,
+      context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).remove+" $name "+AppLocalizations.of(this.state.context).from+" $playlistName ?", style: TextStyle(color: Colors.white)),
+          title: Text(AppLocalizations.of(context).remove+" $name "+AppLocalizations.of(context).from+" $playlistName ?", style: TextStyle(color: Colors.white)),
           actions: [
             FlatButton(
-              child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).cancel, style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.pop(dialogContext),
             ),
             FlatButton(
-              child: Text(AppLocalizations.of(this.state.context).confirm, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).confirm, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
                 int trackIndex = ctrl.platform.playlists.value[playlistIndex].getTracks.indexOf(track);
-                this.state.setState(() {
+                scaffold.currentState.setState(() {
                   ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
                   if(refresh != null) refresh(null, null, '', null, null);
                 });
@@ -963,14 +985,14 @@ class TabsView {
   void trackInformations(Track track, {@required PlatformsController ctrl}) {
     String name = track.name;
     String artist = track.artist;
-    String artist_string = AppLocalizations.of(this.state.context).globalArtist;
-    if(artist.contains(',')) artist_string = AppLocalizations.of(this.state.context).globalArtists;
+    String artist_string = AppLocalizations.of(context).globalArtist;
+    if(artist.contains(',')) artist_string = AppLocalizations.of(context).globalArtists;
     String album;
     if(track.album != null) album = track.album;
-    else album = AppLocalizations.of(this.state.context).nothing;
+    else album = AppLocalizations.of(context).nothing;
     String service = track.serviceName.toString();
     showDialog(
-      context: this.state.context,
+      context: context,
       builder: (dialogContext) {
         return AlertDialog(
           contentPadding: EdgeInsets.all(0),
@@ -986,7 +1008,7 @@ class TabsView {
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.all(10),
-                    child: Text(AppLocalizations.of(this.state.context).popupItemTitle+": $name", style: TextStyle(fontSize: 25))
+                    child: Text(AppLocalizations.of(context).popupItemTitle+": $name", style: TextStyle(fontSize: 25))
                   ),
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
@@ -996,12 +1018,12 @@ class TabsView {
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text(AppLocalizations.of(this.state.context).globalAlbum+": $album", style: TextStyle(fontSize: 17))
+                    child: Text(AppLocalizations.of(context).globalAlbum+": $album", style: TextStyle(fontSize: 17))
                   ),
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text(AppLocalizations.of(this.state.context).globalService+": $service", style: TextStyle(fontSize: 17))
+                    child: Text(AppLocalizations.of(context).globalService+": $service", style: TextStyle(fontSize: 17))
                   ),
                 ]
               )
@@ -1009,7 +1031,7 @@ class TabsView {
           ),
           actions: [
             FlatButton(
-              child: Text(AppLocalizations.of(this.state.context).ok, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).ok, style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.pop(dialogContext),
             ),
           ],
@@ -1020,7 +1042,7 @@ class TabsView {
 
 
   void openReportForm(Track track) {
-    Navigator.of(this.state.context)
+    Navigator.of(context)
       .push(
         MaterialPageRoute(
           builder: (context) => FormReport(track: track)
@@ -1043,15 +1065,15 @@ class TabsView {
     String name = playlist.name;
 
     List<PopupMenuEntry> items = [];
-    items.add(PlaylistsPopupItemRename().build(this.state.context));
-    if(ctrl.platform.name != 'SmartShuffle')  items.add(PlaylistsPopupItemClone().build(this.state.context));
-    if(ctrl.platform.name != 'SmartShuffle')  items.add(PlaylistsPopupItemMerge().build(this.state.context));
-    items.add(PlaylistsPopupItemDelete().build(this.state.context));
+    items.add(PlaylistsPopupItemRename().build(context));
+    if(ctrl.platform.name != 'SmartShuffle')  items.add(PlaylistsPopupItemClone().build(context));
+    if(ctrl.platform.name != 'SmartShuffle')  items.add(PlaylistsPopupItemMerge().build(context));
+    items.add(PlaylistsPopupItemDelete().build(context));
 
     await showMenu(
-        context: this.state.context,
+        context: context,
         position: RelativeRect.fromLTRB(detail.globalPosition.dx, detail.globalPosition.dy,
-         MediaQuery.of(this.state.context).size.width - detail.globalPosition.dx, MediaQuery.of(this.state.context).size.height - detail.globalPosition.dy),
+         MediaQuery.of(context).size.width - detail.globalPosition.dx, MediaQuery.of(context).size.height - detail.globalPosition.dy),
         items: items,
         elevation: 8.0,
       ).then((value){
@@ -1082,13 +1104,13 @@ class TabsView {
   }
 
   void createPlaylist(PlatformsController ctrl) {
-    String value = AppLocalizations.of(this.state.context).globalPlaylist + " " + ctrl.platform.name + " n°" + ctrl.platform.playlists.value.length.toString();
+    String value = AppLocalizations.of(context).globalPlaylist + " " + ctrl.platform.name + " n°" + ctrl.platform.playlists.value.length.toString();
 
     showDialog(
-      context: this.state.context,
+      context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).tabsViewCreateAPlaylist, style: TextStyle(color: Colors.white)),
+          title: Text(AppLocalizations.of(context).tabsViewCreateAPlaylist, style: TextStyle(color: Colors.white)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1098,7 +1120,7 @@ class TabsView {
                   decoration: InputDecoration(
                     labelStyle: TextStyle(color: Colors.grey),
                     border: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-                    labelText: AppLocalizations.of(this.state.context).tabsViewNameOfPlaylist
+                    labelText: AppLocalizations.of(context).tabsViewNameOfPlaylist
                   ), 
                   onChanged: (String val) {
                     value = val;
@@ -1110,14 +1132,14 @@ class TabsView {
           contentTextStyle: TextStyle(color: Colors.white),
           actions: [
             MaterialButton(
-              child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).cancel, style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.pop(dialogContext),
             ),
             MaterialButton(
-              child: Text(AppLocalizations.of(this.state.context).confirm, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).confirm, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
-                this.state.setState(() {
+                state.setState(() {
                   ctrl.addPlaylist(name: value, ownerId: ctrl.getPlatformInformations()['ownerId']);
                 });
               },
@@ -1137,22 +1159,22 @@ class TabsView {
     String name = playlist.name;
 
     showDialog(
-      context: this.state.context,
+      context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).delete+" $name ?", style: TextStyle(color: Colors.white)),
-          content: Text(AppLocalizations.of(this.state.context).tabsViewRemoveMessage),
+          title: Text(AppLocalizations.of(context).delete+" $name ?", style: TextStyle(color: Colors.white)),
+          content: Text(AppLocalizations.of(context).tabsViewRemoveMessage),
           contentTextStyle: TextStyle(color: Colors.white),
           actions: [
             MaterialButton(
-              child: Text(AppLocalizations.of(this.state.context).no, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).no, style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.pop(dialogContext),
             ),
             MaterialButton(
-              child: Text(AppLocalizations.of(this.state.context).yes, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).yes, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
-                this.state.setState(() {
+                state.setState(() {
                   ctrl.removePlaylist(index);
                 });
               },
@@ -1169,16 +1191,16 @@ class TabsView {
     String value = playlist.name;
 
     showDialog(
-      context: this.state.context,
+      context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).globalRename+" $name", style: TextStyle(color: Colors.white)),
+          title: Text(AppLocalizations.of(context).globalRename+" $name", style: TextStyle(color: Colors.white)),
           content: TextFormField(
             style: TextStyle(color: Colors.white),
             decoration: InputDecoration(
               labelStyle: TextStyle(color: Colors.grey),
               border: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-              labelText: AppLocalizations.of(this.state.context).tabsViewNameOfPlaylist,
+              labelText: AppLocalizations.of(context).tabsViewNameOfPlaylist,
             ),
             initialValue: name,
             onChanged: (String val) {
@@ -1187,14 +1209,14 @@ class TabsView {
           ),
           actions: [
             MaterialButton(
-              child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).cancel, style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.pop(dialogContext),
             ),
             MaterialButton(
-              child: Text(AppLocalizations.of(this.state.context).confirm, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).confirm, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
-                this.state.setState(() {
+                state.setState(() {
                   playlist.rename(value);
                 });
               },
@@ -1210,32 +1232,32 @@ class TabsView {
     String name = playlist.name;
     
     showDialog(
-      context: this.state.context,
+      context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).globalClone+" $name "+ AppLocalizations.of(this.state.context).globalIn+ " SmartShuffle ?", style: TextStyle(color: Colors.white)),
+          title: Text(AppLocalizations.of(context).globalClone+" $name "+ AppLocalizations.of(context).globalIn+ " SmartShuffle ?", style: TextStyle(color: Colors.white)),
           actions: [
             MaterialButton(
-              child: Text(AppLocalizations.of(this.state.context).no, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).no, style: TextStyle(color: Colors.white)),
               onPressed: () => Navigator.pop(dialogContext),
             ),
             MaterialButton(
-              child: Text(AppLocalizations.of(this.state.context).yes, style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context).yes, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
                 Playlist play;
-                this.state.setState(() {
+                state.setState(() {
                   play = PlatformsLister.platforms[ServicesLister.DEFAULT].addPlaylist(playlist: playlist,);
                 });
                 if(play == null) {
                   showDialog(
-                    context: this.state.context,
+                    context: context,
                     builder: (dialogContext) {
                       return AlertDialog(
-                        title: Text("$name "+AppLocalizations.of(this.state.context).tabsViewAlreadyExists+" "+ AppLocalizations.of(this.state.context).globalIn+" SmartShuffle", style: TextStyle(color: Colors.white)),
+                        title: Text("$name "+AppLocalizations.of(context).tabsViewAlreadyExists+" "+ AppLocalizations.of(context).globalIn+" SmartShuffle", style: TextStyle(color: Colors.white)),
                         actions: [
                           FlatButton(
-                            child: Text(AppLocalizations.of(this.state.context).ok, style: TextStyle(color: Colors.white)),
+                            child: Text(AppLocalizations.of(context).ok, style: TextStyle(color: Colors.white)),
                             onPressed: () => Navigator.pop(dialogContext),
                           )
                         ],
@@ -1259,10 +1281,10 @@ class TabsView {
     PlatformsController defaultCtrl = PlatformsLister.platforms[ServicesLister.DEFAULT];
     
     showDialog(
-      context: this.state.context,
+      context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(this.state.context).tabsViewChoosePlaylistToMerge+" $name", style: TextStyle(color: Colors.white)),
+          title: Text(AppLocalizations.of(context).tabsViewChoosePlaylistToMerge+" $name", style: TextStyle(color: Colors.white)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1293,7 +1315,7 @@ class TabsView {
                                 ),
                               )
                             ),
-                            subtitle: Text(ctrl.platform.playlists.value[index].getTracks.length.toString() + " "+AppLocalizations.of(this.state.context).globalTracks),
+                            subtitle: Text(ctrl.platform.playlists.value[index].getTracks.length.toString() + " "+AppLocalizations.of(context).globalTracks),
                             onTap: () {
                               Navigator.pop(dialogContext);
                               //TODO Message de confirmation
@@ -1308,7 +1330,7 @@ class TabsView {
                 allCards.add(
                   Container(
                     child: MaterialButton(
-                      child: Text(AppLocalizations.of(this.state.context).cancel, style: TextStyle(color: Colors.white)),
+                      child: Text(AppLocalizations.of(context).cancel, style: TextStyle(color: Colors.white)),
                       onPressed: () => Navigator.pop(dialogContext),
                     ),
                   ),

@@ -365,7 +365,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                                   opacity: _elementsOpacity,
                                                   child: InkWell(
                                                       onTap: () {
-                                                        TabsView(this).addToPlaylist(trackUp, ctrl: PlatformsLister.platforms[trackUp.service]);
+                                                        TabsView(objectState: this).addToPlaylist(trackUp, ctrl: PlatformsLister.platforms[trackUp.service]);
                                                       },
                                                       child: Icon(
                                                       Icons.add,
@@ -419,7 +419,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                 TracksPopupItemReport().build(context)
                               ],
                               onSelected: (value) {
-                                TabsView(this).trackMainDialogOptions(
+                                TabsView(objectState: this).trackMainDialogOptions(
                                   value,
                                   name: FrontPlayerController().currentTrack.value.name,
                                   ctrl: PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service],
