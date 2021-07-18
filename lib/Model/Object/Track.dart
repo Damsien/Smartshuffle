@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Model/Util.dart';
 
 class Track {
 
@@ -37,7 +38,6 @@ class Track {
       @required String title,
       @required String artist,
       @required ServicesLister service,
-      String serviceName,
       @required id,
       @required Duration totalDuration,
       String album,
@@ -58,7 +58,6 @@ class Track {
     else _addDate = DateTime.now();
     if (totalDuration != null) _totalDuration.value = totalDuration;
     if (streamTrack != null) _streamTrack = streamTrack;
-    if (serviceName != null) _service = PlatformsLister.nameToService(serviceName);
   }
 
   ValueListenable<bool> get isSelected => _isSelected;
@@ -169,26 +168,29 @@ class Track {
     title: json['title'],
     artist: json['artist'],
     album: json['album'],
-    imageUrlLittle: json['imageurlLittle'],
+    imageUrlLittle: json['imageurllittle'],
     imageUrlLarge: json['imageurllarge'],
-    serviceName: json['servicename'],
-    totalDuration: PlatformsLister.parseDuration(json['duration']),
-    streamTrack: json['streamTrack'],
+    service: PlatformsLister.nameToService(json['service']),
+    totalDuration: Util.parseDuration(json['duration']),
+    streamTrack: json['streamtrack'],
     addDate: json['addDate']
   );
 
   Map<String, dynamic> toMap() =>
   {
     'id': _id,
+    'service': serviceName,
+    'playlist_id': PlatformsLister.platforms[service].platform.getPlaylistTrack(this).id,
+    'playlist_service': PlatformsLister.platforms[service].platform.getPlaylistTrack(this).service,
     'title': _title,
     'artist': _artist,
     'album': _album,
     'imageurllittle': _imageUrlLittle,
     'imageurllarge': _imageUrlLarge,
-    'servicename': serviceName,
     'totalduration': _totalDuration.value.toString(),
+    'adddate': _addDate,
     'streamtrack_id': _streamTrack.id,
-    'addDate': _addDate
+    'streamtrack_service': _streamTrack.serviceName
   };
 
 

@@ -210,4 +210,34 @@ class Playlist {
 
     return getTracks;
   }
+
+  bool isMine(Track track) {
+    return getTracks.contains(track);
+  }
+
+
+
+  // Object persistence
+
+  factory Playlist.fromMap(Map<String, dynamic> json) => Playlist(
+    id: json['id'],
+    ownerId: json['ownerid'],
+    ownerName: json['ownername'],
+    service: PlatformsLister.nameToService(json['service']),
+    name: json['name'],
+    imageUrl: json['imageurl'],
+    uri: Uri.parse(json['uri'])
+  );
+
+  Map<String, dynamic> toMap() =>
+  {
+    'id': _id,
+    'service': _service.toString().split(".")[1],
+    'platform_name': PlatformsLister.platforms[_service].platform.name,
+    'name': name,
+    'ownerid': ownerId,
+    'ownername': ownerName,
+    'imageurl': imageUrl,
+    'uri': uri.toFilePath(windows: false)
+  };
 }

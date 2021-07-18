@@ -175,19 +175,46 @@ class DataBaseController {
 
   _onCreate(Database db, int version) async {
     await db.execute('''
+      CREATE TABLE platform(
+        name STRING PRIMARY KEY,
+        userinformations_name STRING,
+        userinformations_account STRING,
+        userinformations_isconnected INTEGER,
+        platformInformations_logo STRING,
+        platformInformations_icon STRING,
+        platformInformations_maincolor STRING,
+        platformInformations_package STRING
+      );
+      CREATE TABLE playlist(
+        id STRING PRIMARY KEY,
+        service STRING PRIMARY KEY,
+        platform_name STRING,
+        FOREIGN KEY(platform_name) REFERENCES platform(name),
+        name STRING,
+        ownerid STRING,
+        ownername STRING,
+        imageurl STRING,
+        uri STRING
+      );
       CREATE TABLE track(
-        id TEXT PRIMARY KEY,
-        title TEXT,
-        artist TEXT,
-        album TEXT,
-        imageurllittle TEXT,
-        imageurllarge TEXT,
-        servicename TEXT,
-        duration TEXT,
+        id STRING PRIMARY KEY,
+        service STRING PRIMARY KEY,
+        playlist_id STRING,
+        playlist_service STRING,
+        FOREIGN KEY(playlist_id) REFERENCES playlist(id),
+        FOREIGN KEY(playlist_service) REFERENCES playlist(service),
+        title STRING,
+        artist STRING,
+        album STRING,
+        imageurllittle STRING,
+        imageurllarge STRING,
+        duration STRING,
         adddate DATETIME,
-        streamtrack_id TEXT,
-        FOREIGN KEY(stream_track_id) REFERENCES track(id)
-      )
+        streamtrack_id STRING,
+        streamtrack_service STRING,
+        FOREIGN KEY(streamtrack_id) REFERENCES track(id),
+        FOREIGN KEY(streamtrack_service) REFERENCES track(service)
+      );
     ''');
   }
 
@@ -196,6 +223,11 @@ class DataBaseController {
     var query = await db.query('track');
     List<Track> tracks = query.isNotEmpty ?
       query.map((e) => Track.fromMap(e)).toList() : [];
+  }
+
+
+  Future<Track> getTrack(String id, String serviceName) {
+    
   }
 
 }

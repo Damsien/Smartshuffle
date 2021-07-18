@@ -11,7 +11,6 @@ import 'package:smartshuffle/Model/Object/Track.dart';
 class PlatformDefaultController extends PlatformsController {
   PlatformDefaultController(Platform platform) : super(platform) {
     platform.userInformations['isConnected'] = true;
-    platform.platformInformations['logo'] = "assets/logo/smartshuffle.png";
     platform.platformInformations['logo'] = 'assets/logo/smartshuffle.png';
     platform.platformInformations['icon'] =
         'assets/logo/icons/smartshuffle.png';

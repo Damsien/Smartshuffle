@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/Model/Util.dart';
 
 class Platform {
   
@@ -80,5 +81,49 @@ class Platform {
     return playlists.value;
   }
 
+
+  bool isMine(Playlist playlist) {
+    return playlists.value.contains(playlist);
+  }
+
+
+  Playlist getPlaylistTrack(Track track) {
+    for(Playlist playlist in playlists.value) {
+      if(playlist.isMine(track)) return playlist;
+    }
+    return null;
+  }
+
+
+
+
+  // Object persistence
+
+  factory Platform.fromMap(Map<String, dynamic> json) => Platform(
+    json['name'],
+    userInformations: {
+      'name': json['userinformations_name'],
+      'account': json['userinformations_account'],
+      'isconnected': json['userinformations_isconnected']
+    },
+    platformInformations: {
+      'logo': json['platformInformations_logo'],
+      'icon': json['platformInformations_icon'],
+      'maincolor': Util.stringToColor(json['platformInformations_maincolor']),
+      'package': json['platformInformations_package']
+    }
+  );
+
+  Map<String, dynamic> toMap() =>
+  {
+    'name': name,
+    'userinformations_name': userInformations['name'],
+    'userinformations_account': userInformations['account'],
+    'userinformations_isconnected': userInformations['isConnected'],
+    'platformInformations_logo': platformInformations['logo'],
+    'platformInformations_icon': platformInformations['icon'],
+    'platformInformations_maincolor': platformInformations['maincolor'].toString(),
+    'platformInformations_package': platformInformations['package'],
+  };
 
 }
