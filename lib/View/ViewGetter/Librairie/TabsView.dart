@@ -122,7 +122,7 @@ class _TracksViewState extends State<TracksView> {
       if(value != '') {
         List<Track> temp = List<Track>();
         for(Track track in _playlist.getTracks) {
-          if(track.name.contains(value) || track.name.toLowerCase().contains(value)
+          if(track.title.contains(value) || track.title.toLowerCase().contains(value)
           || track.artist.contains(value) || track.artist.toLowerCase().contains(value)) {
             temp.add(track);
           }
@@ -414,7 +414,7 @@ class _TrackViewState extends State<TrackView> {
         },
         onDoubleTap: () {
           TabsView(objectState: this).addToQueue(track);
-          String trackName = track.name;
+          String trackName = track.title;
           SnackBarController().showSnackBar(
             SnackBar(
               action: SnackBarAction(
@@ -433,7 +433,7 @@ class _TrackViewState extends State<TrackView> {
                 valueListenable: track.isSelected,
                 builder: (_, value, __) {
                   return Text(
-                    track.name,
+                    track.title,
                     style: (value ?
                       TextStyle(color: _materialColor.shade300) : TextStyle(color: Colors.white)
                     )
@@ -755,7 +755,7 @@ class TabsView {
     @required int index,
     Function refresh
   }) {
-    String name = track.name;
+    String name = track.title;
 
     return PopupMenuButton(
       icon: Icon(Icons.more_vert),
@@ -780,7 +780,7 @@ class TabsView {
     Function refresh
   }) async {
     HapticFeedback.lightImpact();
-    String name = track.name;
+    String name = track.title;
 
     await showMenu(
         context: context,
@@ -802,7 +802,7 @@ class TabsView {
 
 
   void addToPlaylist(Track track, {@required PlatformsController ctrl}) {
-    String name = track.name;
+    String name = track.title;
     String ctrlName = ctrl.platform.name;
     showDialog(
       context: context,
@@ -951,7 +951,7 @@ class TabsView {
     @required int playlistIndex,
     Function refresh
   }) {
-    String name = track.name;
+    String name = track.title;
     String playlistName = ctrl.platform.playlists.value[playlistIndex].name;
     showDialog(
       context: context,
@@ -983,7 +983,7 @@ class TabsView {
 
 
   void trackInformations(Track track, {@required PlatformsController ctrl}) {
-    String name = track.name;
+    String name = track.title;
     String artist = track.artist;
     String artist_string = AppLocalizations.of(context).globalArtist;
     if(artist.contains(',')) artist_string = AppLocalizations.of(context).globalArtists;

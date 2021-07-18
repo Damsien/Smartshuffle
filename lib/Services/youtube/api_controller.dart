@@ -203,7 +203,7 @@ class API {
       Duration duration = _toDuration(response.items[0].contentDetails.duration);
       Track track = Track(
           id: id,
-          name: name,
+          title: name,
           artist: artist,
           imageUrlLittle: imageUrlLittle,
           imageUrlLarge: imageUrlLarge,

@@ -26,7 +26,7 @@ class YoutubeRetriever {
   }
 
   Future<MapEntry<Track, File>> streamByName(Track track) async {
-    Track tr = await SearchAlgorithm().search(tArtist: track.artist, tTitle: track.name, tDuration: track.totalDuration.value);
+    Track tr = await SearchAlgorithm().search(tArtist: track.artist, tTitle: track.title, tDuration: track.totalDuration.value);
     return MapEntry(tr, await streamById(tr.id));
   }
 

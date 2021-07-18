@@ -34,7 +34,7 @@ class FrontPlayerController {
   ValueNotifier<Track> currentTrack = ValueNotifier<Track>(Track(
     service: ServicesLister.DEFAULT,
     artist: '',
-    name: '',
+    title: '',
     id: null,
     imageUrlLittle: '',
     imageUrlLarge: '',)
@@ -227,7 +227,7 @@ class FrontPlayerController {
     queue['service'] = List<String>();
     queue['duration'] = List<String>();
     for(MapEntry<Track, bool> me in frontQueue) {
-      queue['name'].add(me.key.name);
+      queue['name'].add(me.key.title);
       queue['artist'].add(me.key.artist);
       queue['image'].add(me.key.imageUrlLarge);
       queue['id'].add(me.key.id);

@@ -146,7 +146,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
       MapEntry<Track, File> me = MapEntry<Track, File>(
         Track(
           id: searchingItem.id,
-          name: track.name,
+          title: track.title,
           artist: track.artist,
           imageUrlLarge: track.imageUrlLarge,
           totalDuration: track.totalDuration.value
@@ -237,7 +237,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
         for(int i=0; i<arguments['queue']['id'].length; i++) {
           trackQueue.add(Track(
             id: arguments['queue']['id'][i],
-            name: arguments['queue']['name'][i],
+            title: arguments['queue']['name'][i],
             artist: arguments['queue']['artist'][i],
             imageUrlLarge: arguments['queue']['image'][i],
             service: PlatformsLister.nameToService(arguments['queue']['service'][i]),
@@ -251,7 +251,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
         final MediaItem mediaItem = MediaItem(
           id: foundTrack.value.path,
           album: track.artist,
-          title: track.name,
+          title: track.title,
           artUri: Uri.parse(track.imageUrlLarge),
           duration: foundTrack.key.totalDuration.value,
           extras: {'track_id': track.id, 'service_name': track.serviceName}
@@ -269,7 +269,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
       case 'INSERT_ITEM' : {
         Track tr = Track(
           id: arguments['track']['id'],
-          name: arguments['track']['name'],
+          title: arguments['track']['name'],
           artist: arguments['track']['artist'],
           imageUrlLarge: arguments['track']['image'],
           service: PlatformsLister.nameToService(arguments['track']['service'])
@@ -279,7 +279,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
         final MediaItem mi = MediaItem(
           id: me.value.path,
           album: tr.artist,
-          title: tr.name,
+          title: tr.title,
           artUri: Uri.parse(tr.imageUrlLarge),
           duration: Duration(seconds: tr.totalDuration.value.inSeconds),
           extras: {'track_id': tr.id, 'service_name': tr.serviceName}
@@ -357,7 +357,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
             MediaItem mi = MediaItem(
               id: file.path,
               album: track.artist,
-              title: track.name,
+              title: track.title,
               artUri: Uri.parse(track.imageUrlLarge),
               duration: Duration(seconds: track.totalDuration.value.inSeconds),
               extras: {'track_id': track.id, 'service_name': track.serviceName}

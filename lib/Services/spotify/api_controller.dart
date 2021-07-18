@@ -179,7 +179,7 @@ class API {
       if (id != null) {
         list.add(Track(
             id: id,
-            name: name,
+            title: name,
             artist: artist,
             addDate: DateTime.parse(addDate),
             imageUrlLittle: imageUrlLittle,

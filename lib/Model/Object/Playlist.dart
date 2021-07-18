@@ -159,8 +159,8 @@ class Playlist {
     if (value == PopupMenuConstants.SORTMODE_TITLE) {
       if(_sortDirection[value] == null || !_sortDirection[value]) {
         tracks.sort((a, b) {
-          String _a = a.key.name;
-          String _b = b.key.name;
+          String _a = a.key.title;
+          String _b = b.key.title;
 
           return _a.compareTo(_b);
         });
@@ -170,8 +170,8 @@ class Playlist {
         _sortDirection[value] = true;
       } else {
         tracks.sort((a, b) {
-          String _a = a.key.name;
-          String _b = b.key.name;
+          String _a = a.key.title;
+          String _b = b.key.title;
 
           return _b.compareTo(_a);
         });

@@ -103,7 +103,7 @@ class _FormReport extends State<FormReport> {
     if (_formKey.currentState.validate()) {
                 
       String subject = _select + " 😓";
-      String title = this.widget.track.name;
+      String title = this.widget.track.title;
       String artist = this.widget.track.artist;
       String id = this.widget.track.id;
       String service = this.widget.track.serviceName;

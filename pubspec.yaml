@@ -43,6 +43,7 @@ dependencies:
   focus_detector: any
   visibility_detector: any
   youtube_explode_dart: ^1.9.6
+  sqflite: any
 
     #google sign in
   firebase_auth: any

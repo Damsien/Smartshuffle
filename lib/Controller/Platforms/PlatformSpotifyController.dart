@@ -142,7 +142,13 @@ class PlatformSpotifyController extends PlatformsController {
   }
 
   @override
-  Future<MapEntry<Track,File>> getFile(Track tr) async => await YoutubeRetriever().streamByName(tr);
+  Future<MapEntry<Track,File>> getFile(Track tr) async {
+    if(tr.streamTrack == null) {
+      return await YoutubeRetriever().streamByName(tr);
+    } else {
+      return MapEntry(tr.streamTrack, await YoutubeRetriever().streamById(tr.streamTrack.id));
+    }
+  }
 
   // @override
   // pause() {

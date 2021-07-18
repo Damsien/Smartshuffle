@@ -341,7 +341,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                                     margin: EdgeInsets.only(left: _screen_width * 0.15 * _ratio),
                                                     width: _screen_width - (_screen_width * 0.1 * 4),
                                                     child: Text(
-                                                      trackUp.name,
+                                                      trackUp.title,
                                                       textAlign: TextAlign.left,
                                                       style: TextStyle(fontSize: _textSize + (5 * _ratio)),
                                                     )
@@ -421,7 +421,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                               onSelected: (value) {
                                 TabsView(objectState: this).trackMainDialogOptions(
                                   value,
-                                  name: FrontPlayerController().currentTrack.value.name,
+                                  name: FrontPlayerController().currentTrack.value.title,
                                   ctrl: PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service],
                                   track: FrontPlayerController().currentTrack.value,
                                   index: FrontPlayerController().currentPlaylist.getTracks.indexOf(FrontPlayerController().currentTrack.value)
@@ -690,7 +690,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                                                       Flexible(
                                                                         flex: 5,
                                                                         child: ListTile(
-                                                                          title: Text(queue.elementAt(index).name),
+                                                                          title: Text(queue.elementAt(index).title),
                                                                           leading: FractionallySizedBox(
                                                                             heightFactor: 0.8,
                                                                             child: AspectRatio(
@@ -756,7 +756,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                                                       Flexible(
                                                                         flex: 5,
                                                                         child: ListTile(
-                                                                          title: Text(queue.elementAt(index).name),
+                                                                          title: Text(queue.elementAt(index).title),
                                                                           leading: FractionallySizedBox(
                                                                             heightFactor: 0.8,
                                                                             child: AspectRatio(

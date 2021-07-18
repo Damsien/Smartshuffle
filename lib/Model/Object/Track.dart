@@ -12,7 +12,7 @@ class Track {
   static const String DEFAULT_IMAGE_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Solid_yellow.svg/512px-Solid_yellow.svg.png';
 
   String _id;
-  String _name;
+  String _title;
   String _artist;
   String _album;
   ValueNotifier<Duration> _currentDuration = ValueNotifier<Duration>(Duration(seconds: 0));
@@ -29,21 +29,26 @@ class Track {
   ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   ValueNotifier<bool> _isSelected = ValueNotifier<bool>(false);
 
-  Track _tempoTrack;
+  Track _streamTrack;
   File _file;
 
   Track(
-      {@required String name,
+    {
+      @required String title,
       @required String artist,
       @required ServicesLister service,
+      String serviceName,
       @required id,
       @required Duration totalDuration,
       String album,
       @required String imageUrlLittle,
       @required String imageUrlLarge,
-      DateTime addDate}) {
+      DateTime addDate,
+      Track streamTrack
+    }
+  ) {
     _id = id;
-    _name = name;
+    _title = title;
     _artist = artist;
     _album = album;
     if (imageUrlLittle != null) _imageUrlLittle = imageUrlLittle;
@@ -52,6 +57,8 @@ class Track {
     if (addDate != null) _addDate = addDate;
     else _addDate = DateTime.now();
     if (totalDuration != null) _totalDuration.value = totalDuration;
+    if (streamTrack != null) _streamTrack = streamTrack;
+    if (serviceName != null) _service = PlatformsLister.nameToService(serviceName);
   }
 
   ValueListenable<bool> get isSelected => _isSelected;
@@ -59,7 +66,7 @@ class Track {
 
   String get id => _id;
 
-  String get name => _name;
+  String get title => _title;
   String get artist => _artist;
   String get album => _album;
   
@@ -77,21 +84,18 @@ class Track {
   String get serviceName => _service.toString().split(".")[1];  
   // Stream get serviceStream => _stream;
 
-  Track get tempoTrack => _tempoTrack;
-
-  // Future<File> get file async {
-  //   Completer().complete(_file);
-  //   if(_file != null) return Completer().future;
-  //   else return await loadFile();
-  // }
+  Track get streamTrack => _streamTrack;
 
   Future<File> loadFile() async {
-    PlatformsController ctrl = PlatformsLister.platforms[_service];
-    MapEntry<Track, File> me = await ctrl.getFile(this);
-    _tempoTrack = me.key;
-    _totalDuration = _tempoTrack.totalDuration;
-    _totalDuration.notifyListeners();
-    return _file = me.value;
+    if(_file != null) {
+      return _file;
+    } else {
+      MapEntry<Track, File> me = await PlatformsLister.platforms[_service].getFile(this);
+      _streamTrack = me.key;
+      _totalDuration = _streamTrack.totalDuration;
+      _totalDuration.notifyListeners();
+      return _file = me.value;
+    }
   }
 
   bool setIsSelected(bool isSelected) {
@@ -114,7 +118,7 @@ class Track {
 
   @override
   String toString() {
-    return "{$_name - $_artist}";
+    return "{$_title - $_artist}";
   }
 
 
@@ -156,5 +160,38 @@ class Track {
       ctrl.seekTo(position);
     }
   }
+
+
+  // Object persistence
+
+  factory Track.fromMap(Map<String, dynamic> json) => Track(
+    id: json['id'],
+    title: json['title'],
+    artist: json['artist'],
+    album: json['album'],
+    imageUrlLittle: json['imageurlLittle'],
+    imageUrlLarge: json['imageurllarge'],
+    serviceName: json['servicename'],
+    totalDuration: PlatformsLister.parseDuration(json['duration']),
+    streamTrack: json['streamTrack'],
+    addDate: json['addDate']
+  );
+
+  Map<String, dynamic> toMap() =>
+  {
+    'id': _id,
+    'title': _title,
+    'artist': _artist,
+    'album': _album,
+    'imageurllittle': _imageUrlLittle,
+    'imageurllarge': _imageUrlLarge,
+    'servicename': serviceName,
+    'totalduration': _totalDuration.value.toString(),
+    'streamtrack_id': _streamTrack.id,
+    'addDate': _addDate
+  };
+
+
+
 
 }
