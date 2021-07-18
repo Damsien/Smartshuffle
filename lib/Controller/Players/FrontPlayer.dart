@@ -86,35 +86,45 @@ class FrontPlayerController {
     bool isShuffle,
     Track track
   }) {
-    if(isShuffle == null) {
-      isShuffle = this.isShuffle;
-    }
 
-    //Init queue
-    _createQueue(playlist, isShuffle: isShuffle, track: track);
+    if(track.id != currentTrack.value.id) {
 
-    //Play track
-    if (track != null) {
-
-      _playTrack(track);
-      if(pageCtrl.hasClients) {
-        if(isShuffle) {
-          pageCtrl.jumpToPage(0);
-        } else {
-          pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
-        }
+      if(isShuffle == null) {
+        isShuffle = this.isShuffle;
       }
+
+      //Init queue
+      _createQueue(playlist, isShuffle: isShuffle, track: track);
+
+      //Play track
+      if (track != null) {
+
+        _playTrack(track);
+        if(pageCtrl.hasClients) {
+          if(isShuffle) {
+            pageCtrl.jumpToPage(0);
+          } else {
+            pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+          }
+        }
+
+      } else {
+
+        _playTrack(GlobalQueue.queue.value[0].key);
+        if(pageCtrl.hasClients) {
+          pageCtrl.jumpToPage(0);
+        }
+
+      }
+
+      _loadBackQueue(GlobalQueue.queue.value);
 
     } else {
 
-      _playTrack(GlobalQueue.queue.value[0].key);
-      if(pageCtrl.hasClients) {
-        pageCtrl.jumpToPage(0);
-      }
+      currentTrack.value.setIsSelected(true);
 
     }
 
-    _loadBackQueue(GlobalQueue.queue.value);
   }
 
 
@@ -200,6 +210,11 @@ class FrontPlayerController {
 
   /// Transfer current [frontQueue] to the back player notification
   Future<void> _loadBackQueue(frontQueue) async {
+    
+    isPlayerReady = false;
+    //Reload front player state to show it
+    views['player'].setState(() {});
+
     if(!AudioService.connected) {
       await AudioService.connect();
     }
@@ -220,6 +235,7 @@ class FrontPlayerController {
       queue['duration'].add(me.key.totalDuration.value.toString());
     }
 
+    await AudioService.stop();
     await AudioService.start(
       backgroundTaskEntrypoint: _entrypoint
     );

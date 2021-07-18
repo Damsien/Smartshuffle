@@ -138,8 +138,7 @@ class PlatformSpotifyController extends PlatformsController {
   @override
   void renamePlaylist(Playlist playlist, String name) {
     playlist.rename(name);
-    spotify.API api = new spotify.API();
-    api.setPlaylistName(playlist);
+    spotify.API().setPlaylistName(playlist);
   }
 
   @override

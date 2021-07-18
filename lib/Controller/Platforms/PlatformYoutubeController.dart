@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -140,10 +141,7 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
-  Future<MapEntry<Track,File>> getFile(Track tr) {
-    // TODO: implement stream
-    throw UnimplementedError();
-  }
+  Future<MapEntry<Track,File>> getFile(Track tr) async => MapEntry(tr, await YoutubeRetriever().streamById(tr.id));
 
   // @override
   // pause() {

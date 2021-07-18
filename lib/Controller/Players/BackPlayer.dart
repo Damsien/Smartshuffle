@@ -229,7 +229,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
     switch(type) {
 
       case 'LAUNCH_QUEUE' : {
-        await AudioService.pause();
+        // await AudioService.pause();
 
         currentIndex = 0;
         trackQueue.clear();
@@ -424,7 +424,7 @@ class PlayerListener {
 
         }
 
-        if(data['INDEX'] != null) {
+        if(data is Map && data['INDEX'] != null) {
           FrontPlayerController().backIndex = data['INDEX'];
         }
 
