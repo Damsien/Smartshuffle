@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Util.dart';
@@ -50,6 +51,7 @@ class Platform {
     playlists.value.add(playlist);
     Playlist newPlaylist = playlists.value.removeAt(playlists.value.length-1);
     playlists.value.insert(0, newPlaylist);
+    DataBaseController().insertPlaylist(this, playlist);
     return newPlaylist;
   }
 

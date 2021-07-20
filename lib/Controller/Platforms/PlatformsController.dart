@@ -24,6 +24,7 @@ abstract class PlatformsController {
 
   PlatformsController(Platform platform) {
     this.platform = platform;
+    DataBaseController().insertPlatform(platform);
     this.updateInformations();
   }
 
@@ -265,9 +266,11 @@ class DataBaseController {
     await db.insert('platform', platform.toMap());
   }
 
-  Future<void> insertPlaylist(Playlist playlist) async {
+  Future<void> insertPlaylist(Platform platform, Playlist playlist) async {
     Database db = await DataBaseController().database;
-    await db.insert('playlist', playlist.toMap());
+    Map obj = playlist.toMap();
+    obj['platform_name'] = platform.name;
+    await db.insert('playlist', obj);
   }
 
   Future<void> insertTrack(Playlist playlist, Track track) async {

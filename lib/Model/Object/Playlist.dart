@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
@@ -58,6 +59,7 @@ class Playlist {
     tracks.add(MapEntry(track, DateTime.now()));
     MapEntry newTrack = tracks.removeAt(tracks.length - 1);
     tracks.insert(0, newTrack);
+    DataBaseController().insertTrack(this, track);
     return track.id;
   }
 
@@ -233,7 +235,6 @@ class Playlist {
   {
     'id': _id,
     'service': _service.toString().split(".")[1],
-    'platform_name': PlatformsLister.platforms[_service].platform.name,
     'name': name,
     'ownerid': ownerId,
     'ownername': ownerName,
