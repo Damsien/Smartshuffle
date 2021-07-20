@@ -18,6 +18,8 @@ enum ServicesLister {
   YOUTUBE
 }
 
+String serviceToString(ServicesLister service) => service.toString().split(".")[1];
+
 class PlatformsLister {
 
   static LinkedHashMap<ServicesLister, PlatformsController> platforms = 

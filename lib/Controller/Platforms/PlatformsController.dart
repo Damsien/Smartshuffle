@@ -176,58 +176,147 @@ class DataBaseController {
   _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE platform(
-        name STRING PRIMARY KEY,
-        userinformations_name STRING,
-        userinformations_account STRING,
+        name TEXT PRIMARY KEY,
+        userinformations_name TEXT,
+        userinformations_account TEXT,
         userinformations_isconnected INTEGER,
-        platformInformations_logo STRING,
-        platformInformations_icon STRING,
-        platformInformations_maincolor STRING,
-        platformInformations_package STRING
+        platformInformations_logo TEXT,
+        platformInformations_icon TEXT,
+        platformInformations_maincolor TEXT,
+        platformInformations_package TEXT
       );
       CREATE TABLE playlist(
-        id STRING PRIMARY KEY,
-        service STRING PRIMARY KEY,
-        platform_name STRING,
+        id TEXT PRIMARY KEY,
+        service TEXT PRIMARY KEY,
+        platform_name TEXT,
         FOREIGN KEY(platform_name) REFERENCES platform(name),
-        name STRING,
-        ownerid STRING,
-        ownername STRING,
-        imageurl STRING,
+        name TEXT,
+        ownerid TEXT,
+        ownername TEXT,
+        imageurl TEXT,
         uri STRING
       );
+      CREATE TABLE link_playlist_track(
+        track_id TEXT,
+        track_service TEXT,
+        playlist_id TEXT KEY,
+        playlist_service TEXT KEY,
+        FOREIGN KEY(track_id) REFERENCES track(id),
+        FOREIGN KEY(track_service) REFERENCES track(service),
+        FOREIGN KEY(playlist_id) REFERENCES playlist(id),
+        FOREIGN KEY(playlist_service) REFERENCES playlist(service)
+      );
       CREATE TABLE track(
-        id STRING PRIMARY KEY,
-        service STRING PRIMARY KEY,
-        playlist_id STRING,
-        playlist_service STRING,
+        id TEXT PRIMARY KEY,
+        service TEXT PRIMARY KEY,
+        playlist_id TEXT,
+        playlist_service TEXT,
         FOREIGN KEY(playlist_id) REFERENCES playlist(id),
         FOREIGN KEY(playlist_service) REFERENCES playlist(service),
-        title STRING,
-        artist STRING,
-        album STRING,
-        imageurllittle STRING,
-        imageurllarge STRING,
-        duration STRING,
+        title TEXT,
+        artist TEXT,
+        album TEXT,
+        imageurllittle TEXT,
+        imageurllarge TEXT,
+        duration TEXT,
         adddate DATETIME,
-        streamtrack_id STRING,
-        streamtrack_service STRING,
+        streamtrack_id TEXT,
+        streamtrack_service TEXT,
         FOREIGN KEY(streamtrack_id) REFERENCES track(id),
         FOREIGN KEY(streamtrack_service) REFERENCES track(service)
       );
     ''');
   }
 
-  Future<List<Track>> getTracks(PlatformsController ctrl, Playlist playlist) async {
+  Future<void> removePlatform(Platform platform) async {
     Database db = await DataBaseController().database;
-    var query = await db.query('track');
-    List<Track> tracks = query.isNotEmpty ?
-      query.map((e) => Track.fromMap(e)).toList() : [];
+    await db.delete('platform', where: 'name = ?', whereArgs: [platform.name]);
   }
 
+  Future<void> removePlaylist(Playlist playlist) async {
+    Database db = await DataBaseController().database;
+    await db.delete('playlist', where: 'id = ? AND service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
+    await db.delete('link_playlist_track', where: 'playlist_id = ? AND playlist_service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
+  }
 
-  Future<Track> getTrack(String id, String serviceName) {
-    
+  Future<void> removeTrack(Track track) async {
+    Database db = await DataBaseController().database;
+    await db.delete('track', where: 'id = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
+    await db.delete('link_playlist_track', where: 'track_id = ? AND track_service = ?', whereArgs: [track.id, track.serviceName]);
+  }
+
+  Future<void> updatePlatform(Platform platform) async {
+    Database db = await DataBaseController().database;
+    await db.update('platform', platform.toMap(), where: 'name = ?', whereArgs: [platform.name]);
+  }
+
+  Future<void> updatePlaylist(Playlist playlist) async {
+    Database db = await DataBaseController().database;
+    await db.update('playlist', playlist.toMap(), where: 'id = ? AND service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
+  }
+
+  Future<void> updateTrack(Track track) async {
+    Database db = await DataBaseController().database;
+    await db.update('track', track.toMap(), where: 'id = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
+  }
+
+  Future<void> insertPlatform(Platform platform) async {
+    Database db = await DataBaseController().database;
+    await db.insert('platform', platform.toMap());
+  }
+
+  Future<void> insertPlaylist(Playlist playlist) async {
+    Database db = await DataBaseController().database;
+    await db.insert('playlist', playlist.toMap());
+  }
+
+  Future<void> insertTrack(Playlist playlist, Track track) async {
+    Database db = await DataBaseController().database;
+    await db.insert('track', track.toMap());
+    await db.insert('link_playlist_track',
+      {'track_id': track.id, 'track_service': track.serviceName, 'playlist_id': playlist.id, 'playlist_service': serviceToString(playlist.service)}
+    );
+  }
+
+  Future<List<Platform>> getPlatforms() async {
+    Database db = await DataBaseController().database;
+    var query = await db.query('platform');
+    List<Platform> platforms = query.isNotEmpty ?
+      query.map((e) => Platform.fromMap(e)).toList() : [];
+    return platforms;
+  }
+
+  Future<List<Playlist>> getPlaylists(Platform platform) async {
+    Database db = await DataBaseController().database;
+    var query = await db.query('playlist', where: 'platform_name = ?', whereArgs: [platform.name]);
+    List<Playlist> playlists = query.isNotEmpty ?
+      query.map((e) => Playlist.fromMap(e)).toList() : [];
+    return playlists;
+  }
+
+  Future<List<Track>> getTracks(Playlist playlist) async {
+    Database db = await DataBaseController().database;
+    var query = await db.rawQuery('''
+      SELECT *
+      FROM track T, link_playlist_track L
+      WHERE
+        T.id = L.track_id AND T.service = L.track_service AND
+        L.playlist_id = ${playlist.id} AND L.playlist_service = ${serviceToString(playlist.service)}
+    ''');
+    List<Track> tracks = query.isNotEmpty ?
+      query.map((e) async {
+        e['streamtrack'] = await getTrack(e['streamtrack_id'], e['streamtrack_service']);
+        Track.fromMap(e);
+      }).toList() : [];
+    return tracks;
+  }
+
+  Future<Track> getTrack(String id, String serviceName) async {
+    Database db = await DataBaseController().database;
+    var query = await db.query('track', where: 'id = ? AND service = ?', whereArgs: [id, serviceName], limit: 1);
+    List<Track> tracks = query.isNotEmpty ?
+      query.map((e) => Track.fromMap(e)).toList() : [];
+    return tracks[0];
   }
 
 }

@@ -180,8 +180,6 @@ class Track {
   {
     'id': _id,
     'service': serviceName,
-    'playlist_id': PlatformsLister.platforms[service].platform.getPlaylistTrack(this).id,
-    'playlist_service': PlatformsLister.platforms[service].platform.getPlaylistTrack(this).service,
     'title': _title,
     'artist': _artist,
     'album': _album,
