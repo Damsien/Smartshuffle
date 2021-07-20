@@ -128,7 +128,7 @@ class Platform {
     'name': name,
     'userinformations_name': userInformations['name'],
     'userinformations_account': userInformations['account'],
-    'userinformations_isconnected': userInformations['isConnected'],
+    'userinformations_isconnected': userInformations['isConnected'] == true ? 1 : 0,
     'platformInformations_logo': platformInformations['logo'],
     'platformInformations_icon': platformInformations['icon'],
     'platformInformations_maincolor': platformInformations['maincolor'].toString(),

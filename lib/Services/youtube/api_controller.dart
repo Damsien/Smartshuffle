@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/youtube/v3.dart' as YTB;
 import 'package:smartshuffle/Controller/ServicesLister.dart';
@@ -22,6 +23,7 @@ class API {
   bool _isLoggedIn;
   String _displayName;
   String _email;
+  static final storage = new FlutterSecureStorage();
 
   get displayName => _displayName;
   get email => _email;
@@ -107,24 +109,32 @@ class API {
     };
   }
 
-  Future login() async {
-    Map<dynamic, GoogleSignInAccount> infos = await APIAuth.login();
-    _httpClient = infos.entries.first.key;
-    _youtubeApi = YTB.YouTubeApi(_httpClient);
-    String token;
-    GoogleSignInAccount user = infos.entries.first.value;
-    _displayName = user.displayName;
-    _email = user.email;
-    if (user == null) {
-      _isLoggedIn = false;
+  Future login({String storeToken}) async {
+    if(storeToken == null) {
+      Map<dynamic, GoogleSignInAccount> infos = await APIAuth.login();
+      _httpClient = infos.entries.first.key;
+      _youtubeApi = YTB.YouTubeApi(_httpClient);
+      String token;
+      GoogleSignInAccount user = infos.entries.first.value;
+      _displayName = user.displayName;
+      _email = user.email;
+
+      if (user == null) {
+        _isLoggedIn = false;
+      } else {
+        _isLoggedIn = true;
+        _token = token;
+        storage.write(key: 'youtube', value: token);
+      }
     } else {
       _isLoggedIn = true;
-      _token = token;
+      _token = storeToken;
     }
   }
 
   void disconnect() async {
     _isLoggedIn = await APIAuth.logout();
+    await storage.delete(key: 'youtube');
   }
 
   void _playlistList(List<Playlist> list, YTB.PlaylistListResponse playlists) {

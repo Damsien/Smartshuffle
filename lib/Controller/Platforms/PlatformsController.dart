@@ -159,14 +159,17 @@ class DataBaseController {
   static Database _dataBase;
   Future<Database> get database async => await _initDatabase();
 
+  Future<bool> databaseExists(String path) =>
+    databaseFactory.databaseExists(path);
+
   Future<Database> _initDatabase() async {
     String documentsDirectory = await getDatabasesPath();
     String path = documentsDirectory + 'smartshuffle.db';
     return await openDatabase(
       path,
       version: 1,
-      onCreate: _onCreate(_dataBase, 1),
-      onConfigure: _onConfigure(_dataBase),
+      onCreate: _onCreate,
+      onConfigure: _onConfigure,
     );
   }
 
@@ -281,6 +284,7 @@ class DataBaseController {
 
   Future<void> insertPlatform(Platform platform) async {
     Database db = await DataBaseController().database;
+    print(platform.name);
     await db.insert('platform', platform.toMap());
   }
 
