@@ -41,7 +41,9 @@ class Platform {
   }
   
   Track removeTrackFromPlaylistByIndex(int playlistIndex, int trackIndex) {
-    Track deletedTrack = playlists.value.elementAt(playlistIndex).removeTrack(trackIndex);
+    Playlist playlist = playlists.value.elementAt(playlistIndex);
+    Track deletedTrack = playlist.removeTrack(trackIndex);
+    DataBaseController().removeLink(playlist, deletedTrack);
     return deletedTrack;
   }
 
@@ -57,12 +59,16 @@ class Platform {
 
   Playlist removePlaylist(int playlistIndex) {
     Playlist deletedPlaylist = playlists.value.removeAt(playlistIndex);
+    DataBaseController().removePlaylist(deletedPlaylist);
     return deletedPlaylist;
   }
 
 
 
   List<Playlist> setPlaylist(List<Playlist> playlists) {
+    for(Playlist playlist in playlists) {
+      DataBaseController().insertPlaylist(this, playlist);
+    }
     return this.playlists.value = playlists;
   }
 
@@ -70,6 +76,7 @@ class Platform {
 
   void addAppPackage(String package) {
     platformInformations['package'] = package;
+    DataBaseController().updatePlatform(this);
   }
 
   List<Playlist> reorder(int oldIndex, int newIndex) {

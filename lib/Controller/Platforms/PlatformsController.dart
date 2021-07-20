@@ -190,6 +190,7 @@ class DataBaseController {
         id TEXT PRIMARY KEY,
         service TEXT PRIMARY KEY,
         platform_name TEXT,
+        order INTEGER,
         FOREIGN KEY(platform_name) REFERENCES platform(name),
         name TEXT,
         ownerid TEXT,
@@ -240,6 +241,14 @@ class DataBaseController {
     await db.delete('link_playlist_track', where: 'playlist_id = ? AND playlist_service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
   }
 
+  Future<void> removeLink(Playlist playlist, Track track) async {
+    Database db = await DataBaseController().database;
+    await db.delete('link_playlist_track',
+      where: 'track_id = ? AND track_service = ? AND playlist_id = ? AND playlist_service = ?',
+      whereArgs: [track.id, track.serviceName, playlist.id, serviceToString(playlist.service)]
+    );
+  }
+
   Future<void> removeTrack(Track track) async {
     Database db = await DataBaseController().database;
     await db.delete('track', where: 'id = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
@@ -249,6 +258,15 @@ class DataBaseController {
   Future<void> updatePlatform(Platform platform) async {
     Database db = await DataBaseController().database;
     await db.update('platform', platform.toMap(), where: 'name = ?', whereArgs: [platform.name]);
+  }
+
+  Future<void> updatePlaylistOrder(Platform platform) async {
+    Database db = await DataBaseController().database;
+    List<Playlist> playlists = await getPlaylists(platform);
+    await db.delete('playlist', where: 'platform_name = ?', whereArgs: [platform.name]);
+    for(Playlist playlist in playlists) {
+      await db.insert('playlist', playlist.toMap());
+    }
   }
 
   Future<void> updatePlaylist(Playlist playlist) async {

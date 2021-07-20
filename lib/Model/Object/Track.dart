@@ -93,6 +93,7 @@ class Track {
       _streamTrack = me.key;
       _totalDuration = _streamTrack.totalDuration;
       _totalDuration.notifyListeners();
+      DataBaseController().updateTrack(this);
       return _file = me.value;
     }
   }
@@ -113,6 +114,7 @@ class Track {
 
   void setId(String id) {
     _id = id;
+    DataBaseController().updateTrack(this);
   }
 
   @override

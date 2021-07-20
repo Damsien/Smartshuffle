@@ -70,10 +70,12 @@ class Playlist {
 
   void setId(String id) {
     _id = id;
+    DataBaseController().updatePlaylist(this);
   }
 
   void rename(String name) {
     _name = name;
+    DataBaseController().updatePlaylist(this);
   }
 
   List<Track> get getTracks {
@@ -89,6 +91,7 @@ class Playlist {
     _tracks.clear();
     for (Track track in allTracks) {
       _tracks.add(MapEntry(track, track.addedDate));
+      DataBaseController().insertTrack(this, track);
     }
     return allTracks;
   }
@@ -100,7 +103,10 @@ class Playlist {
       for (Track rTrack in getTracks) {
         if (rTrack.id == track.id) exist = true;
       }
-      if (!exist) this.addTrack(track);
+      if (!exist) {
+        this.addTrack(track);
+        DataBaseController().insertTrack(this, track);
+      }
     }
     return allTracks;
   }
@@ -111,10 +117,12 @@ class Playlist {
         _imageUrl = _tracks[0].key.imageUrlLarge;
       }
     }
+    DataBaseController().updatePlaylist(this);
   }
 
   ServicesLister setService(ServicesLister service) {
     _service = service;
+    DataBaseController().updatePlaylist(this);
   }
 
   List<Track> reorder(int oldIndex, int newIndex) {
@@ -209,6 +217,7 @@ class Playlist {
         _sortDirection[value] = false;
       }
     }
+    DataBaseController().updatePlaylist(this);
 
     return getTracks;
   }
@@ -235,6 +244,8 @@ class Playlist {
   {
     'id': _id,
     'service': _service.toString().split(".")[1],
+    'platform_name': PlatformsLister.platforms[_service].platform.name,
+    'order': PlatformsLister.platforms[_service].platform.playlists.value.indexOf(this),
     'name': name,
     'ownerid': ownerId,
     'ownername': ownerName,
