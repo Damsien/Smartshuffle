@@ -180,7 +180,8 @@ class DataBaseController {
   _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE platform(
-        name TEXT PRIMARY KEY,
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
         userinformations_name TEXT,
         userinformations_account TEXT,
         userinformations_isconnected INTEGER,
@@ -189,18 +190,23 @@ class DataBaseController {
         platformInformations_maincolor TEXT,
         platformInformations_package TEXT
       );
+    ''');
+    await db.execute('''
       CREATE TABLE playlist(
-        id TEXT PRIMARY KEY,
-        service TEXT PRIMARY KEY,
+        id TEXT NOT NULL,
+        services TEXT NOT NULL,
+        PRIMARY KEY(id, service),
         platform_name TEXT,
-        order INTEGER,
         FOREIGN KEY(platform_name) REFERENCES platform(name),
+        order INTEGER,
         name TEXT,
         ownerid TEXT,
         ownername TEXT,
         imageurl TEXT,
         uri STRING
       );
+    ''');
+    await db.execute('''
       CREATE TABLE link_playlist_track(
         track_id TEXT,
         track_service TEXT,
@@ -211,9 +217,11 @@ class DataBaseController {
         FOREIGN KEY(playlist_id) REFERENCES playlist(id),
         FOREIGN KEY(playlist_service) REFERENCES playlist(service)
       );
+    ''');
+    await db.execute('''
       CREATE TABLE track(
-        id TEXT PRIMARY KEY,
-        service TEXT PRIMARY KEY,
+        id TEXT NOT NULL,
+        service TEXT NOT NULL,
         playlist_id TEXT,
         playlist_service TEXT,
         FOREIGN KEY(playlist_id) REFERENCES playlist(id),
@@ -224,13 +232,15 @@ class DataBaseController {
         imageurllittle TEXT,
         imageurllarge TEXT,
         duration TEXT,
-        adddate DATETIME,
+        adddate TEXT,
         streamtrack_id TEXT,
         streamtrack_service TEXT,
         FOREIGN KEY(streamtrack_id) REFERENCES track(id),
+        PRIMARY KEY(id, service),
         FOREIGN KEY(streamtrack_service) REFERENCES track(service)
       );
     ''');
+    print('on est good');
   }
 
   Future<void> removePlatform(Platform platform) async {
@@ -284,8 +294,7 @@ class DataBaseController {
 
   Future<void> insertPlatform(Platform platform) async {
     Database db = await DataBaseController().database;
-    print(platform.name);
-    await db.insert('platform', platform.toMap());
+    await db.insert('platform', platform.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> insertPlaylist(Platform platform, Playlist playlist) async {
@@ -341,7 +350,7 @@ class DataBaseController {
     var query = await db.query('track', where: 'id = ? AND service = ?', whereArgs: [id, serviceName], limit: 1);
     List<Track> tracks = query.isNotEmpty ?
       query.map((e) => Track.fromMap(e)).toList() : [];
-    return tracks[0];
+    return tracks[0] ?? null;
   }
 
 }

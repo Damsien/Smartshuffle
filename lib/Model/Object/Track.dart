@@ -175,7 +175,7 @@ class Track {
     service: PlatformsLister.nameToService(json['service']),
     totalDuration: Util.parseDuration(json['duration']),
     streamTrack: json['streamtrack'],
-    addDate: json['addDate']
+    addDate: DateTime.parse(json['addDate'])
   );
 
   Map<String, dynamic> toMap() =>
@@ -188,9 +188,9 @@ class Track {
     'imageurllittle': _imageUrlLittle,
     'imageurllarge': _imageUrlLarge,
     'totalduration': _totalDuration.value.toString(),
-    'adddate': _addDate,
-    'streamtrack_id': _streamTrack.id,
-    'streamtrack_service': _streamTrack.serviceName
+    'adddate': _addDate.toString(),
+    'streamtrack_id': _streamTrack == null ? '' : _streamTrack.id ,
+    'streamtrack_service': _streamTrack == null ? '' : _streamTrack.serviceName
   };
 
 
