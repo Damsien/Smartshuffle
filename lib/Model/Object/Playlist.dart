@@ -250,6 +250,6 @@ class Playlist {
     'ownerid': ownerId,
     'ownername': ownerName,
     'imageurl': imageUrl,
-    'uri': uri.toFilePath(windows: false)
+    'uri': uri.toString()
   };
 }

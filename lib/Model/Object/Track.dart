@@ -166,7 +166,7 @@ class Track {
   // Object persistence
 
   factory Track.fromMap(Map<String, dynamic> json) => Track(
-    id: json['id'],
+    id: json['trackid'],
     title: json['title'],
     artist: json['artist'],
     album: json['album'],
@@ -180,7 +180,7 @@ class Track {
 
   Map<String, dynamic> toMap() =>
   {
-    'id': _id,
+    'trackid': _id,
     'service': serviceName,
     'title': _title,
     'artist': _artist,

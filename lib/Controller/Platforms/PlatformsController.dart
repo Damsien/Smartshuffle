@@ -186,8 +186,7 @@ class DataBaseController {
   _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE platform(
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL PRIMARY KEY,
         userinformations_name TEXT,
         userinformations_account TEXT,
         userinformations_isconnected INTEGER,
@@ -208,28 +207,23 @@ class DataBaseController {
         ownername TEXT,
         imageurl TEXT,
         uri STRING,
-        PRIMARY KEY(id, service),
-        FOREIGN KEY(platform_name) REFERENCES platform(name)
+        FOREIGN KEY(platform_name) REFERENCES platform(name),
+        PRIMARY KEY(id, service)
       );
     ''');
     await db.execute('''
       CREATE TABLE link_playlist_track(
         track_id TEXT,
         track_service TEXT,
-        playlist_id TEXT KEY,
-        playlist_service TEXT KEY,
-        FOREIGN KEY(track_id) REFERENCES track(id),
-        FOREIGN KEY(track_service) REFERENCES track(service),
-        FOREIGN KEY(playlist_id) REFERENCES playlist(id),
-        FOREIGN KEY(playlist_service) REFERENCES playlist(service)
+        playlist_id TEXT,
+        playlist_service TEXT
       );
     ''');
     await db.execute('''
       CREATE TABLE track(
-        id TEXT NOT NULL,
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        trackid TEXT NOT NULL,
         service TEXT NOT NULL,
-        playlist_id TEXT,
-        playlist_service TEXT,
         title TEXT,
         artist TEXT,
         album TEXT,
@@ -238,10 +232,7 @@ class DataBaseController {
         duration TEXT,
         adddate TEXT,
         streamtrack_id TEXT,
-        streamtrack_service TEXT,
-        PRIMARY KEY(id, service),
-        FOREIGN KEY(playlist_id) REFERENCES playlist(id),
-        FOREIGN KEY(playlist_service) REFERENCES playlist(service)
+        streamtrack_service TEXT
       );
     ''');
   }
@@ -301,6 +292,7 @@ class DataBaseController {
   }
 
   Future<void> insertPlaylist(Platform platform, Playlist playlist) async {
+    print('insert : ${playlist.id}');
     Database db = await DataBaseController().database;
     Map obj = playlist.toMap();
     obj['platform_name'] = platform.name;

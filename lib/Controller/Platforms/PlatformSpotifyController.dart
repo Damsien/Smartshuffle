@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:googleapis/composer/v1.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
@@ -45,6 +46,8 @@ class PlatformSpotifyController extends PlatformsController {
       }
     }
     for (Playlist play in playlists) {
+      print('ca va insert ${play.id}');
+      await DataBaseController().insertPlaylist(platform, play);
       play.setTracks(await spController.getPlaylistSongs(play));
       finalPlaylists.add(play);
     }
