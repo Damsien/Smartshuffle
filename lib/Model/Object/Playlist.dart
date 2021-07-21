@@ -245,7 +245,7 @@ class Playlist {
     'id': _id,
     'service': _service.toString().split(".")[1],
     'platform_name': PlatformsLister.platforms[_service].platform.name,
-    'order': PlatformsLister.platforms[_service].platform.playlists.value.indexOf(this),
+    'ordersort': PlatformsLister.platforms[_service].platform.playlists.value.indexOf(this),
     'name': name,
     'ownerid': ownerId,
     'ownername': ownerName,

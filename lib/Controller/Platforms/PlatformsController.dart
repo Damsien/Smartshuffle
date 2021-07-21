@@ -169,12 +169,18 @@ class DataBaseController {
       path,
       version: 1,
       onCreate: _onCreate,
+      onUpgrade: _onUpdate,
+      onDowngrade: _onUpdate,
       onConfigure: _onConfigure,
     );
   }
 
   _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  _onUpdate(Database db, int previousVersion, int currentVersion) {
+    _onCreate(db, currentVersion);
   }
 
   _onCreate(Database db, int version) async {
@@ -194,16 +200,16 @@ class DataBaseController {
     await db.execute('''
       CREATE TABLE playlist(
         id TEXT NOT NULL,
-        services TEXT NOT NULL,
-        PRIMARY KEY(id, service),
+        service TEXT NOT NULL,
         platform_name TEXT,
-        FOREIGN KEY(platform_name) REFERENCES platform(name),
-        order INTEGER,
+        ordersort INTEGER,
         name TEXT,
         ownerid TEXT,
         ownername TEXT,
         imageurl TEXT,
-        uri STRING
+        uri STRING,
+        PRIMARY KEY(id, service),
+        FOREIGN KEY(platform_name) REFERENCES platform(name)
       );
     ''');
     await db.execute('''
@@ -224,8 +230,6 @@ class DataBaseController {
         service TEXT NOT NULL,
         playlist_id TEXT,
         playlist_service TEXT,
-        FOREIGN KEY(playlist_id) REFERENCES playlist(id),
-        FOREIGN KEY(playlist_service) REFERENCES playlist(service),
         title TEXT,
         artist TEXT,
         album TEXT,
@@ -235,12 +239,11 @@ class DataBaseController {
         adddate TEXT,
         streamtrack_id TEXT,
         streamtrack_service TEXT,
-        FOREIGN KEY(streamtrack_id) REFERENCES track(id),
         PRIMARY KEY(id, service),
-        FOREIGN KEY(streamtrack_service) REFERENCES track(service)
+        FOREIGN KEY(playlist_id) REFERENCES playlist(id),
+        FOREIGN KEY(playlist_service) REFERENCES playlist(service)
       );
     ''');
-    print('on est good');
   }
 
   Future<void> removePlatform(Platform platform) async {

@@ -187,7 +187,7 @@ class Track {
     'album': _album,
     'imageurllittle': _imageUrlLittle,
     'imageurllarge': _imageUrlLarge,
-    'totalduration': _totalDuration.value.toString(),
+    'duration': _totalDuration.value.toString(),
     'adddate': _addDate.toString(),
     'streamtrack_id': _streamTrack == null ? '' : _streamTrack.id ,
     'streamtrack_service': _streamTrack == null ? '' : _streamTrack.serviceName
