@@ -154,8 +154,8 @@ class DataBaseController {
   }
 
   Future<void> insertPlatform(Platform platform) async {
-    Database db = await DataBaseController().database;
-    await db.insert('platform', platform.toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
+    print('insert');
+    await _db.insert('platform', platform.toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   void insertPlaylist(Platform platform, Playlist playlist) {
@@ -180,6 +180,7 @@ class DataBaseController {
     for(Map map in query) {
       print('tour de b');
       query.map((e) {
+        print(e['name']);
         Platform platform = Platform.fromMap(e);
         finalMap[platform.name] = platform;
       });

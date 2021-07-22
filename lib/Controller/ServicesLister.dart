@@ -43,6 +43,8 @@ class GlobalAppController {
 
     print('checking..');
 
+    PlatformsLister.platforms[ServicesLister.DEFAULT] = new PlatformDefaultController(Platform("SmartShuffle"));
+
     if(await storage.containsKey(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase())) {
       print('spotify');
       String spToken = await storage.read(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase());
@@ -50,6 +52,8 @@ class GlobalAppController {
       SP.API().login(storeToken: spToken);
 
       PlatformsLister.platforms[ServicesLister.SPOTIFY].platform = platforms['Spotify'];
+    } else {
+      PlatformsLister.platforms[ServicesLister.SPOTIFY] = new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'}));
     }
 
     if(await storage.containsKey(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase())) {
@@ -58,6 +62,8 @@ class GlobalAppController {
       YT.API().login(storeToken: ytToken);
 
       PlatformsLister.platforms[ServicesLister.YOUTUBE].platform = platforms['Youtube'];
+    } else {
+      PlatformsLister.platforms[ServicesLister.YOUTUBE] = new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'}));
     }
 
     print('on va update');
@@ -76,12 +82,12 @@ class PlatformsLister {
 
   static Map<ServicesLister, String> tokens = {};
 
-  static LinkedHashMap<ServicesLister, PlatformsController> platforms = 
-  {
-    ServicesLister.DEFAULT: new PlatformDefaultController(Platform("SmartShuffle")),
-    ServicesLister.SPOTIFY: new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'})),
-    ServicesLister.YOUTUBE: new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'}))
-  } as LinkedHashMap;
+  static Map<ServicesLister, PlatformsController> platforms = Map<ServicesLister, PlatformsController>();
+  // {
+  //   ServicesLister.DEFAULT: new PlatformDefaultController(Platform("SmartShuffle")),
+  //   ServicesLister.SPOTIFY: new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'})),
+  //   ServicesLister.YOUTUBE: new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'}))
+  // };
 
   static ServicesLister nameToService(String name) {
     if(name == "DEFAULT") return ServicesLister.DEFAULT;
