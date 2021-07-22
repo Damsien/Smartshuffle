@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformDefaultController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformSpotifyController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformYoutubeController.dart';
@@ -35,21 +36,38 @@ class GlobalAppController {
     return plat;
   }
 
-  static Future<void> initApp() async {
-    bool dbExists = await DataBaseController().databaseExists('smartshuffle.db');
-    DataBaseController().database;
-    if(dbExists) {
-      final storage = new FlutterSecureStorage();
+  static Future<void> storageInit() async {
+    final storage = FlutterSecureStorage();
+    print('la ca part');
+    Map<String, Platform> platforms = await DataBaseController().getPlatforms();
 
-      String spToken = await storage.read(key: serviceToString(ServicesLister.SPOTIFY));
+    print('checking..');
+
+    if(await storage.containsKey(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase())) {
+      print('spotify');
+      String spToken = await storage.read(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase());
       PlatformsLister.tokens[ServicesLister.SPOTIFY] = spToken;
       SP.API().login(storeToken: spToken);
 
-      String ytToken = await storage.read(key: serviceToString(ServicesLister.SPOTIFY));
-      PlatformsLister.tokens[ServicesLister.SPOTIFY] = ytToken;
-      SP.API().login(storeToken: ytToken);
-      
+      PlatformsLister.platforms[ServicesLister.SPOTIFY].platform = platforms['Spotify'];
     }
+
+    if(await storage.containsKey(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase())) {
+      String ytToken = await storage.read(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase());
+      PlatformsLister.tokens[ServicesLister.YOUTUBE] = ytToken;
+      YT.API().login(storeToken: ytToken);
+
+      PlatformsLister.platforms[ServicesLister.YOUTUBE].platform = platforms['Youtube'];
+    }
+
+    print('on va update');
+  }
+
+  static Future<void> initApp(State state) async {
+    print('init');
+    await DataBaseController().database;
+    state.setState(() {});
+    print('c update');
   }
 
 }

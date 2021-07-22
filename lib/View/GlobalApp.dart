@@ -162,13 +162,13 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    GlobalAppController.initApp();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
     this.initPage();
     super.initState();
+    GlobalAppController.initApp(this);
   }
 
   void initPage() {
