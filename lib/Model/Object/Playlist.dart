@@ -55,11 +55,13 @@ class Playlist {
   @override
   List<Object> get props => [name, id];
 
-  String addTrack(Track track) {
+  String addTrack(Track track, {@required bool isNew}) {
     tracks.add(MapEntry(track, DateTime.now()));
     MapEntry newTrack = tracks.removeAt(tracks.length - 1);
     tracks.insert(0, newTrack);
-    DataBaseController().insertTrack(this, track);
+    if(isNew) {
+      DataBaseController().insertTrack(this, track);
+    }
     return track.id;
   }
 
@@ -86,17 +88,19 @@ class Playlist {
     return finalTracks;
   }
 
-  List<Track> setTracks(List<Track> tracks) {
+  List<Track> setTracks(List<Track> tracks, {@required bool isNew}) {
     List<Track> allTracks = tracks;
     _tracks.clear();
     for (Track track in allTracks) {
       _tracks.add(MapEntry(track, track.addedDate));
-      DataBaseController().insertTrack(this, track);
+      if(isNew) {
+        DataBaseController().insertTrack(this, track);
+      }
     }
     return allTracks;
   }
 
-  List<Track> addTracks(List<Track> tracks) {
+  List<Track> addTracks(List<Track> tracks, {@required bool isNew}) {
     List<Track> allTracks = tracks;
     for (Track track in allTracks) {
       bool exist = false;
@@ -104,8 +108,7 @@ class Playlist {
         if (rTrack.id == track.id) exist = true;
       }
       if (!exist) {
-        this.addTrack(track);
-        DataBaseController().insertTrack(this, track);
+        this.addTrack(track, isNew: isNew);
       }
     }
     return allTracks;

@@ -35,6 +35,7 @@ class PlatformSpotifyController extends PlatformsController {
 
   @override
   Future<List<Playlist>> getPlaylists({bool refreshing}) async {
+    super.getPlaylists(refreshing: refreshing);
     List<Playlist> finalPlaylists = List<Playlist>();
     List<Playlist> playlists = await spController.getPlaylistsList();
     for (Playlist play in platform.playlists.value) {
@@ -46,20 +47,18 @@ class PlatformSpotifyController extends PlatformsController {
       }
     }
     for (Playlist play in playlists) {
-      print('ca va insert ${play.id}');
-      await DataBaseController().insertPlaylist(platform, play);
-      play.setTracks(await spController.getPlaylistSongs(play));
+      play.setTracks(await spController.getPlaylistSongs(play), isNew: true);
       finalPlaylists.add(play);
     }
     for (int i = 0; i < platform.playlists.value.length; i++) {
       if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true) {
         finalPlaylists[i]
-            .setTracks(await spController.getPlaylistSongs(finalPlaylists[i]));
+            .setTracks(await spController.getPlaylistSongs(finalPlaylists[i]), isNew: true);
       }
       else
-        finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks);
+        finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks, isNew: true);
     }
-    List<Playlist> platPlaylists = platform.setPlaylist(finalPlaylists);
+    List<Playlist> platPlaylists = platform.setPlaylist(finalPlaylists, isNew: true);
     super.getAllPlatformTracks();
     return platPlaylists;
   }
@@ -86,7 +85,7 @@ class PlatformSpotifyController extends PlatformsController {
       for (Track track in tracks) {
         finalTracks.add(track);
       }
-      playlist.setTracks(finalTracks);
+      playlist.setTracks(finalTracks, isNew: true);
     }
 
     return playlist.getTracks;

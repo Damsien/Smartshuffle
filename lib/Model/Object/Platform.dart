@@ -36,7 +36,7 @@ class Platform {
       if(track.id == tr.id) exist = true;
     }
     if(!exist || force)
-      return playlists.value.elementAt(playlistIndex).addTrack(track);
+      return playlists.value.elementAt(playlistIndex).addTrack(track, isNew: true);
     return null;
   }
   
@@ -49,11 +49,14 @@ class Platform {
 
 
 
-  Playlist addPlaylist(Playlist playlist) {
+  Playlist addPlaylist(Playlist playlist, {@required bool isNew}) {
     playlists.value.add(playlist);
     Playlist newPlaylist = playlists.value.removeAt(playlists.value.length-1);
     playlists.value.insert(0, newPlaylist);
-    DataBaseController().insertPlaylist(this, playlist);
+    if(isNew) {
+      DataBaseController().insertPlaylist(this, playlist);
+      DataBaseController().isOperationFinished.value = true;
+    }
     return newPlaylist;
   }
 
@@ -65,9 +68,12 @@ class Platform {
 
 
 
-  List<Playlist> setPlaylist(List<Playlist> playlists) {
-    for(Playlist playlist in playlists) {
-      DataBaseController().insertPlaylist(this, playlist);
+  List<Playlist> setPlaylist(List<Playlist> playlists, {@required bool isNew}) {
+    if(isNew) {
+      for(Playlist playlist in playlists) {
+        DataBaseController().insertPlaylist(this, playlist);
+      }
+      DataBaseController().isOperationFinished.value = true;
     }
     return this.playlists.value = playlists;
   }

@@ -71,7 +71,17 @@ abstract class PlatformsController {
 
   getUserInformations();
 
-  Future<List<Playlist>> getPlaylists({bool refreshing});
+  FutureOr<List<Playlist>> getPlaylists({bool refreshing}) async {
+    if(refreshing == null || !refreshing) {
+      if(await DataBaseController().databaseExists('smartshuffle.db')) {
+        platform.setPlaylist(await DataBaseController().getPlaylists(platform), isNew: false);
+        for(Playlist play in platform.playlists.value) {
+          play.setTracks(await DataBaseController().getTracks(play), isNew: false);
+        }
+        return platform.playlists.value;
+      }
+    }
+  }
 
   Future<List<Track>> getTracks(Playlist playlist);
 
@@ -156,7 +166,10 @@ class DataBaseController {
     return _instance;
   }
 
-  static Database _dataBase;
+  static Database _db;
+  Batch _batch;
+  ValueNotifier<bool> isOperationFinished = ValueNotifier<bool>(false);
+
   Future<Database> get database async => await _initDatabase();
 
   Future<bool> databaseExists(String path) =>
@@ -165,7 +178,7 @@ class DataBaseController {
   Future<Database> _initDatabase() async {
     String documentsDirectory = await getDatabasesPath();
     String path = documentsDirectory + 'smartshuffle.db';
-    return await openDatabase(
+    _db = await openDatabase(
       path,
       version: 1,
       onCreate: _onCreate,
@@ -173,6 +186,16 @@ class DataBaseController {
       onDowngrade: _onUpdate,
       onConfigure: _onConfigure,
     );
+    _batch = _db.batch();
+
+    isOperationFinished.addListener(() async {
+      if(isOperationFinished.value == true) {
+        await _batch.commit(noResult: true);
+        isOperationFinished.value = false;
+      }
+    });
+
+    return _db;
   }
 
   _onConfigure(Database db) async {
@@ -221,7 +244,6 @@ class DataBaseController {
     ''');
     await db.execute('''
       CREATE TABLE track(
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         trackid TEXT NOT NULL,
         service TEXT NOT NULL,
         title TEXT,
@@ -232,78 +254,69 @@ class DataBaseController {
         duration TEXT,
         adddate TEXT,
         streamtrack_id TEXT,
-        streamtrack_service TEXT
+        streamtrack_service TEXT,
+        PRIMARY KEY(trackid, service)
       );
     ''');
   }
 
   Future<void> removePlatform(Platform platform) async {
-    Database db = await DataBaseController().database;
-    await db.delete('platform', where: 'name = ?', whereArgs: [platform.name]);
+    await _db.delete('platform', where: 'name = ?', whereArgs: [platform.name]);
   }
 
   Future<void> removePlaylist(Playlist playlist) async {
-    Database db = await DataBaseController().database;
-    await db.delete('playlist', where: 'id = ? AND service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
-    await db.delete('link_playlist_track', where: 'playlist_id = ? AND playlist_service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
+    await _db.delete('playlist', where: 'id = ? AND service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
+    await _db.delete('link_playlist_track', where: 'playlist_id = ? AND playlist_service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
   }
 
   Future<void> removeLink(Playlist playlist, Track track) async {
-    Database db = await DataBaseController().database;
-    await db.delete('link_playlist_track',
+    await _db.delete('link_playlist_track',
       where: 'track_id = ? AND track_service = ? AND playlist_id = ? AND playlist_service = ?',
       whereArgs: [track.id, track.serviceName, playlist.id, serviceToString(playlist.service)]
     );
   }
 
   Future<void> removeTrack(Track track) async {
-    Database db = await DataBaseController().database;
-    await db.delete('track', where: 'id = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
-    await db.delete('link_playlist_track', where: 'track_id = ? AND track_service = ?', whereArgs: [track.id, track.serviceName]);
+    await _db.delete('track', where: 'id = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
+    await _db.delete('link_playlist_track', where: 'track_id = ? AND track_service = ?', whereArgs: [track.id, track.serviceName]);
   }
 
   Future<void> updatePlatform(Platform platform) async {
-    Database db = await DataBaseController().database;
-    await db.update('platform', platform.toMap(), where: 'name = ?', whereArgs: [platform.name]);
+    await _db.update('platform', platform.toMap(), where: 'name = ?', whereArgs: [platform.name]);
   }
 
   Future<void> updatePlaylistOrder(Platform platform) async {
-    Database db = await DataBaseController().database;
     List<Playlist> playlists = await getPlaylists(platform);
-    await db.delete('playlist', where: 'platform_name = ?', whereArgs: [platform.name]);
+    await _db.delete('playlist', where: 'platform_name = ?', whereArgs: [platform.name]);
     for(Playlist playlist in playlists) {
-      await db.insert('playlist', playlist.toMap());
+      await _db.insert('playlist', playlist.toMap());
     }
   }
 
   Future<void> updatePlaylist(Playlist playlist) async {
-    Database db = await DataBaseController().database;
-    await db.update('playlist', playlist.toMap(), where: 'id = ? AND service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
+    await _db.update('playlist', playlist.toMap(), where: 'id = ? AND service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
   }
 
   Future<void> updateTrack(Track track) async {
-    Database db = await DataBaseController().database;
-    await db.update('track', track.toMap(), where: 'id = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
+    await _db.update('track', track.toMap(), where: 'id = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
   }
 
   Future<void> insertPlatform(Platform platform) async {
     Database db = await DataBaseController().database;
-    await db.insert('platform', platform.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('platform', platform.toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  Future<void> insertPlaylist(Platform platform, Playlist playlist) async {
-    print('insert : ${playlist.id}');
-    Database db = await DataBaseController().database;
+  void insertPlaylist(Platform platform, Playlist playlist) {
     Map obj = playlist.toMap();
     obj['platform_name'] = platform.name;
-    await db.insert('playlist', obj);
+    _batch.insert('playlist', obj, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  Future<void> insertTrack(Playlist playlist, Track track) async {
-    Database db = await DataBaseController().database;
-    await db.insert('track', track.toMap());
-    await db.insert('link_playlist_track',
-      {'track_id': track.id, 'track_service': track.serviceName, 'playlist_id': playlist.id, 'playlist_service': serviceToString(playlist.service)}
+  void insertTrack(Playlist playlist, Track track) {
+    _batch.insert('track', track.toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
+    _batch.insert('link_playlist_track',
+      {'track_id': track.id, 'track_service': track.serviceName, 'playlist_id': playlist.id, 'playlist_service': serviceToString(playlist.service)},
+      conflictAlgorithm: ConflictAlgorithm.ignore
     );
   }
 
