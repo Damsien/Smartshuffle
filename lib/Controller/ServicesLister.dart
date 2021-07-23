@@ -43,23 +43,29 @@ class GlobalAppController {
 
     print('checking..');
 
-    PlatformsLister.platforms[ServicesLister.DEFAULT] = new PlatformDefaultController(Platform("SmartShuffle"));
+    if(platforms['SmartShuffle'] != null) {
+      PlatformsLister.platforms[ServicesLister.DEFAULT].platform = platforms['Smartshuffle'];
+    } else {
+      PlatformsLister.platforms[ServicesLister.DEFAULT] = new PlatformDefaultController(Platform("SmartShuffle"));
+    }
 
-    if(await storage.containsKey(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase())) {
+    // if(await storage.containsKey(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase())) {
+    if(platforms['Spotify'] != null) {
       print('spotify');
       String spToken = await storage.read(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase());
       PlatformsLister.tokens[ServicesLister.SPOTIFY] = spToken;
-      SP.API().login(storeToken: spToken);
+      await SP.API().login(storeToken: spToken);
 
       PlatformsLister.platforms[ServicesLister.SPOTIFY].platform = platforms['Spotify'];
     } else {
       PlatformsLister.platforms[ServicesLister.SPOTIFY] = new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'}));
     }
 
-    if(await storage.containsKey(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase())) {
+    // if(await storage.containsKey(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase())) {
+    if(platforms['Youtube'] != null) {
       String ytToken = await storage.read(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase());
       PlatformsLister.tokens[ServicesLister.YOUTUBE] = ytToken;
-      YT.API().login(storeToken: ytToken);
+      await YT.API().login(storeToken: ytToken);
 
       PlatformsLister.platforms[ServicesLister.YOUTUBE].platform = platforms['Youtube'];
     } else {

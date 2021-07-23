@@ -179,11 +179,9 @@ class DataBaseController {
     print('b0');
     for(Map map in query) {
       print('tour de b');
-      query.map((e) {
-        print(e['name']);
-        Platform platform = Platform.fromMap(e);
-        finalMap[platform.name] = platform;
-      });
+      print(map);
+      Platform platform = Platform.fromMap(map);
+      finalMap[platform.name] = platform;
     }
     print(finalMap.length);
     return finalMap;
