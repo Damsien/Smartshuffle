@@ -14,7 +14,7 @@ class PlatformDefaultController extends PlatformsController {
     platform.platformInformations['logo'] = 'assets/logo/smartshuffle.png';
     platform.platformInformations['icon'] =
         'assets/logo/icons/smartshuffle.png';
-    platform.platformInformations['main_color'] = Colors.blueAccent;
+    platform.platformInformations['main_color'] = Colors.purple[400];
   }
 
   @override
@@ -24,8 +24,6 @@ class PlatformDefaultController extends PlatformsController {
 
   @override
   getUserInformations() {
-    platform.userInformations['isConnected'] = true;
-    platform.userInformations['ownerId'] = "";
     return platform.userInformations;
   }
 

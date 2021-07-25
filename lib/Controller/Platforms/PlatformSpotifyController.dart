@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:googleapis/composer/v1.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
@@ -35,7 +36,8 @@ class PlatformSpotifyController extends PlatformsController {
 
   @override
   Future<List<Playlist>> getPlaylists({bool refreshing}) async {
-    super.getPlaylists(refreshing: refreshing);
+    var parent = await super.getPlaylists(refreshing: refreshing);
+    if(parent != null) return parent;
     List<Playlist> finalPlaylists = List<Playlist>();
     List<Playlist> playlists = await spController.getPlaylistsList();
     for (Playlist play in platform.playlists.value) {
@@ -97,14 +99,16 @@ class PlatformSpotifyController extends PlatformsController {
     platform.userInformations['isConnected'] = spController.isLoggedIn;
     platform.userInformations['name'] = spController.displayName;
     platform.userInformations['email'] = spController.email;
-    this.updateStates();
+    DataBaseController().updatePlatform(platform);
+    PlatformsController.updateStates();
   }
 
   @override
   disconnect() {
     spController.disconnect();
     platform.userInformations['isConnected'] = spController.isLoggedIn;
-    this.updateStates();
+    DataBaseController().updatePlatform(platform);
+    PlatformsController.updateStates();
   }
 
   @override

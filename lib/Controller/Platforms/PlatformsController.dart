@@ -19,7 +19,7 @@ import 'package:protobuf/protobuf.dart';
 
 
 abstract class PlatformsController {
-  Map<String, State> states = new Map<String, State>();
+  static Map<String, State> states = new Map<String, State>();
   Map<String, Track> allTracks = Map<String, Track>();
   Platform platform;
 
@@ -31,29 +31,29 @@ abstract class PlatformsController {
 
   /*  STATE MANAGER */
 
-  setPlaylistsPageState(State state) {
+  static void setPlaylistsPageState(State state) {
     states['PlaylistsPage'] = state;
   }
 
-  setSearchPageState(State state) {
+  static void setSearchPageState(State state) {
     states['SearchPage'] = state;
   }
 
-  setProfilePageState(State state) {
+  static void setProfilePageState(State state) {
     states['ProfilePage'] = state;
   }
 
   void updateState(String stringState) {
     State<dynamic> state = states[stringState];
     state.setState(() {
-      state.widget.createState().key = UniqueKey();
+      // state.widget.createState().key = UniqueKey();
     });
   }
 
-  void updateStates() {
+  static void updateStates() {
     for (MapEntry state in states.entries) {
       state.value.setState(() {
-        state.value.widget.createState().key = UniqueKey();
+        // state.value.widget.createState().key = UniqueKey();
       });
     }
   }
@@ -73,15 +73,22 @@ abstract class PlatformsController {
   getUserInformations();
 
   FutureOr<List<Playlist>> getPlaylists({bool refreshing}) async {
-    if(refreshing == null || !refreshing) {
-      if(await DataBaseController().databaseExists('smartshuffle.db')) {
-        platform.setPlaylist(await DataBaseController().getPlaylists(platform), isNew: false);
+    if((refreshing == null || !refreshing) && platform.playlists.value.isEmpty) {
+      List<Playlist> playlists = await DataBaseController().getPlaylists(platform);
+      if(playlists.isNotEmpty) {
+        platform.setPlaylist(playlists, isNew: false);
         for(Playlist play in platform.playlists.value) {
           play.setTracks(await DataBaseController().getTracks(play), isNew: false);
         }
         return platform.playlists.value;
+      } else {
+        return null;
       }
     }
+    if(platform.playlists.value.isNotEmpty) {
+      return platform.playlists.value;
+    }
+    return null;
   }
 
   Future<List<Track>> getTracks(Playlist playlist);

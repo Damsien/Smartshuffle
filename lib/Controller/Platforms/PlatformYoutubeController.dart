@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
@@ -31,7 +32,8 @@ class PlatformYoutubeController extends PlatformsController {
 
   @override
   Future<List<Playlist>> getPlaylists({bool refreshing}) async {
-    super.getPlaylists(refreshing: refreshing);
+    var parent = await super.getPlaylists(refreshing: refreshing);
+    if(parent != null) return parent;
     List<Playlist> finalPlaylists = List<Playlist>();
     List<Playlist> playlists = await yt.getPlaylistsList();
     for (Playlist play in platform.playlists.value) {
@@ -94,16 +96,16 @@ class PlatformYoutubeController extends PlatformsController {
     platform.userInformations['isConnected'] = yt.isLoggedIn;
     platform.userInformations['name'] = yt.displayName;
     platform.userInformations['email'] = yt.email;
-    //platform.userInformations['isConnected'] = true;
-    this.updateStates();
+    DataBaseController().updatePlatform(platform);
+    PlatformsController.updateStates();
   }
 
   @override
   disconnect() async {
     yt.disconnect();
     platform.userInformations['isConnected'] = yt.isLoggedIn;
-    //platform.userInformations['isConnected'] = false;
-    this.updateStates();
+    DataBaseController().updatePlatform(platform);
+    PlatformsController.updateStates();
   }
 
   @override

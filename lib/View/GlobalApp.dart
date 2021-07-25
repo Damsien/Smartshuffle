@@ -193,7 +193,6 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
     });
     for (MapEntry<ServicesLister, PlatformsController> elem
         in PlatformsLister.platforms.entries) {
-      elem.value.setPlaylistsPageState(this);
       if (elem.value.getUserInformations()['isConnected'] == true)
         this.userPlatforms[elem.key] = elem.value;
     }

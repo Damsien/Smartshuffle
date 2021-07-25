@@ -38,48 +38,42 @@ class GlobalAppController {
 
   static Future<void> storageInit() async {
     final storage = FlutterSecureStorage();
-    print('la ca part');
+    
     Map<String, Platform> platforms = await DataBaseController().getPlatforms();
 
-    print('checking..');
-
     if(platforms['SmartShuffle'] != null) {
-      PlatformsLister.platforms[ServicesLister.DEFAULT].platform = platforms['Smartshuffle'];
+      PlatformsLister.platforms[ServicesLister.DEFAULT] = new PlatformDefaultController(platforms['Smartshuffle']);
     } else {
-      PlatformsLister.platforms[ServicesLister.DEFAULT] = new PlatformDefaultController(Platform("SmartShuffle"));
+      PlatformsLister.platforms[ServicesLister.DEFAULT] = new PlatformDefaultController(Platform("Smartshuffle"));
     }
 
     // if(await storage.containsKey(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase())) {
-    if(platforms['Spotify'] != null) {
-      print('spotify');
+    if(platforms['Spotify'] != null && platforms['Spotify'].userInformations['isConnected']) {
       String spToken = await storage.read(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase());
       PlatformsLister.tokens[ServicesLister.SPOTIFY] = spToken;
       await SP.API().login(storeToken: spToken);
 
-      PlatformsLister.platforms[ServicesLister.SPOTIFY].platform = platforms['Spotify'];
+      PlatformsLister.platforms[ServicesLister.SPOTIFY] = new PlatformSpotifyController(platforms['Spotify']);
     } else {
       PlatformsLister.platforms[ServicesLister.SPOTIFY] = new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'}));
     }
 
     // if(await storage.containsKey(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase())) {
-    if(platforms['Youtube'] != null) {
+    if(platforms['Youtube'] != null && platforms['Youtube'].userInformations['isConnected']) {
       String ytToken = await storage.read(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase());
       PlatformsLister.tokens[ServicesLister.YOUTUBE] = ytToken;
       await YT.API().login(storeToken: ytToken);
 
-      PlatformsLister.platforms[ServicesLister.YOUTUBE].platform = platforms['Youtube'];
+      PlatformsLister.platforms[ServicesLister.YOUTUBE] = new PlatformYoutubeController(platforms['Youtube']);
     } else {
       PlatformsLister.platforms[ServicesLister.YOUTUBE] = new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'}));
     }
-
-    print('on va update');
   }
 
   static Future<void> initApp(State state) async {
-    print('init');
     await DataBaseController().database;
     state.setState(() {});
-    print('c update');
+    PlatformsController.updateStates();
   }
 
 }

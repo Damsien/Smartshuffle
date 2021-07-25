@@ -4,7 +4,6 @@ import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:smartshuffle/View/GlobalApp.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DataBaseController {
@@ -154,7 +153,6 @@ class DataBaseController {
   }
 
   Future<void> insertPlatform(Platform platform) async {
-    print('insert');
     await _db.insert('platform', platform.toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
@@ -176,48 +174,64 @@ class DataBaseController {
     Map<String, Platform> finalMap = Map<String, Platform>();
 
     var query = await _db.query('platform');
-    print('b0');
     for(Map map in query) {
-      print('tour de b');
-      print(map);
       Platform platform = Platform.fromMap(map);
       finalMap[platform.name] = platform;
     }
-    print(finalMap.length);
     return finalMap;
   }
 
   Future<List<Playlist>> getPlaylists(Platform platform) async {
-    Database db = await DataBaseController().database;
-    var query = await db.query('playlist', where: 'platform_name = ?', whereArgs: [platform.name]);
+    var query = await _db.query('playlist', where: 'platform_name = ?', whereArgs: [platform.name]);
     List<Playlist> playlists = query.isNotEmpty ?
       query.map((e) => Playlist.fromMap(e)).toList() : [];
     return playlists;
   }
 
   Future<List<Track>> getTracks(Playlist playlist) async {
-    Database db = await DataBaseController().database;
-    var query = await db.rawQuery('''
-      SELECT *
-      FROM track T, link_playlist_track L
+    // var query = await _db.query('link_playlist_track',
+    //  where: 'playlist_id = ? AND playlist_service = ?',
+    //  whereArgs: [playlist.id, serviceToString(playlist.service)],
+    //  columns: ['track_id', 'track_service']
+    // );
+    // List<List<Map<String, Object>>> objects = List<List<Map<String, Object>>>();
+    // for(Map track in query) {
+    //   objects.add(
+    //   await _db.query('track',
+    //     where: 'trackid = ? AND service = ?',
+    //     whereArgs: [track['track_id'], track['track_service']]
+    //     )
+    //   );
+    // }
+    // final objects = (await batch.commit()).cast<Map>();
+    // List<Track> tracks = List<Track>();
+    // for(List<Map> e in objects) {
+    //   Map<String, dynamic> track = Map<String, dynamic>();
+    //   for(MapEntry me in e[0].entries) {
+    //     track[me.key] = me.value;
+    //   }
+    //   track['streamtrack'] = await getTrack(track['streamtrack_id'], track['streamtrack_service']);
+    //   tracks.add(Track.fromMap(track));
+    // }
+    var query = await _db.rawQuery('''
+      SELECT track.*
+      FROM track
+      INNER JOIN link_playlist_track
+      ON track.trackid = link_playlist_track.track_id AND track.service = link_playlist_track.track_service
       WHERE
-        T.id = L.track_id AND T.service = L.track_service AND
-        L.playlist_id = ${playlist.id} AND L.playlist_service = ${serviceToString(playlist.service)}
+        link_playlist_track.playlist_id = "${playlist.id}" AND link_playlist_track.playlist_service = "${serviceToString(playlist.service)}";
     ''');
     List<Track> tracks = query.isNotEmpty ?
-      query.map((e) async {
-        e['streamtrack'] = await getTrack(e['streamtrack_id'], e['streamtrack_service']);
-        Track.fromMap(e);
-      }).toList() : [];
+      query.map((e) => Track.fromMap(e)).toList() : [];
     return tracks;
   }
 
   Future<Track> getTrack(String id, String serviceName) async {
     Database db = await DataBaseController().database;
-    var query = await db.query('track', where: 'id = ? AND service = ?', whereArgs: [id, serviceName], limit: 1);
+    var query = await db.query('track', where: 'trackid = ? AND service = ?', whereArgs: [id, serviceName], limit: 1);
     List<Track> tracks = query.isNotEmpty ?
       query.map((e) => Track.fromMap(e)).toList() : [];
-    return tracks[0] ?? null;
+    return tracks.isNotEmpty ? tracks[0] : null;
   }
 
 }

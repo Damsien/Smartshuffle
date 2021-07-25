@@ -120,12 +120,12 @@ class Platform {
     userInformations: {
       'name': json['userinformations_name'],
       'account': json['userinformations_account'],
-      'isconnected': json['userinformations_isconnected']
+      'isConnected': json['userinformations_isconnected'] == 1 ? true : false
     },
     platformInformations: {
       'logo': json['platformInformations_logo'],
       'icon': json['platformInformations_icon'],
-      'maincolor': Util.stringToColor(json['platformInformations_maincolor']),
+      'maincolor': json['platformInformations_maincolor'] != 'null' ? Util.stringToColor(json['platformInformations_maincolor']) : null,
       'package': json['platformInformations_package']
     }
   );
