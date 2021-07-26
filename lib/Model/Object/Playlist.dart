@@ -57,9 +57,9 @@ class Playlist {
   List<Object> get props => [name, id];
 
   String addTrack(Track track, {@required bool isNew}) {
-    tracks.add(MapEntry(track, DateTime.now()));
-    MapEntry newTrack = tracks.removeAt(tracks.length - 1);
-    tracks.insert(0, newTrack);
+    print('addTracks');
+    print(isNew);
+    tracks.insert(0, MapEntry(track, DateTime.now()));
     if(isNew) {
       DataBaseController().insertTrack(this, track);
     }
@@ -98,6 +98,7 @@ class Playlist {
         DataBaseController().insertTrack(this, track);
       }
     }
+    DataBaseController().isOperationFinished.value = true;
     return allTracks;
   }
 

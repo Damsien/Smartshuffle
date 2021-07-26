@@ -182,7 +182,7 @@ class DataBaseController {
   }
 
   Future<List<Playlist>> getPlaylists(Platform platform) async {
-    var query = await _db.query('playlist', where: 'platform_name = ?', whereArgs: [platform.name]);
+    var query = await _db.query('playlist', distinct: true, where: 'platform_name = ?', whereArgs: [platform.name]);
     List<Playlist> playlists = query.isNotEmpty ?
       query.map((e) => Playlist.fromMap(e)).toList() : [];
     return playlists;
@@ -214,7 +214,7 @@ class DataBaseController {
     //   tracks.add(Track.fromMap(track));
     // }
     var query = await _db.rawQuery('''
-      SELECT track.*
+      SELECT DISTINCT track.*
       FROM track
       INNER JOIN link_playlist_track
       ON track.trackid = link_playlist_track.track_id AND track.service = link_playlist_track.track_service

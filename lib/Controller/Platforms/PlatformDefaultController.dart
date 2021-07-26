@@ -76,7 +76,7 @@ class PlatformDefaultController extends PlatformsController {
         if (play.id == playlist.id) return null;
       }
       playlist.setService(ServicesLister.DEFAULT);
-      return this.platform.addPlaylist(playlist, isNew: true);
+      return this.platform.addPlaylist(playlist..setTracks(playlist.getTracks, isNew: true), isNew: true);
     }
     return this.platform.addPlaylist(Playlist(
       name: name,
@@ -85,8 +85,7 @@ class PlatformDefaultController extends PlatformsController {
       id: this.platform.playlists.value.length.toString(),
       service: ServicesLister.DEFAULT,
       imageUrl: imageUrl,
-      uri: (playlistUri != null ? Uri.parse(playlistUri) : Uri.http("", "")),
-      tracks: tracks),
+      uri: (playlistUri != null ? Uri.parse(playlistUri) : Uri.http("", "")))..setTracks(playlist.getTracks, isNew: true),
       isNew: true
     );
   }
