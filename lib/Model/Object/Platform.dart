@@ -1,6 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/Model/Util.dart';
 
 class Platform {
   
@@ -34,32 +37,45 @@ class Platform {
       if(track.id == tr.id) exist = true;
     }
     if(!exist || force)
-      return playlists.value.elementAt(playlistIndex).addTrack(track);
+      return playlists.value.elementAt(playlistIndex).addTrack(track, isNew: true);
     return null;
   }
   
   Track removeTrackFromPlaylistByIndex(int playlistIndex, int trackIndex) {
-    Track deletedTrack = playlists.value.elementAt(playlistIndex).removeTrack(trackIndex);
+    Playlist playlist = playlists.value.elementAt(playlistIndex);
+    Track deletedTrack = playlist.removeTrack(trackIndex);
+    DataBaseController().removeLink(playlist, deletedTrack);
     return deletedTrack;
   }
 
 
 
-  Playlist addPlaylist(Playlist playlist) {
+  Playlist addPlaylist(Playlist playlist, {@required bool isNew}) {
     playlists.value.add(playlist);
     Playlist newPlaylist = playlists.value.removeAt(playlists.value.length-1);
     playlists.value.insert(0, newPlaylist);
+    if(isNew) {
+      DataBaseController().insertPlaylist(this, playlist);
+      DataBaseController().isOperationFinished.value = true;
+    }
     return newPlaylist;
   }
 
   Playlist removePlaylist(int playlistIndex) {
     Playlist deletedPlaylist = playlists.value.removeAt(playlistIndex);
+    DataBaseController().removePlaylist(deletedPlaylist);
     return deletedPlaylist;
   }
 
 
 
-  List<Playlist> setPlaylist(List<Playlist> playlists) {
+  List<Playlist> setPlaylist(List<Playlist> playlists, {@required bool isNew}) {
+    if(isNew) {
+      for(Playlist playlist in playlists) {
+        DataBaseController().insertPlaylist(this, playlist);
+      }
+      DataBaseController().isOperationFinished.value = true;
+    }
     return this.playlists.value = playlists;
   }
 
@@ -67,6 +83,7 @@ class Platform {
 
   void addAppPackage(String package) {
     platformInformations['package'] = package;
+    DataBaseController().updatePlatform(this);
   }
 
   List<Playlist> reorder(int oldIndex, int newIndex) {
@@ -80,5 +97,49 @@ class Platform {
     return playlists.value;
   }
 
+
+  bool isMine(Playlist playlist) {
+    return playlists.value.contains(playlist);
+  }
+
+
+  Playlist getPlaylistTrack(Track track) {
+    for(Playlist playlist in playlists.value) {
+      if(playlist.isMine(track)) return playlist;
+    }
+    return null;
+  }
+
+
+
+
+  // Object persistence
+
+  factory Platform.fromMap(Map<String, dynamic> json) => Platform(
+    json['name'],
+    userInformations: {
+      'name': json['userinformations_name'],
+      'account': json['userinformations_account'],
+      'isConnected': json['userinformations_isconnected'] == 1 ? true : false
+    },
+    platformInformations: {
+      'logo': json['platformInformations_logo'],
+      'icon': json['platformInformations_icon'],
+      'maincolor': json['platformInformations_maincolor'] != 'null' ? Util.stringToColor(json['platformInformations_maincolor']) : null,
+      'package': json['platformInformations_package']
+    }
+  );
+
+  Map<String, dynamic> toMap() =>
+  {
+    'name': name,
+    'userinformations_name': userInformations['name'],
+    'userinformations_account': userInformations['account'],
+    'userinformations_isconnected': userInformations['isConnected'] == true ? 1 : 0,
+    'platformInformations_logo': platformInformations['logo'],
+    'platformInformations_icon': platformInformations['icon'],
+    'platformInformations_maincolor': platformInformations['maincolor'].toString(),
+    'platformInformations_package': platformInformations['package'],
+  };
 
 }

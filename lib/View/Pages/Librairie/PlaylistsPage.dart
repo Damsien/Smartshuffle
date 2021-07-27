@@ -85,9 +85,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
   void userPlatformsInit() {
     this.userPlatforms.clear();
-    int i=0;
     for(MapEntry<ServicesLister, PlatformsController> elem in PlatformsLister.platforms.entries) {
-      elem.value.setPlaylistsPageState(this);
       if(elem.value.getUserInformations()['isConnected'] == true)
         this.userPlatforms[elem.key] = elem.value;
     }
@@ -96,6 +94,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    PlatformsController.setPlaylistsPageState(this);
 
     userPlatformsInit();
     _tabController = TabController(initialIndex: initialTabIndex.value, length: this.userPlatforms.length, vsync: this);
@@ -104,7 +104,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     for(MapEntry elem in this.userPlatforms.entries) {
       elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.getPlatformInformations()['icon']))));
     }
-
 
     return MaterialApp(
       theme: widget.themeData,
@@ -135,8 +134,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
             controller: _tabController,
             children: List.generate(_tabController.length, (index) {
               return Container(
-                key: PageStorageKey(PlatformsLister.getAllControllers()[index].platform.name),
-                child: TabView(PlatformsLister.getAllControllers()[index]),
+                key: PageStorageKey(GlobalAppController.getAllControllers()[index].platform.name),
+                child: TabView(GlobalAppController.getAllControllers()[index]),
               );
             }),
           ),

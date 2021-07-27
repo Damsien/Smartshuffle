@@ -119,7 +119,7 @@ class GlobalQueue {
       'index': lastPermanentIndex,
       'track': {
         'id': queue.value[lastPermanentIndex].key.id,
-        'name': queue.value[lastPermanentIndex].key.name,
+        'name': queue.value[lastPermanentIndex].key.title,
         'artist': queue.value[lastPermanentIndex].key.artist,
         'image': queue.value[lastPermanentIndex].key.imageUrlLarge,
         'service': queue.value[lastPermanentIndex].key.serviceName

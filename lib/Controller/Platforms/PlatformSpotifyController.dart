@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:googleapis/composer/v1.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
@@ -34,6 +36,8 @@ class PlatformSpotifyController extends PlatformsController {
 
   @override
   Future<List<Playlist>> getPlaylists({bool refreshing}) async {
+    var parent = await super.getPlaylists(refreshing: refreshing);
+    if(parent != null) return parent;
     List<Playlist> finalPlaylists = List<Playlist>();
     List<Playlist> playlists = await spController.getPlaylistsList();
     for (Playlist play in platform.playlists.value) {
@@ -45,18 +49,18 @@ class PlatformSpotifyController extends PlatformsController {
       }
     }
     for (Playlist play in playlists) {
-      play.setTracks(await spController.getPlaylistSongs(play));
+      play.setTracks(await spController.getPlaylistSongs(play), isNew: true);
       finalPlaylists.add(play);
     }
     for (int i = 0; i < platform.playlists.value.length; i++) {
       if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true) {
         finalPlaylists[i]
-            .setTracks(await spController.getPlaylistSongs(finalPlaylists[i]));
+            .setTracks(await spController.getPlaylistSongs(finalPlaylists[i]), isNew: true);
       }
       else
-        finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks);
+        finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks, isNew: true);
     }
-    List<Playlist> platPlaylists = platform.setPlaylist(finalPlaylists);
+    List<Playlist> platPlaylists = platform.setPlaylist(finalPlaylists, isNew: true);
     super.getAllPlatformTracks();
     return platPlaylists;
   }
@@ -83,7 +87,7 @@ class PlatformSpotifyController extends PlatformsController {
       for (Track track in tracks) {
         finalTracks.add(track);
       }
-      playlist.setTracks(finalTracks);
+      playlist.setTracks(finalTracks, isNew: true);
     }
 
     return playlist.getTracks;
@@ -95,14 +99,16 @@ class PlatformSpotifyController extends PlatformsController {
     platform.userInformations['isConnected'] = spController.isLoggedIn;
     platform.userInformations['name'] = spController.displayName;
     platform.userInformations['email'] = spController.email;
-    this.updateStates();
+    DataBaseController().updatePlatform(platform);
+    PlatformsController.updateStates();
   }
 
   @override
   disconnect() {
     spController.disconnect();
     platform.userInformations['isConnected'] = spController.isLoggedIn;
-    this.updateStates();
+    DataBaseController().updatePlatform(platform);
+    PlatformsController.updateStates();
   }
 
   @override
@@ -142,7 +148,13 @@ class PlatformSpotifyController extends PlatformsController {
   }
 
   @override
-  Future<MapEntry<Track,File>> getFile(Track tr) async => await YoutubeRetriever().streamByName(tr);
+  Future<MapEntry<Track,File>> getFile(Track tr) async {
+    if(tr.streamTrack == null) {
+      return await YoutubeRetriever().streamByName(tr);
+    } else {
+      return MapEntry(tr.streamTrack, await YoutubeRetriever().streamById(tr.streamTrack.id));
+    }
+  }
 
   // @override
   // pause() {

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
@@ -31,6 +32,8 @@ class PlatformYoutubeController extends PlatformsController {
 
   @override
   Future<List<Playlist>> getPlaylists({bool refreshing}) async {
+    var parent = await super.getPlaylists(refreshing: refreshing);
+    if(parent != null) return parent;
     List<Playlist> finalPlaylists = List<Playlist>();
     List<Playlist> playlists = await yt.getPlaylistsList();
     for (Playlist play in platform.playlists.value) {
@@ -42,18 +45,18 @@ class PlatformYoutubeController extends PlatformsController {
       }
     }
     for (Playlist play in playlists) {
-      play.setTracks(await yt.getPlaylistSongs(play));
+      play.setTracks(await yt.getPlaylistSongs(play), isNew: true);
       finalPlaylists.add(play);
     }
     for (int i = 0; i < platform.playlists.value.length; i++) {
       if (platform.playlists.value[i].getTracks.length == 0 || refreshing == true) {
         finalPlaylists[i]
-            .setTracks(await yt.getPlaylistSongs(finalPlaylists[i]));
+            .setTracks(await yt.getPlaylistSongs(finalPlaylists[i]), isNew: true);
       }
       else
-        finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks);
+        finalPlaylists[i].setTracks(platform.playlists.value[i].getTracks, isNew: true);
     }
-    List<Playlist> platPlaylists = platform.setPlaylist(finalPlaylists);
+    List<Playlist> platPlaylists = platform.setPlaylist(finalPlaylists, isNew: true);
     super.getAllPlatformTracks();
     return platPlaylists;
   }
@@ -84,7 +87,7 @@ class PlatformYoutubeController extends PlatformsController {
       finalTracks = playlist.getTracks;
     }
 
-    return playlist.setTracks(finalTracks);
+    return playlist.setTracks(finalTracks, isNew: true);
   }
 
   @override
@@ -93,16 +96,16 @@ class PlatformYoutubeController extends PlatformsController {
     platform.userInformations['isConnected'] = yt.isLoggedIn;
     platform.userInformations['name'] = yt.displayName;
     platform.userInformations['email'] = yt.email;
-    //platform.userInformations['isConnected'] = true;
-    this.updateStates();
+    DataBaseController().updatePlatform(platform);
+    PlatformsController.updateStates();
   }
 
   @override
   disconnect() async {
     yt.disconnect();
     platform.userInformations['isConnected'] = yt.isLoggedIn;
-    //platform.userInformations['isConnected'] = false;
-    this.updateStates();
+    DataBaseController().updatePlatform(platform);
+    PlatformsController.updateStates();
   }
 
   @override

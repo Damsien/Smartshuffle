@@ -36,7 +36,7 @@ class PlatformsInformation {
             ),
             SizedBox(height: 20),
             Container(
-              width: MediaQuery.of(ctrl.states['ProfilePage'].context).size.width*0.6,
+              width: MediaQuery.of(PlatformsController.states['ProfilePage'].context).size.width*0.6,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

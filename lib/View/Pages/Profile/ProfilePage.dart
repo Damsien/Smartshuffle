@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/View/GlobalApp.dart';
@@ -57,9 +58,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    for(MapEntry plat in PlatformsLister.platforms.entries) {
-      plat.value.setProfilePageState(this);
-    }
+    PlatformsController.setProfilePageState(this);
 
     return MaterialApp(
       key: this.key,

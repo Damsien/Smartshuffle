@@ -242,7 +242,7 @@ class SearchAlgorithm {
 
       Track track = Track(
         id: id,
-        name: name,
+        title: name,
         artist: artist,
         imageUrlLittle: imageUrlLittle,
         imageUrlLarge: imageUrlLarge,

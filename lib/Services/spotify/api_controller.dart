@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
@@ -17,6 +18,7 @@ class API {
   static final API _instance = API._internal();
   String _token;
   bool _isLoggedIn;
+  static final storage = new FlutterSecureStorage();
   
   String _displayName;
   String _email;
@@ -101,21 +103,28 @@ class API {
   ///
   ///Public
   ///
-  Future login() async {
-    var token = await APIAuth.login();
-    if (token == null) {
-      _isLoggedIn = false;
+  Future login({String storeToken}) async {
+    if(storeToken == null) {
+      var token = await APIAuth.login();
+      if (token == null) {
+        _isLoggedIn = false;
+      } else {
+        _isLoggedIn = true;
+        _token = token;
+        storage.write(key: 'spotify', value: token);
+        await _getUserProfile();
+      }
     } else {
       _isLoggedIn = true;
-      _token = token;
-      await _getUserProfile();
+      _token = storeToken;
     }
-    print('Spotify token :');
-    print(token);
+    // print('Spotify token :');
+    // print(token);
   }
 
   void disconnect() async {
     _isLoggedIn = await APIAuth.logout();
+    await storage.delete(key: 'spotify');
   }
 
   ///
@@ -179,7 +188,7 @@ class API {
       if (id != null) {
         list.add(Track(
             id: id,
-            name: name,
+            title: name,
             artist: artist,
             addDate: DateTime.parse(addDate),
             imageUrlLittle: imageUrlLittle,
