@@ -1315,7 +1315,7 @@ class TabsView {
                                 ),
                               )
                             ),
-                            subtitle: Text(ctrl.platform.playlists.value[index].getTracks.length.toString() + " "+AppLocalizations.of(context).globalTracks),
+                            subtitle: Text(defaultCtrl.platform.playlists.value[index].tracks.length.toString() + " "+AppLocalizations.of(context).globalTracks),
                             onTap: () {
                               Navigator.pop(dialogContext);
                               //TODO Message de confirmation
