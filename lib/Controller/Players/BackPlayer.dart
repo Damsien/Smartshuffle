@@ -8,6 +8,7 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart' as SM;
@@ -29,6 +30,10 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   @override
   Future<void> onStart(Map<String, dynamic> params) async {
+
+    PlatformsLister.initBackPlayer();
+    await DataBaseController().backDatabase;
+
     // Listen to state changes on the player...
     _player.playerStateStream.listen((playerState) {
       // ... and forward them to all audio_service clients.

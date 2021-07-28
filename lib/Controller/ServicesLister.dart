@@ -1,6 +1,8 @@
 import 'dart:collection';
 import 'dart:math';
+import 'dart:isolate' as isolate;
 
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -55,18 +57,21 @@ class GlobalAppController {
 
       PlatformsLister.platforms[ServicesLister.SPOTIFY] = new PlatformSpotifyController(platforms['Spotify']);
     } else {
-      PlatformsLister.platforms[ServicesLister.SPOTIFY] = new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'}));
+      PlatformsLister.platforms[ServicesLister.SPOTIFY] = new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'})
+      , isBack: AudioService.running);
     }
 
     // if(await storage.containsKey(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase())) {
     if(platforms['Youtube'] != null && platforms['Youtube'].userInformations['isConnected']) {
       String ytToken = await storage.read(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase());
       PlatformsLister.tokens[ServicesLister.YOUTUBE] = ytToken;
+      print(' ytOktenenenen');
       await YT.API().login(storeToken: ytToken);
 
       PlatformsLister.platforms[ServicesLister.YOUTUBE] = new PlatformYoutubeController(platforms['Youtube']);
     } else {
-      PlatformsLister.platforms[ServicesLister.YOUTUBE] = new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'}));
+      PlatformsLister.platforms[ServicesLister.YOUTUBE] = new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'})
+      , isBack: AudioService.running);
     }
   }
 
@@ -88,6 +93,15 @@ class PlatformsLister {
   //   ServicesLister.SPOTIFY: new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'})),
   //   ServicesLister.YOUTUBE: new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'}))
   // };
+
+  static void initBackPlayer() {
+    platforms =
+    {
+      ServicesLister.DEFAULT: new PlatformDefaultController(Platform("SmartShuffle"), isBack: true),
+      ServicesLister.SPOTIFY: new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'}), isBack: true),
+      ServicesLister.YOUTUBE: new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'}), isBack: true)
+    };
+  }
 
   static ServicesLister nameToService(String name) {
     if(name == "DEFAULT") return ServicesLister.DEFAULT;

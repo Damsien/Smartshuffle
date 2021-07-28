@@ -14,7 +14,7 @@ import 'package:smartshuffle/Services/spotify/api_controller.dart' as spotify;
 import 'package:spotify_sdk/spotify_sdk.dart';
 
 class PlatformSpotifyController extends PlatformsController {
-  PlatformSpotifyController(Platform platform) : super(platform) {
+  PlatformSpotifyController(Platform platform, {bool isBack}) : super(platform, isBack: isBack) {
     platform.platformInformations['logo'] = 'assets/logo/spotify_logo.png';
     platform.platformInformations['icon'] =
         'assets/logo/icons/spotify_icon.png';

@@ -23,9 +23,11 @@ abstract class PlatformsController {
   Map<String, Track> allTracks = Map<String, Track>();
   Platform platform;
 
-  PlatformsController(Platform platform) {
+  PlatformsController(Platform platform, {bool isBack}) {
     this.platform = platform;
-    DataBaseController().insertPlatform(platform);
+    if(isBack == null || isBack == false) {
+      DataBaseController().insertPlatform(platform);
+    }
     this.updateInformations();
   }
 

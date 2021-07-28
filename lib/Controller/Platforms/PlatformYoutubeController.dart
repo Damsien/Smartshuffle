@@ -11,7 +11,7 @@ import 'package:smartshuffle/Services/youtube/api_controller.dart'
     as ytController;
 
 class PlatformYoutubeController extends PlatformsController {
-  PlatformYoutubeController(Platform platform) : super(platform) {
+  PlatformYoutubeController(Platform platform, {bool isBack}) : super(platform, isBack: isBack) {
     platform.platformInformations['logo'] = 'assets/logo/youtube_logo.png';
     platform.platformInformations['icon'] =
         'assets/logo/icons/youtube_icon.png';
