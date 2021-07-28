@@ -57,7 +57,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
   static double _playbutton_size_little;
   static double _text_size_large;
   static double _text_size_little;
-  static Color _main_image_color = Colors.black87;
+  static Color _main_image_color = Colors.black;
 
   // Front variables
   double _imageSize;
@@ -575,7 +575,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                 topLeft: const Radius.circular(15.0),
                                 topRight: const Radius.circular(15.0),
                               ),
-                              color: _main_image_color,
+                              color: Color(0xFF000000),
                             ),
                             child: Column(
                               children: [

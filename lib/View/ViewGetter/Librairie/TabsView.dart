@@ -6,6 +6,7 @@ import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/SearchAlgorithm.dart';
 import 'package:smartshuffle/View/GlobalApp.dart';
+import 'package:smartshuffle/View/Pages/Librairie/PlaylistsPage.dart';
 import 'package:smartshuffle/View/ViewGetter/FormsView.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -23,9 +24,10 @@ import 'package:smartshuffle/Model/Object/Track.dart';
 
 class TabView extends StatefulWidget {
 
-  PlatformsController ctrl;
+  final PlatformsController ctrl;
+  final PlaylistsPageState parent;
 
-  TabView(this.ctrl, {Key key}) : super(key: key);
+  TabView(this.ctrl, {Key key, this.parent}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TabViewState();
@@ -49,8 +51,8 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
   }
 
   void openPlaylist(Playlist playlist) {
+    _isPlaylistOpen = true;
     setState(() {
-      _isPlaylistOpen = true;
       tab = TracksView(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist, notifyParent: refresh,);
     });
   }
@@ -70,10 +72,11 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
       onWillPop: () async {
         if(_isPlaylistOpen) {
           returnToPlaylist();
-          return false;
         } else {
-          return true;
+          if(widget.parent.tabController.index == 0) widget.parent.exitDialog();
+          else widget.parent.tabController.animateTo(0);
         }
+        return false;
       },
     );
   }
