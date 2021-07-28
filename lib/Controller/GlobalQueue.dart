@@ -121,7 +121,8 @@ class GlobalQueue {
         'id': queue.value[lastPermanentIndex].key.id,
         'name': queue.value[lastPermanentIndex].key.title,
         'artist': queue.value[lastPermanentIndex].key.artist,
-        'image': queue.value[lastPermanentIndex].key.imageUrlLarge,
+        'imagelarge': queue.value[lastPermanentIndex].key.imageUrlLarge,
+        'imagelittle': queue.value[lastPermanentIndex].key.imageUrlLittle,
         'service': queue.value[lastPermanentIndex].key.serviceName
       }
     });
@@ -178,12 +179,23 @@ class GlobalQueue {
 
     //Back player reorder variables
     int bOldIndex;
+    int bOldList = oldList;
     int bNewIndex;
+    int bNewList = newList;
 
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
-    switch(oldList) {
+    if (oldList == 0 && newList == 0 && permanentQueue.value.isEmpty) {
+      bOldList = 1;
+      bNewList = 1;
+    }
+          print('============');
+          print(oldIndex);
+          print(oldList);
+          print(newIndex);
+          print(newList);
+    switch(bOldList) {
       case 0: {
         switch(newList) {
           case 0: {
@@ -201,7 +213,7 @@ class GlobalQueue {
         }
       } break;
       case 1: {
-        switch(newList) {
+        switch(bNewList) {
           case 0: {
             Track track = noPermanentQueue.value.removeAt(oldIndex+currentQueueIndex+1-permanentQueue.value.length);
             permanentQueue.value.insert(newIndex, track);

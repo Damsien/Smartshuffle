@@ -276,7 +276,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
           id: arguments['track']['id'],
           title: arguments['track']['name'],
           artist: arguments['track']['artist'],
-          imageUrlLarge: arguments['track']['image'],
+          imageUrlLittle: arguments['track']['imageLittle'],
+          imageUrlLarge: arguments['track']['imageLarge'],
           service: PlatformsLister.nameToService(arguments['track']['service'])
         );
         trackQueue.insert(arguments['index'], tr);
