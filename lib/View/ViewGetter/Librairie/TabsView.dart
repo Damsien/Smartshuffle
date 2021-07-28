@@ -106,7 +106,7 @@ class TracksView extends StatefulWidget {
 
 class _TracksViewState extends State<TracksView> {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
 
   PlatformsController _ctrl;
   Playlist _playlist;
@@ -397,7 +397,7 @@ class TrackView extends StatefulWidget {
 
 class _TrackViewState extends State<TrackView> {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
 
   @override
   Widget build(BuildContext context) {
@@ -487,7 +487,7 @@ class PlaylistsView extends StatefulWidget {
 
 class _PlaylistsViewState extends State<PlaylistsView> {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
 
   @override
   Widget build(BuildContext context) {
@@ -657,7 +657,7 @@ class TabsView {
   
   static final TabsView _tabsView = TabsView._instance();
 
-  final MaterialColor materialColor = MaterialColorApplication.material_color;
+  final MaterialColor materialColor = GlobalTheme.material_color;
 
   factory TabsView({GlobalKey<ScaffoldState> scaffoldKey, State objectState}) {
     _tabsView.scaffold = scaffoldKey;

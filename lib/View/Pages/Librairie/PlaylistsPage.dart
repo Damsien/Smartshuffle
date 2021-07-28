@@ -19,9 +19,7 @@ import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 class PlaylistsPage extends StatefulWidget {
 
-  final ThemeData themeData;
-
-  PlaylistsPage({Key key, @required this.themeData}) : super(key: key);
+  PlaylistsPage({Key key}) : super(key: key);
 
   @override
   _PlaylistsPageState createState() => _PlaylistsPageState();
@@ -29,7 +27,8 @@ class PlaylistsPage extends StatefulWidget {
 
 class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
+  final ThemeData _themeData = GlobalTheme.themeData;
 
   Key key = UniqueKey();
   Key tabKey = UniqueKey();
@@ -106,7 +105,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     }
 
     return MaterialApp(
-      theme: widget.themeData,
+      theme: _themeData,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: [
         AppLocalizations.delegate, // Add this line

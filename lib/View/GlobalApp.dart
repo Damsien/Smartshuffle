@@ -38,7 +38,7 @@ import 'Pages/Profile/ProfilePage.dart';
 import 'Pages/Search/SearchPage.dart';
 
 
-class MaterialColorApplication {
+class GlobalTheme {
 
   static Map<int, Color> _colorCodes = {
     50: Colors.deepPurple[50],
@@ -53,7 +53,18 @@ class MaterialColorApplication {
     900: Colors.deepPurple[900]
   };
 
-  static final MaterialColor material_color = MaterialColor(0xFFFDD835, _colorCodes);
+  static final MaterialColor material_color = MaterialColor(0xFF7E57C2, _colorCodes);
+
+  static ThemeData themeData = ThemeData(
+    brightness: Brightness.dark,
+    primarySwatch: material_color,
+    accentColor: material_color.shade100,
+    visualDensity: VisualDensity.adaptivePlatformDensity,
+    focusColor: material_color.shade400,
+    canvasColor: Color(0xff1D1E33),
+    scaffoldBackgroundColor: Colors.black
+    // scaffoldBackgroundColor: Color(0xff1D1E33)
+  );
 
 }
 
@@ -123,9 +134,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   int selectedIndex;
   Widget currentPage;
 
-  ThemeData _themeData;
+  ThemeData _themeData = GlobalTheme.themeData;
 
-  final MaterialColor materialColor = MaterialColorApplication.material_color;
+  final MaterialColor materialColor = GlobalTheme.material_color;
 
   // void fakers() {
   //   PlatformsController ctrl =
@@ -173,16 +184,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   void initPage() {
 
-    _themeData = ThemeData(
-      brightness: Brightness.dark,
-      primarySwatch: materialColor,
-      accentColor: materialColor.shade100,
-      visualDensity: VisualDensity.adaptivePlatformDensity,
-      focusColor: materialColor.shade400,
-      canvasColor: Colors.transparent
-    );
-
-    Widget playlistsPage = new PlaylistsPage(themeData: _themeData,);
+    Widget playlistsPage = new PlaylistsPage();
     Widget searchPage = new SearchPageMain();
     Widget profilePage = new ProfilePage();
     setState(() {
@@ -228,6 +230,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
             color: Colors.grey[900],
             height: FrontPlayerController().botBarHeight,
             child:  BottomNavigationBar(
+              backgroundColor: Colors.black,
               selectedItemColor: this.materialColor.shade300,
               items: <BottomNavigationBarItem>[
                 BottomNavigationBarItem(

@@ -21,7 +21,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientMixin {
   
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
+  final ThemeData _themeData = GlobalTheme.themeData;
 
   Key key = UniqueKey();
 
@@ -62,12 +63,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
 
     return MaterialApp(
       key: this.key,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: _materialColor,
-        accentColor: _materialColor.shade100,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
+      theme: _themeData,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: [
         AppLocalizations.delegate, // Add this line
@@ -128,11 +124,22 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                   ),
                   InkWell(
                     onTap: () {
-                      showAboutDialog(
+                      showDialog(
                         context: context,
-                        applicationVersion: '1.0.0',
-                        applicationName: 'SmartShuffle'
+                        builder: (context) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(backgroundColor: Colors.orange),
+                            child: AboutDialog(
+                              applicationName: 'SmartShuffle'
+                            ),
+                          );
+                        },
                       );
+                      // showAboutDialog(
+                      //   context: context,
+                      //   applicationVersion: 'beta-1.0',
+                      //   applicationName: 'SmartShuffle'
+                      // );
                     },
                     child: Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,

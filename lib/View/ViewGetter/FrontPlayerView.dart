@@ -33,7 +33,7 @@ class FrontPlayerView extends StatefulWidget {
 
 class _FrontPlayerViewState extends State<FrontPlayerView> {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
 
   // Controllers
   PanelController _panelCtrl = PanelController();
