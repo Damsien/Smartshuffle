@@ -41,7 +41,7 @@ dependencies:
   device_apps: any
   sliding_up_panel: any
   #reorderables: ^0.4.1
-  drag_and_drop_lists: any
+  drag_and_drop_lists: ^0.3.2
   palette_generator: any
   focus_detector: any
   visibility_detector: any

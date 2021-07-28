@@ -560,8 +560,6 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                     borderRadius: BorderRadius.only(topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
                     panelBuilder: (ScrollController scrollCtrl) {
 
-                      List<DragAndDropList> allList;
-
                       return GestureDetector(
                         onTap: () => _panelQueueCtrl.panelPosition < 0.3 ? _panelQueueCtrl.open() : null,
                         onVerticalDragStart: (vertDragStart) {
@@ -597,12 +595,6 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                       appBar: AppBar(
                                         backgroundColor: _main_image_color,
                                         toolbarHeight: 50,
-                                        bottom: TabBar(
-                                          tabs: [
-                                            Tab(text: AppLocalizations.of(context).globalAppTracksQueue),
-                                            Tab(text: AppLocalizations.of(context).globalAppTrackLyrics),
-                                          ],
-                                        ),
                                       ),
                                       body: GestureDetector(
                                         onVerticalDragStart: (vertDragStart) {
@@ -611,233 +603,32 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                         child: TabBarView(
                                           children: [
 
-                                              DragAndDropLists(
-                                                onItemDraggingChanged: (DragAndDropItem details, bool isChanging) {
-                                                  if(isChanging == null || isChanging) _isPanelQueueDraggable.value = false;
-                                                  else _isPanelQueueDraggable.value = true;
-                                                },
-                                                onItemReorder: (int i1, int l1, int i2, int l2) { },
-                                                itemOnAccept: (DragAndDropItem i1, DragAndDropItem i2) {
-                                                  /*print("------------");
-                                                  print(i1.child.key);
-                                                  print(i2.child.key);*/
-                                                  if(i1 != null && i2 != null) {
-                                                    int oldItemIndex = int.parse(i1.child.key.toString().split(':')[2]);
-                                                    int newItemIndex = int.parse(i2.child.key.toString().split(':')[2]);
-                                                    if(allList.length == 1) {
-                                                      GlobalQueue().reorder(oldItemIndex, 1, newItemIndex, 1);
-                                                    } else {
-                                                      String oldList = i1.child.key.toString().split(':')[1];
-                                                      String newList = i2.child.key.toString().split(':')[1];
-                                                      switch(oldList) {
-                                                        case 'PermanentQueue': {
-                                                          switch(newList) {
-                                                            case 'PermanentQueue': GlobalQueue().reorder(oldItemIndex, 0, newItemIndex, 0); break;
-                                                            case 'NoPermanentQueue': GlobalQueue().reorder(oldItemIndex, 0, newItemIndex, 1); break;
-                                                          }
-                                                        } break;
-                                                        case 'NoPermanentQueue': {
-                                                          switch(newList) {
-                                                            case 'PermanentQueue': GlobalQueue().reorder(oldItemIndex, 1, newItemIndex, 0); break;
-                                                            case 'NoPermanentQueue': GlobalQueue().reorder(oldItemIndex, 1, newItemIndex, 1); break;
-                                                          }
-                                                        } break;
-                                                      }
-                                                    }
-                                                  }
-                                                },
-                                                scrollController: scrollCtrl,
-                                                children: () {
-
-                                                  int permaLength = GlobalQueue.permanentQueue.value.length;
-                                                  int noPermaLength = (GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
-                                                      GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0);
-
-                                                  if(!_panelQueueCtrl.isPanelOpen) {
-                                                    permaLength = permaLength > 10 ? 10 : permaLength;
-                                                    noPermaLength = noPermaLength > 10 ? 10 : noPermaLength;
-                                                  } else {
-                                                    permaLength = GlobalQueue.permanentQueue.value.length;
-                                                    noPermaLength = (GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
-                                                      GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0);
-                                                  }
-
-                                                  
-                                                  List<DragAndDropItem> permanentItems = 
-                                                  List.generate(
-                                                      permaLength,
-                                                      (index) {
-
-                                                        return DragAndDropItem(
-                                                          child: ValueListenableBuilder(
-                                                            valueListenable: GlobalQueue.permanentQueue,
-                                                            key: ValueKey('ReorderableListView:PermanentQueue:$index:'),
-                                                            builder: (BuildContext context, List<Track> value, Widget child) {
-                                                        
-                                                              List<Track> queue = List<Track>();
-                                                              
-                                                              for(Track tr in GlobalQueue.permanentQueue.value) {
-                                                                queue.add(tr);
-                                                              }
-
-                                                              return Container(
-                                                                margin: EdgeInsets.only(left: 20, right: 20),
-                                                                
-                                                                child:  Card(
-                                                                  color: _main_image_color,
-                                                                  child: Row(
-                                                                    children: [
-                                                                      Flexible(
-                                                                        flex: 5,
-                                                                        child: ListTile(
-                                                                          title: Text(queue.elementAt(index).title),
-                                                                          leading: FractionallySizedBox(
-                                                                            heightFactor: 0.8,
-                                                                            child: AspectRatio(
-                                                                              aspectRatio: 1,
-                                                                              child: new Container(
-                                                                                decoration: new BoxDecoration(
-                                                                                  image: new DecorationImage(
-                                                                                    fit: BoxFit.fitHeight,
-                                                                                    alignment: FractionalOffset.center,
-                                                                                    image: NetworkImage(queue.elementAt(index).imageUrlLittle),
-                                                                                  )
-                                                                                ),
-                                                                              ),
-                                                                            )
-                                                                          ),
-                                                                          subtitle: Text(queue.elementAt(index).artist),
-                                                                        )
-                                                                      ),
-                                                                      Flexible(
-                                                                        flex: 1,
-                                                                        child: Container (
-                                                                          margin: EdgeInsets.only(left:20, right: 20),
-                                                                          child: Icon(Icons.drag_handle)
-                                                                        )
-                                                                      )
-                                                                    ]
-                                                                  )
-                                                                )
-                                                              );
-                                                            }
-                                                          )
-                                                        );
-                                                      },
-                                                    );
-
-
-                                                  List<DragAndDropItem> noPermanentItems = 
-                                                  List.generate(
-                                                      noPermaLength,
-                                                      (index) {
-
-                                                        return DragAndDropItem(
-                                                          child: ValueListenableBuilder(
-                                                            valueListenable: GlobalQueue.noPermanentQueue,
-                                                            key: ValueKey('ReorderableListView:NoPermanentQueue:$index:'),
-                                                            builder: (BuildContext context, List<Track> value, Widget child) {
-                                                        
-                                                              List<Track> queue = List<Track>();
-                                                              
-                                                              for(int i=0; i<GlobalQueue.noPermanentQueue.value.length; i++) {
-                                                                if(i>GlobalQueue.currentQueueIndex) {
-                                                                  queue.add(GlobalQueue.noPermanentQueue.value[i]);
-                                                                }
-                                                              }
-
-                                                              return Container(
-                                                                margin: EdgeInsets.only(left: 20, right: 20),
-                                                                
-                                                                child: Card(
-                                                                  color: _main_image_color,
-                                                                  child: Row(
-                                                                    children: [
-                                                                      Flexible(
-                                                                        flex: 5,
-                                                                        child: ListTile(
-                                                                          title: Text(queue.elementAt(index).title),
-                                                                          leading: FractionallySizedBox(
-                                                                            heightFactor: 0.8,
-                                                                            child: AspectRatio(
-                                                                              aspectRatio: 1,
-                                                                              child: new Container(
-                                                                                decoration: new BoxDecoration(
-                                                                                  image: new DecorationImage(
-                                                                                    fit: BoxFit.fitHeight,
-                                                                                    alignment: FractionalOffset.center,
-                                                                                    image: NetworkImage(queue.elementAt(index).imageUrlLittle),
-                                                                                  )
-                                                                                ),
-                                                                              ),
-                                                                            )
-                                                                          ),
-                                                                          subtitle: Text(queue.elementAt(index).artist),
-                                                                        )
-                                                                      ),
-                                                                      Flexible(
-                                                                        flex: 1,
-                                                                        child: Container (
-                                                                            margin: EdgeInsets.only(left:20, right: 20),
-                                                                            child: Icon(Icons.drag_handle)
-                                                                          )
-                                                                        )
-                                                                      ]
-                                                                    )
-                                                                  )
-                                                                );
-                                                            }
-                                                          )
-                                                        );
-                                                      },
-                                                    );
-
-                                                
-                                                    DragAndDropList permanentList = DragAndDropList(
-                                                      canDrag: false,
-                                                      header: Container(
-                                                        margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
-                                                        child: Text(
-                                                          AppLocalizations.of(context).globalAppTracksNextInQueue,
-                                                          textAlign: TextAlign.left,
-                                                          style: TextStyle(
-                                                            fontSize: 20
-                                                          )
-                                                        )
-                                                      ),
-                                                      children: permanentItems
-                                                    );
-
-                                                    DragAndDropList noPermanentList = DragAndDropList(
-                                                      canDrag: false,
-                                                      header: Container(
-                                                        margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
-                                                        child: Text(
-                                                          AppLocalizations.of(context).globalAppPlaylistNextFrom + " " + FrontPlayerController().currentPlaylist.name,
-                                                          textAlign: TextAlign.center,
-                                                          style: TextStyle(
-                                                            fontSize: 20
-                                                          )
-                                                        )
-                                                      ),
-                                                      children: noPermanentItems
-                                                    );
-
-                                                    if(GlobalQueue.permanentQueue.value.isEmpty)
-                                                      allList = [noPermanentList];
-                                                    else
-                                                      allList = [permanentList, noPermanentList];
-
-                                                    return allList;
-
-                                                }.call(),
-                                              ),
-
+                                            // ListView.builder(
+                                            //   itemCount: allList.length,
+                                            //   itemBuilder: (buildContext, index) {
+                                            //     return Text('$index');
+                                            //   }
+                                            // ),
+                                            Row(
+                                              children: [
+                                                InkWell(
+                                                  child: Icon(Icons.filter_list),
+                                                  onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => QueueList(this))),
+                                                ),
+                                                Text('oui')
+                                              ],
+                                            ),
 
                                             Text(AppLocalizations.of(context).globalWIP),
                                           ],
                                         ),
-                                      )
+                                      ),
+                                      bottomNavigationBar: TabBar(
+                                        tabs: [
+                                          Tab(text: AppLocalizations.of(context).globalAppTracksQueue),
+                                          Tab(text: AppLocalizations.of(context).globalAppTrackLyrics),
+                                        ],
+                                      ),
                                     )
                                   )
                                 )
@@ -858,5 +649,282 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
 
 
   }
+
+}
+
+
+
+class QueueList extends StatefulWidget {
+
+  final _FrontPlayerViewState parent;
+
+  QueueList(this.parent, {Key key}) : super(key: key);
+
+  @override
+  _QueueListState createState() => _QueueListState();
+  
+}
+
+
+class _QueueListState extends State<QueueList> {
+
+  _FrontPlayerViewState parent;
+
+  @override
+  void initState() {
+    parent = widget.parent;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    List<DragAndDropList> allList;
+
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(AppLocalizations.of(context).globalReport),
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(right: 20),
+            child: IconButton(
+              icon: Icon(Icons.done),
+              tooltip: AppLocalizations.of(context).confirm,
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          )
+        ]
+      ),
+      body: DragAndDropLists(
+        // onItemDraggingChanged: (DragAndDropItem details, bool isChanging) {
+        //   if(isChanging == null || isChanging) _isPanelQueueDraggable.value = false;
+        //   else _isPanelQueueDraggable.value = true;
+        // },
+        onItemReorder: (int oldIndex, int oldList, int newIndex, int newList) {
+          print('============');
+          print(oldIndex);
+          print(oldList);
+          print(newIndex);
+          print(newList);
+          GlobalQueue().reorder(oldIndex, oldList, newIndex, newList);
+        },
+        itemOnAccept: (DragAndDropItem i1, DragAndDropItem i2) {
+          /*print("------------");
+          print(i1.child.key);
+          print(i2.child.key);*/
+          // if(i1 != null && i2 != null) {
+          //   int oldItemIndex = int.parse(i1.child.key.toString().split(':')[2]);
+          //   int newItemIndex = int.parse(i2.child.key.toString().split(':')[2]);
+          //   if(allList.length == 1) {
+          //     GlobalQueue().reorder(oldItemIndex, 1, newItemIndex, 1);
+          //   } else {
+          //     String oldList = i1.child.key.toString().split(':')[1];
+          //     String newList = i2.child.key.toString().split(':')[1];
+          //     switch(oldList) {
+          //       case 'PermanentQueue': {
+          //         switch(newList) {
+          //           case 'PermanentQueue': GlobalQueue().reorder(oldItemIndex, 0, newItemIndex, 0); break;
+          //           case 'NoPermanentQueue': GlobalQueue().reorder(oldItemIndex, 0, newItemIndex, 1); break;
+          //         }
+          //       } break;
+          //       case 'NoPermanentQueue': {
+          //         switch(newList) {
+          //           case 'PermanentQueue': GlobalQueue().reorder(oldItemIndex, 1, newItemIndex, 0); break;
+          //           case 'NoPermanentQueue': GlobalQueue().reorder(oldItemIndex, 1, newItemIndex, 1); break;
+          //         }
+          //       } break;
+          //     }
+          //   }
+          // }
+        },
+        children: () {
+
+          int permaLength = GlobalQueue.permanentQueue.value.length;
+          int noPermaLength = (GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
+              GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0);
+
+          // if(!_panelQueueCtrl.isPanelOpen) {
+          //   permaLength = permaLength > 10 ? 10 : permaLength;
+          //   noPermaLength = noPermaLength > 10 ? 10 : noPermaLength;
+          // } else {
+            permaLength = GlobalQueue.permanentQueue.value.length;
+            noPermaLength = (GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
+              GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0);
+          // }
+
+          
+          List<DragAndDropItem> permanentItems = 
+          List.generate(
+              permaLength,
+              (index) {
+
+                return DragAndDropItem(
+                  child: ValueListenableBuilder(
+                    valueListenable: GlobalQueue.permanentQueue,
+                    key: ValueKey('ReorderableListView:PermanentQueue:$index:'),
+                    builder: (BuildContext context, List<Track> value, Widget child) {
+                
+                      List<Track> queue = List<Track>();
+                      
+                      for(Track tr in GlobalQueue.permanentQueue.value) {
+                        queue.add(tr);
+                      }
+
+                      return Container(
+                        margin: EdgeInsets.only(left: 20, right: 20),
+                        
+                        child:  Card(
+                          color: Color(0xFF000000),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                flex: 5,
+                                child: ListTile(
+                                  title: Text(queue.elementAt(index).title),
+                                  leading: FractionallySizedBox(
+                                    heightFactor: 0.8,
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: new Container(
+                                        decoration: new BoxDecoration(
+                                          image: new DecorationImage(
+                                            fit: BoxFit.fitHeight,
+                                            alignment: FractionalOffset.center,
+                                            image: NetworkImage(queue.elementAt(index).imageUrlLittle),
+                                          )
+                                        ),
+                                      ),
+                                    )
+                                  ),
+                                  subtitle: Text(queue.elementAt(index).artist),
+                                )
+                              ),
+                              Flexible(
+                                flex: 1,
+                                child: Container (
+                                  margin: EdgeInsets.only(left:20, right: 20),
+                                  child: Icon(Icons.drag_handle)
+                                )
+                              )
+                            ]
+                          )
+                        )
+                      );
+                    }
+                  )
+                );
+              },
+            );
+
+
+          List<DragAndDropItem> noPermanentItems = 
+          List.generate(
+              noPermaLength,
+              (index) {
+
+                return DragAndDropItem(
+                  child: ValueListenableBuilder(
+                    valueListenable: GlobalQueue.noPermanentQueue,
+                    key: ValueKey('ReorderableListView:NoPermanentQueue:$index:'),
+                    builder: (BuildContext context, List<Track> value, Widget child) {
+                
+                      List<Track> queue = List<Track>();
+                      
+                      for(int i=0; i<GlobalQueue.noPermanentQueue.value.length; i++) {
+                        if(i>GlobalQueue.currentQueueIndex) {
+                          queue.add(GlobalQueue.noPermanentQueue.value[i]);
+                        }
+                      }
+
+                      return Container(
+                        margin: EdgeInsets.only(left: 20, right: 20),
+                        
+                        child: Card(
+                          color: Color(0xFF000000),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                flex: 5,
+                                child: ListTile(
+                                  title: Text(queue.elementAt(index).title),
+                                  leading: FractionallySizedBox(
+                                    heightFactor: 0.8,
+                                    child: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: new Container(
+                                        decoration: new BoxDecoration(
+                                          image: new DecorationImage(
+                                            fit: BoxFit.fitHeight,
+                                            alignment: FractionalOffset.center,
+                                            image: NetworkImage(queue.elementAt(index).imageUrlLittle),
+                                          )
+                                        ),
+                                      ),
+                                    )
+                                  ),
+                                  subtitle: Text(queue.elementAt(index).artist),
+                                )
+                              ),
+                              Flexible(
+                                flex: 1,
+                                child: Container (
+                                    margin: EdgeInsets.only(left:20, right: 20),
+                                    child: Icon(Icons.drag_handle)
+                                  )
+                                )
+                              ]
+                            )
+                          )
+                        );
+                    }
+                  )
+                );
+              },
+            );
+
+        
+            DragAndDropList permanentList = DragAndDropList(
+              canDrag: false,
+              header: Container(
+                margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
+                child: Text(
+                  AppLocalizations.of(context).globalAppTracksNextInQueue,
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                    fontSize: 20
+                  )
+                )
+              ),
+              children: permanentItems
+            );
+
+            DragAndDropList noPermanentList = DragAndDropList(
+              canDrag: false,
+              header: Container(
+                margin: EdgeInsets.only(left: 25, right: 25, top: 10, bottom: 10),
+                child: Text(
+                  AppLocalizations.of(context).globalAppPlaylistNextFrom + " " + FrontPlayerController().currentPlaylist.name,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20
+                  )
+                )
+              ),
+              children: noPermanentItems
+            );
+
+            if(GlobalQueue.permanentQueue.value.isEmpty)
+              allList = [noPermanentList];
+            else
+              allList = [permanentList, noPermanentList];
+
+            return allList;
+
+        }.call(),
+      )
+    );
+  }
+
 
 }
