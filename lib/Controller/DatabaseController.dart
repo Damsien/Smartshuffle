@@ -68,7 +68,7 @@ class DataBaseController {
       CREATE TABLE platform(
         name TEXT NOT NULL PRIMARY KEY,
         userinformations_name TEXT,
-        userinformations_account TEXT,
+        userinformations_email TEXT,
         userinformations_isconnected INTEGER,
         platformInformations_logo TEXT,
         platformInformations_icon TEXT,
@@ -159,7 +159,6 @@ class DataBaseController {
   }
 
   Future<void> insertPlatform(Platform platform) async {
-    print('inserttt ${platform.name}');
     await _db.insert('platform', platform.toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 

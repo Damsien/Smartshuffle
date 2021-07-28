@@ -90,8 +90,6 @@ class Track {
     if(_file != null) {
       return _file;
     } else {
-      print(_service);
-      print(PlatformsLister.platforms[_service]);
       MapEntry<Track, File> me = await PlatformsLister.platforms[_service].getFile(this);
       _streamTrack = me.key;
       _totalDuration = _streamTrack.totalDuration;

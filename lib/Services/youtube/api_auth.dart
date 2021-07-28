@@ -23,7 +23,6 @@ class APIAuth {
   bool get isSigningIn => _isSigningIn;
 
   static Future<Map<dynamic, GoogleSignInAccount>> login() {
-    print('       loooggggin');
     return _loginWithAllScopes(_googleSignIn);
   }
 

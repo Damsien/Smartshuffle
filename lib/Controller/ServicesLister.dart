@@ -65,7 +65,6 @@ class GlobalAppController {
     if(platforms['Youtube'] != null && platforms['Youtube'].userInformations['isConnected']) {
       String ytToken = await storage.read(key: serviceToString(ServicesLister.YOUTUBE).toLowerCase());
       PlatformsLister.tokens[ServicesLister.YOUTUBE] = ytToken;
-      print(' ytOktenenenen');
       await YT.API().login(storeToken: ytToken);
 
       PlatformsLister.platforms[ServicesLister.YOUTUBE] = new PlatformYoutubeController(platforms['Youtube']);

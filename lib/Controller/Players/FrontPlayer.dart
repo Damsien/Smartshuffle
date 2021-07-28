@@ -282,7 +282,6 @@ class FrontPlayerController {
     String lastScreenState = SCREEN_IDLE;
     
     screenState.addListener(() async {
-      print(screenState);
       if(lastScreenState == SCREEN_IDLE && screenState.value == SCREEN_VISIBLE && isPlayerReady) {
 
         // if (
