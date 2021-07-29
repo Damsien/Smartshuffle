@@ -33,7 +33,7 @@ class GlobalQueue {
     }
 
     //Is inevitably next track
-    for(int i=lastIndex; i<(currentQueueIndex-lastIndex); i++) {
+    for(int i=lastIndex; i<(currentQueueIndex-lastIndex)+1; i++) {
       //If is in permanent queue is true
       if(queue.value[i].value) {
         //Move last track from permanent queue to no permanent queue
@@ -147,6 +147,7 @@ class GlobalQueue {
   void moveFromPermanentToNoPermanent(int index) {
     noPermanentQueue.value.insert(index, permanentQueue.value[0]);
     permanentQueue.value.removeAt(0);
+    reBuildQueue();
   }
 
   void removeLastPermanent() {

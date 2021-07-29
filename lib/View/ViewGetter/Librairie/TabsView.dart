@@ -652,8 +652,8 @@ class _PlaylistsViewState extends State<PlaylistsView> {
 
 class TabsView {
 
-  GlobalKey<ScaffoldState> scaffold;
-  State objectState;
+  // GlobalKey<ScaffoldState> scaffold;
+  // State objectState;
 
   BuildContext context;
   State state;
@@ -663,8 +663,8 @@ class TabsView {
   final MaterialColor materialColor = GlobalTheme.material_color;
 
   factory TabsView({GlobalKey<ScaffoldState> scaffoldKey, State objectState}) {
-    _tabsView.scaffold = scaffoldKey;
-    _tabsView.objectState = objectState;
+    // _tabsView.scaffold = scaffoldKey;
+    // _tabsView.objectState = objectState;
     
     if(scaffoldKey != null) {
       _tabsView.state = scaffoldKey.currentState;
@@ -755,23 +755,39 @@ class TabsView {
 
   PopupMenuButton trackMainDialog(Track track, {
     @required PlatformsController ctrl,
-    @required int index,
-    Function refresh
+    int index,
+    Function refresh,
+    Map<String, bool> enable
   }) {
     String name = track.title;
+    Map<String, PopupMenuEntry> popUpMenuEntry =
+    {
+      PopupMenuConstants.TRACKSMAINDIALOG_ADDTOQUEUE: TracksPopupItemAddToQueue().build(context),
+      PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST: TracksPopupItemAddToAnotherPlaylist().build(context),
+      PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST: TracksPopupItemRemoveFromPlaylist().build(context),
+      PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS: TracksPopupItemInformations().build(context),
+      PopupMenuConstants.TRACKSMAINDIALOG_REPORT: TracksPopupItemReport().build(context)
+    };
 
     return PopupMenuButton(
       icon: Icon(Icons.more_vert),
       tooltip: AppLocalizations.of(context).options,
-      itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-        TracksPopupItemAddToQueue().build(context),
-        TracksPopupItemAddToAnotherPlaylist().build(context),
-        TracksPopupItemRemoveFromPlaylist().build(context),
-        TracksPopupItemInformations().build(context),
-        TracksPopupItemReport().build(context)
-      ],
+      itemBuilder: (BuildContext context) {
+        if(enable == null) {
+          return popUpMenuEntry.values.toList();
+        } else {
+          List<PopupMenuEntry> tempoList = List<PopupMenuEntry>();
+          for(MapEntry<String, bool> me in enable.entries) {
+            if(me.value) {
+              tempoList.add(popUpMenuEntry[me.key]);
+            }
+          }
+          return tempoList;
+        }
+      },
       onSelected: (value) {
         trackMainDialogOptions(value, name: name, ctrl: ctrl, track: track, index: index, refresh: refresh);
+        this.state.setState(() {});
       },
     );
   }
@@ -971,7 +987,7 @@ class TabsView {
               onPressed: () {
                 Navigator.pop(dialogContext);
                 int trackIndex = ctrl.platform.playlists.value[playlistIndex].getTracks.indexOf(track);
-                scaffold.currentState.setState(() {
+                state.setState(() {
                   ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
                   if(refresh != null) refresh(null, null, '', null, null);
                 });
