@@ -246,12 +246,6 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
 
   /* =========================== */
 
-  _QueueListState _queueState;
-  QueueList _queueListWidget;
-
-  void buildQueueState(_QueueListState state) {
-    _queueState = state;
-  }
 
   Future<void> _initAudioService() async {
     await AudioService.connect();
@@ -263,7 +257,6 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
   void initState() {
     FrontPlayerController().onInitPage();
     _initAudioService();
-    _queueListWidget = QueueList(this);
 
     super.initState();
   }
@@ -291,8 +284,6 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
     _constantBuilder();
     _sizeBuilder();
     listView = _queueListWidgetBuilder();
-    print('  -build');
-    if(_queueState != null) _queueState.setState(() {});
 
     return FocusDetector(
       onVisibilityGained: () {FrontPlayerController().screenState.value = FrontPlayerController.SCREEN_VISIBLE;},
@@ -546,26 +537,26 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                           ignoring: (_elementsOpacity < 0.8 ? true : false),
                           child: Opacity(
                             opacity: _elementsOpacity,
-                            child: PopupMenuButton(
-                              iconSize: 35,
-                              icon: Icon(Icons.more_vert),
-                              tooltip: AppLocalizations.of(context).options,
-                              itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                                TracksPopupItemAddToQueue().build(context),
-                                TracksPopupItemAddToAnotherPlaylist().build(context),
-                                TracksPopupItemRemoveFromPlaylist().build(context),
-                                TracksPopupItemInformations().build(context),
-                                TracksPopupItemReport().build(context)
-                              ],
-                              onSelected: (value) {
-                                TabsView(objectState: this).trackMainDialogOptions(
-                                  value,
-                                  name: FrontPlayerController().currentTrack.value.title,
-                                  ctrl: PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service],
-                                  track: FrontPlayerController().currentTrack.value,
-                                  index: FrontPlayerController().currentPlaylist.getTracks.indexOf(FrontPlayerController().currentTrack.value)
-                                );
-                              },
+                            child: TabsView(objectState: this).trackMainDialog(
+                              FrontPlayerController().currentTrack.value,
+                              ctrl: PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service],
+                              iconSize: 35.0,
+                              index: () {
+                                int index = FrontPlayerController().currentPlaylist.getTracks.indexOf(FrontPlayerController().currentTrack.value);
+                                if(index == -1) {
+                                  return null;
+                                } else {
+                                  return index;
+                                }
+                              }.call(),
+                              enable: {
+                                PopupMenuConstants.TRACKSMAINDIALOG_ADDTOQUEUE: true,
+                                PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST: true,
+                                PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST:
+                                  (FrontPlayerController().currentPlaylist.getTracks.indexOf(FrontPlayerController().currentTrack.value) == -1 ? false : true),
+                                PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS:true,
+                                PopupMenuConstants.TRACKSMAINDIALOG_REPORT: true
+                              }
                             )
                           )
                         )
@@ -751,7 +742,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                                 backgroundColor: _main_image_color,
                                                 leading: IconButton(
                                                   icon: Icon(Icons.filter_list),
-                                                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => _queueListWidget)),
+                                                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => QueueList(this))),
                                                 ),
                                                 // actions: [
                                                 //   Padding(
@@ -975,19 +966,22 @@ class _QueueListState extends State<QueueList> {
   @override
   void initState() {
     parent = widget.parent;
-    parent.buildQueueState(this);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    print('   build');
+
+    FrontPlayerController().currentTrack.addListener(() {
+      setState(() {});
+    });
+
     _listBuilder();
 
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text(AppLocalizations.of(context).globalReport),
+        title: Text(AppLocalizations.of(context).tabsViewSort),
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 18),

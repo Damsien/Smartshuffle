@@ -153,6 +153,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
           id: searchingItem.id,
           title: track.title,
           artist: track.artist,
+          imageUrlLittle: track.imageUrlLittle,
           imageUrlLarge: track.imageUrlLarge,
           totalDuration: track.totalDuration.value
         ),
@@ -166,7 +167,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
   }
 
   Future<void> _playTrack(Track track) async {
-    print('_playTrack');
 
     // int notificationColor = await _getMainImageColor(track.imageUrlLarge);
     MapEntry<Track, File> foundTrack = await _getFilePath(track);
@@ -244,7 +244,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
             id: arguments['queue']['id'][i],
             title: arguments['queue']['name'][i],
             artist: arguments['queue']['artist'][i],
-            imageUrlLarge: arguments['queue']['image'][i],
+            imageUrlLittle: arguments['queue']['imageurllittle'][i],
+            imageUrlLarge: arguments['queue']['imageurllarge'][i],
             service: PlatformsLister.nameToService(arguments['queue']['service'][i]),
             totalDuration: _parseDuration(arguments['queue']['duration'][i])
           ));

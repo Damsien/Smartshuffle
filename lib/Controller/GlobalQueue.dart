@@ -33,17 +33,20 @@ class GlobalQueue {
     }
 
     //Is inevitably next track
-    for(int i=lastIndex; i<(currentQueueIndex-lastIndex)+1; i++) {
-      //If is in permanent queue is true
-      if(queue.value[i].value) {
-        //Move last track from permanent queue to no permanent queue
-        // if(value < 0) {
-        //   GlobalQueue().moveFromPermanentToNoPermanent(queue.value.length-1);
-        // } else {
-          GlobalQueue().moveFromPermanentToNoPermanent(i);
-        // }
-      }
-    }
+    if(queue.value[currentQueueIndex].value) GlobalQueue().moveFromPermanentToNoPermanent(currentQueueIndex);
+
+    // for(int i=lastIndex; i<(currentQueueIndex-lastIndex)+1; i++) {
+    //   print('    boucl');
+    //   //If is in permanent queue is true
+    //   if(queue.value[i].value) {
+    //     //Move last track from permanent queue to no permanent queue
+    //     // if(value < 0) {
+    //     //   GlobalQueue().moveFromPermanentToNoPermanent(queue.value.length-1);
+    //     // } else {
+    //       GlobalQueue().moveFromPermanentToNoPermanent(i);
+    //     // }
+    //   }
+    // }
   }
 
   void reBuildQueue() {
@@ -145,6 +148,7 @@ class GlobalQueue {
   }
 
   void moveFromPermanentToNoPermanent(int index) {
+    print('insert $index');
     noPermanentQueue.value.insert(index, permanentQueue.value[0]);
     permanentQueue.value.removeAt(0);
     reBuildQueue();

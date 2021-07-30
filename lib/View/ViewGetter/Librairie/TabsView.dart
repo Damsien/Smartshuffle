@@ -757,7 +757,8 @@ class TabsView {
     @required PlatformsController ctrl,
     int index,
     Function refresh,
-    Map<String, bool> enable
+    Map<String, bool> enable,
+    double iconSize
   }) {
     String name = track.title;
     Map<String, PopupMenuEntry> popUpMenuEntry =
@@ -770,6 +771,7 @@ class TabsView {
     };
 
     return PopupMenuButton(
+      iconSize: iconSize ?? 24.0,
       icon: Icon(Icons.more_vert),
       tooltip: AppLocalizations.of(context).options,
       itemBuilder: (BuildContext context) {
@@ -1027,22 +1029,94 @@ class TabsView {
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.all(10),
-                    child: Text(AppLocalizations.of(context).popupItemTitle+": $name", style: TextStyle(fontSize: 25))
+                    child: Text.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: AppLocalizations.of(context).popupItemTitle,
+                            style: TextStyle(
+                              fontSize: 25,
+                              decoration: TextDecoration.underline,
+                            )
+                          ),
+                          TextSpan(
+                            text: ": $name",
+                            style: TextStyle(
+                              fontSize: 25,
+                            )
+                          ),
+                        ]
+                      )
+                    )
                   ),
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text("$artist_string: $artist", style: TextStyle(fontSize: 17))
+                    child: Text.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: "$artist_string",
+                            style: TextStyle(
+                              fontSize: 17,
+                              decoration: TextDecoration.underline,
+                            )
+                          ),
+                          TextSpan(
+                            text: ": $artist",
+                            style: TextStyle(
+                              fontSize: 17,
+                            )
+                          ),
+                        ]
+                      )
+                    )
                   ),
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text(AppLocalizations.of(context).globalAlbum+": $album", style: TextStyle(fontSize: 17))
+                    child: Text.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: AppLocalizations.of(context).globalAlbum,
+                            style: TextStyle(
+                              fontSize: 17,
+                              decoration: TextDecoration.underline,
+                            )
+                          ),
+                          TextSpan(
+                            text: ": $album",
+                            style: TextStyle(
+                              fontSize: 17,
+                            )
+                          ),
+                        ]
+                      )
+                    )
                   ),
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text(AppLocalizations.of(context).globalService+": $service", style: TextStyle(fontSize: 17))
+                    child: Text.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: AppLocalizations.of(context).globalService,
+                            style: TextStyle(
+                              fontSize: 17,
+                              decoration: TextDecoration.underline,
+                            )
+                          ),
+                          TextSpan(
+                            text: ": $service",
+                            style: TextStyle(
+                              fontSize: 17,
+                            )
+                          ),
+                        ]
+                      )
+                    )
                   ),
                 ]
               )
