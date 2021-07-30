@@ -15,16 +15,16 @@ class APIAuth {
 
     String token = await SpotifySdk.getAuthenticationToken(
         clientId: clientId, redirectUrl: redirectUri, scope: _scopes);
-    await SpotifySdk.connectToSpotifyRemote(
-          clientId: clientId,
-          redirectUrl: redirectUri);
-    await SpotifySdk.connectToSpotifyRemote(clientId: clientId, redirectUrl: redirectUri, accessToken: token);
+    // await SpotifySdk.connectToSpotifyRemote(
+    //       clientId: clientId,
+    //       redirectUrl: redirectUri);
+    // await SpotifySdk.connectToSpotifyRemote(clientId: clientId, redirectUrl: redirectUri, accessToken: token);
 
     return token;
   }
 
   static Future<bool> logout() async {
-    await SpotifySdk.disconnect();
+    // await SpotifySdk.disconnect();
     return false;
   }
 }

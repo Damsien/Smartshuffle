@@ -8,7 +8,7 @@ import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 
 class Playlist {
 
-  static const String DEFAULT_IMAGE_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Solid_yellow.svg/512px-Solid_yellow.svg.png';
+  static const String DEFAULT_IMAGE_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Solid_purple.svg/2048px-Solid_purple.svg.png';
 
   String _id;
   String _name;
@@ -71,7 +71,11 @@ class Playlist {
 
   void setId(String id) {
     _id = id;
-    DataBaseController().updatePlaylist(this);
+    // DataBaseController().updatePlaylist(this);
+  }
+
+  void setUri(String uri) {
+    _uri = Uri.parse(uri);
   }
 
   void rename(String name) {

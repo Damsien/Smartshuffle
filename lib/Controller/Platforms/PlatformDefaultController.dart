@@ -15,6 +15,19 @@ class PlatformDefaultController extends PlatformsController {
     platform.platformInformations['icon'] =
         'assets/logo/icons/smartshuffle.png';
     platform.platformInformations['main_color'] = Colors.purple[400];
+
+    features = {
+      PlatformsCtrlFeatures.PLAYLIST_ADD: true,
+      PlatformsCtrlFeatures.PLAYLIST_GET: true,
+      PlatformsCtrlFeatures.PLAYLIST_CLONE: false,
+      PlatformsCtrlFeatures.PLAYLIST_MERGE: false,
+      PlatformsCtrlFeatures.PLAYLIST_REMOVE: true,
+      PlatformsCtrlFeatures.PLAYLIST_RENAME: true,
+      PlatformsCtrlFeatures.TRACK_ADD_ANOTHER_PLAYLIST: true,
+      PlatformsCtrlFeatures.TRACK_ADD: true,
+      PlatformsCtrlFeatures.TRACK_GET: true,
+      PlatformsCtrlFeatures.TRACK_REMOVE: true
+    };
   }
 
   @override
@@ -63,7 +76,7 @@ class PlatformDefaultController extends PlatformsController {
   }
 
   @override
-  Playlist addPlaylist(
+  FutureOr<Playlist> addPlaylist(
       {Playlist playlist,
       String name,
       String ownerId,
@@ -78,14 +91,16 @@ class PlatformDefaultController extends PlatformsController {
       playlist.setService(ServicesLister.DEFAULT);
       return this.platform.addPlaylist(playlist..setTracks(playlist.getTracks, isNew: true), isNew: true);
     }
-    return this.platform.addPlaylist(Playlist(
-      name: name,
-      ownerId: ownerId,
-      ownerName: ownerName,
-      id: this.platform.playlists.value.length.toString(),
-      service: ServicesLister.DEFAULT,
-      imageUrl: imageUrl,
-      uri: (playlistUri != null ? Uri.parse(playlistUri) : Uri.http("", "")))..setTracks(playlist.getTracks, isNew: true),
+    return this.platform.addPlaylist(
+      Playlist(
+        name: name,
+        ownerId: ownerId,
+        ownerName: ownerName,
+        id: this.platform.playlists.value.length.toString(),
+        service: ServicesLister.DEFAULT,
+        imageUrl: imageUrl,
+        uri: (playlistUri != null ? Uri.parse(playlistUri) : Uri.http("", ""))
+      ),
       isNew: true
     );
   }
