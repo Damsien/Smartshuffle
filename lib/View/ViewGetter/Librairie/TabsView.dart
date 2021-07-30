@@ -1385,37 +1385,100 @@ class TabsView {
                 allCards = List.generate(
                   defaultCtrl.platform.playlists.value.length,
                   (index) {
-                    return Theme(
-                      data: ThemeData(
-                        brightness: Brightness.dark
-                      ),
-                      child: Container(
-                        child: Card(
-                          child: ListTile(
-                            title: Text(defaultCtrl.platform.playlists.value[index].name),
-                            leading: FractionallySizedBox(
-                              heightFactor: 0.8,
-                              child: AspectRatio(
-                                aspectRatio: 1,
-                                child: new Container(
-                                  decoration: new BoxDecoration(
-                                    image: new DecorationImage(
-                                      fit: BoxFit.fitHeight,
-                                      alignment: FractionalOffset.center,
-                                      image: NetworkImage(defaultCtrl.platform.playlists.value[index].imageUrl),
-                                    )
-                                  ),
-                                ),
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 3),
+                      child: ListTile(
+                        title: Text(defaultCtrl.platform.playlists.value[index].name),
+                        leading: AspectRatio(
+                          aspectRatio: 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                fit: BoxFit.fitHeight,
+                                alignment: FractionalOffset.center,
+                                image: NetworkImage(defaultCtrl.platform.playlists.value[index].imageUrl),
                               )
                             ),
-                            subtitle: Text(defaultCtrl.platform.playlists.value[index].tracks.length.toString() + " "+AppLocalizations.of(context).globalTracks),
-                            onTap: () {
-                              Navigator.pop(dialogContext);
-                              //TODO Message de confirmation
-                              defaultCtrl.mergePlaylist(defaultCtrl.platform.playlists.value[index], playlist);
-                            },
-                          )
-                        )
+                          ),
+                        ),
+                        subtitle: Text(defaultCtrl.platform.playlists.value[index].tracks.length.toString() + " " + AppLocalizations.of(context).globalTracks),
+                        onTap: () {
+                          Navigator.pop(dialogContext);
+                          showDialog(context: dialogContext, builder: (BuildContext bldctx) {
+                            return AlertDialog(
+                              title: Text(AppLocalizations.of(context).tabsViewMergePlaylist + " ?"),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    title: Text(playlist.name),
+                                    leading: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            fit: BoxFit.fitHeight,
+                                            alignment: FractionalOffset.center,
+                                            image: NetworkImage(playlist.imageUrl),
+                                          )
+                                        ),
+                                      ),
+                                    ),
+                                    subtitle: Text.rich(
+                                      TextSpan(
+                                        children: <TextSpan>[
+                                          TextSpan(
+                                            text: playlist.tracks.length.toString(),
+                                            style: TextStyle(decoration: TextDecoration.underline)
+                                          ),
+                                          TextSpan(text: " " +AppLocalizations.of(context).globalTracks)
+                                        ]
+                                      )
+                                    )
+                                  ),
+                                  Icon(Icons.arrow_downward),
+                                  ListTile(
+                                    title: Text(defaultCtrl.platform.playlists.value[index].name),
+                                    leading: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            fit: BoxFit.fitHeight,
+                                            alignment: FractionalOffset.center,
+                                            image: NetworkImage(defaultCtrl.platform.playlists.value[index].imageUrl),
+                                          )
+                                        ),
+                                      ),
+                                    ),
+                                    subtitle: Text.rich(
+                                      TextSpan(
+                                        children: <TextSpan>[
+                                          TextSpan(text: defaultCtrl.platform.playlists.value[index].tracks.length.toString() + "+"),
+                                          TextSpan(
+                                            text: playlist.tracks.length.toString(),
+                                            style: TextStyle(decoration: TextDecoration.underline)
+                                          ),
+                                          TextSpan(text: " " +AppLocalizations.of(context).globalTracks)
+                                        ]
+                                      )
+                                    )
+                                  )
+                                ]
+                              ),
+                              actions: [
+                                FlatButton(
+                                  child: Text(AppLocalizations.of(context).cancel, style: TextStyle(color: Colors.white)),
+                                  onPressed: () => Navigator.pop(bldctx),
+                                ),
+                                FlatButton(
+                                  child: Text(AppLocalizations.of(context).confirm, style: TextStyle(color: Colors.white)),
+                                  onPressed: () => defaultCtrl.mergePlaylist(defaultCtrl.platform.playlists.value[index], playlist),
+                                ),
+                              ],
+                            );
+                          });
+                        },
                       )
                     );
                   }
@@ -1432,7 +1495,6 @@ class TabsView {
               }.call()
             )
           ),
-          backgroundColor: Colors.black,
         );
       }
     );
