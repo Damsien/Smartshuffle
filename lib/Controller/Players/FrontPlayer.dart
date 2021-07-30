@@ -222,14 +222,16 @@ class FrontPlayerController {
     Map<String, List<String>> queue = Map<String, List<String>>();
     queue['name'] = List<String>();
     queue['artist'] = List<String>();
-    queue['image'] = List<String>();
+    queue['imageurllarge'] = List<String>();
+    queue['imageurllittle'] = List<String>();
     queue['id'] = List<String>();
     queue['service'] = List<String>();
     queue['duration'] = List<String>();
     for(MapEntry<Track, bool> me in frontQueue) {
       queue['name'].add(me.key.title);
       queue['artist'].add(me.key.artist);
-      queue['image'].add(me.key.imageUrlLarge);
+      queue['imageurllarge'].add(me.key.imageUrlLarge);
+      queue['imageurllittle'].add(me.key.imageUrlLarge);
       queue['id'].add(me.key.id);
       queue['service'].add(me.key.serviceName);
       queue['duration'].add(me.key.totalDuration.value.toString());

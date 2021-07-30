@@ -19,23 +19,22 @@ import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 class PlaylistsPage extends StatefulWidget {
 
-  final ThemeData themeData;
-
-  PlaylistsPage({Key key, @required this.themeData}) : super(key: key);
+  PlaylistsPage({Key key}) : super(key: key);
 
   @override
-  _PlaylistsPageState createState() => _PlaylistsPageState();
+  PlaylistsPageState createState() => PlaylistsPageState();
 }
 
-class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
+  final ThemeData _themeData = GlobalTheme.themeData;
 
   Key key = UniqueKey();
   Key tabKey = UniqueKey();
 
   bool exitPage = true;
-  TabController _tabController;
+  TabController tabController;
   ValueNotifier<int> initialTabIndex = ValueNotifier<int>(0);
 
   Map<ServicesLister, PlatformsController> userPlatforms = new Map<ServicesLister, PlatformsController>();
@@ -77,7 +76,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
       elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.getPlatformInformations()['icon']))));
     }
     return TabBar(
-      controller: this._tabController,
+      controller: this.tabController,
       indicatorColor: _materialColor.shade300,
       tabs: elements,
     );
@@ -98,7 +97,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     PlatformsController.setPlaylistsPageState(this);
 
     userPlatformsInit();
-    _tabController = TabController(initialIndex: initialTabIndex.value, length: this.userPlatforms.length, vsync: this);
+    tabController = TabController(initialIndex: initialTabIndex.value, length: this.userPlatforms.length, vsync: this);
 
     List elements = List<Widget>();
     for(MapEntry elem in this.userPlatforms.entries) {
@@ -106,7 +105,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
     }
 
     return MaterialApp(
-      theme: widget.themeData,
+      theme: _themeData,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: [
         AppLocalizations.delegate, // Add this line
@@ -123,28 +122,21 @@ class _PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCl
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: TabBar(
-            controller: _tabController,
+            controller: tabController,
             indicatorColor: _materialColor.shade300,
             tabs: elements
           ),
           foregroundColor: _materialColor.shade300,
         ),
-        body: WillPopScope(
-          child: TabBarView(
-            controller: _tabController,
-            children: List.generate(_tabController.length, (index) {
-              return Container(
-                key: PageStorageKey(GlobalAppController.getAllControllers()[index].platform.name),
-                child: TabView(GlobalAppController.getAllControllers()[index]),
-              );
-            }),
-          ),
-          onWillPop: () async {
-            if(this._tabController.index == 0) exitDialog();
-            else this._tabController.animateTo(0);
-            return false;
-          },
-        )
+        body: TabBarView(
+          controller: tabController,
+          children: List.generate(tabController.length, (index) {
+            return Container(
+              key: PageStorageKey(GlobalAppController.getAllControllers()[index].platform.name),
+              child: TabView(GlobalAppController.getAllControllers()[index], parent: this),
+            );
+          }),
+        ),
       )
     );
     

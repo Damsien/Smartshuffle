@@ -6,6 +6,7 @@ import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/SearchAlgorithm.dart';
 import 'package:smartshuffle/View/GlobalApp.dart';
+import 'package:smartshuffle/View/Pages/Librairie/PlaylistsPage.dart';
 import 'package:smartshuffle/View/ViewGetter/FormsView.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -23,9 +24,10 @@ import 'package:smartshuffle/Model/Object/Track.dart';
 
 class TabView extends StatefulWidget {
 
-  PlatformsController ctrl;
+  final PlatformsController ctrl;
+  final PlaylistsPageState parent;
 
-  TabView(this.ctrl, {Key key}) : super(key: key);
+  TabView(this.ctrl, {Key key, this.parent}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TabViewState();
@@ -49,8 +51,8 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
   }
 
   void openPlaylist(Playlist playlist) {
+    _isPlaylistOpen = true;
     setState(() {
-      _isPlaylistOpen = true;
       tab = TracksView(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist, notifyParent: refresh,);
     });
   }
@@ -70,10 +72,11 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
       onWillPop: () async {
         if(_isPlaylistOpen) {
           returnToPlaylist();
-          return false;
         } else {
-          return true;
+          if(widget.parent.tabController.index == 0) widget.parent.exitDialog();
+          else widget.parent.tabController.animateTo(0);
         }
+        return false;
       },
     );
   }
@@ -106,7 +109,7 @@ class TracksView extends StatefulWidget {
 
 class _TracksViewState extends State<TracksView> {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
 
   PlatformsController _ctrl;
   Playlist _playlist;
@@ -397,7 +400,7 @@ class TrackView extends StatefulWidget {
 
 class _TrackViewState extends State<TrackView> {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
 
   @override
   Widget build(BuildContext context) {
@@ -487,7 +490,7 @@ class PlaylistsView extends StatefulWidget {
 
 class _PlaylistsViewState extends State<PlaylistsView> {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
 
   @override
   Widget build(BuildContext context) {
@@ -649,19 +652,19 @@ class _PlaylistsViewState extends State<PlaylistsView> {
 
 class TabsView {
 
-  GlobalKey<ScaffoldState> scaffold;
-  State objectState;
+  // GlobalKey<ScaffoldState> scaffold;
+  // State objectState;
 
   BuildContext context;
   State state;
   
   static final TabsView _tabsView = TabsView._instance();
 
-  final MaterialColor materialColor = MaterialColorApplication.material_color;
+  final MaterialColor materialColor = GlobalTheme.material_color;
 
   factory TabsView({GlobalKey<ScaffoldState> scaffoldKey, State objectState}) {
-    _tabsView.scaffold = scaffoldKey;
-    _tabsView.objectState = objectState;
+    // _tabsView.scaffold = scaffoldKey;
+    // _tabsView.objectState = objectState;
     
     if(scaffoldKey != null) {
       _tabsView.state = scaffoldKey.currentState;
@@ -752,23 +755,41 @@ class TabsView {
 
   PopupMenuButton trackMainDialog(Track track, {
     @required PlatformsController ctrl,
-    @required int index,
-    Function refresh
+    int index,
+    Function refresh,
+    Map<String, bool> enable,
+    double iconSize
   }) {
     String name = track.title;
+    Map<String, PopupMenuEntry> popUpMenuEntry =
+    {
+      PopupMenuConstants.TRACKSMAINDIALOG_ADDTOQUEUE: TracksPopupItemAddToQueue().build(context),
+      PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST: TracksPopupItemAddToAnotherPlaylist().build(context),
+      PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST: TracksPopupItemRemoveFromPlaylist().build(context),
+      PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS: TracksPopupItemInformations().build(context),
+      PopupMenuConstants.TRACKSMAINDIALOG_REPORT: TracksPopupItemReport().build(context)
+    };
 
     return PopupMenuButton(
+      iconSize: iconSize ?? 24.0,
       icon: Icon(Icons.more_vert),
       tooltip: AppLocalizations.of(context).options,
-      itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-        TracksPopupItemAddToQueue().build(context),
-        TracksPopupItemAddToAnotherPlaylist().build(context),
-        TracksPopupItemRemoveFromPlaylist().build(context),
-        TracksPopupItemInformations().build(context),
-        TracksPopupItemReport().build(context)
-      ],
+      itemBuilder: (BuildContext context) {
+        if(enable == null) {
+          return popUpMenuEntry.values.toList();
+        } else {
+          List<PopupMenuEntry> tempoList = List<PopupMenuEntry>();
+          for(MapEntry<String, bool> me in enable.entries) {
+            if(me.value) {
+              tempoList.add(popUpMenuEntry[me.key]);
+            }
+          }
+          return tempoList;
+        }
+      },
       onSelected: (value) {
         trackMainDialogOptions(value, name: name, ctrl: ctrl, track: track, index: index, refresh: refresh);
+        this.state.setState(() {});
       },
     );
   }
@@ -968,7 +989,7 @@ class TabsView {
               onPressed: () {
                 Navigator.pop(dialogContext);
                 int trackIndex = ctrl.platform.playlists.value[playlistIndex].getTracks.indexOf(track);
-                scaffold.currentState.setState(() {
+                state.setState(() {
                   ctrl.removeTrackFromPlaylist(playlistIndex, trackIndex);
                   if(refresh != null) refresh(null, null, '', null, null);
                 });
@@ -1008,22 +1029,94 @@ class TabsView {
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.all(10),
-                    child: Text(AppLocalizations.of(context).popupItemTitle+": $name", style: TextStyle(fontSize: 25))
+                    child: Text.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: AppLocalizations.of(context).popupItemTitle,
+                            style: TextStyle(
+                              fontSize: 25,
+                              decoration: TextDecoration.underline,
+                            )
+                          ),
+                          TextSpan(
+                            text: ": $name",
+                            style: TextStyle(
+                              fontSize: 25,
+                            )
+                          ),
+                        ]
+                      )
+                    )
                   ),
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text("$artist_string: $artist", style: TextStyle(fontSize: 17))
+                    child: Text.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: "$artist_string",
+                            style: TextStyle(
+                              fontSize: 17,
+                              decoration: TextDecoration.underline,
+                            )
+                          ),
+                          TextSpan(
+                            text: ": $artist",
+                            style: TextStyle(
+                              fontSize: 17,
+                            )
+                          ),
+                        ]
+                      )
+                    )
                   ),
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text(AppLocalizations.of(context).globalAlbum+": $album", style: TextStyle(fontSize: 17))
+                    child: Text.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: AppLocalizations.of(context).globalAlbum,
+                            style: TextStyle(
+                              fontSize: 17,
+                              decoration: TextDecoration.underline,
+                            )
+                          ),
+                          TextSpan(
+                            text: ": $album",
+                            style: TextStyle(
+                              fontSize: 17,
+                            )
+                          ),
+                        ]
+                      )
+                    )
                   ),
                   Container(
                     width: MediaQuery.of(dialogContext).size.width,
                     padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
-                    child: Text(AppLocalizations.of(context).globalService+": $service", style: TextStyle(fontSize: 17))
+                    child: Text.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: AppLocalizations.of(context).globalService,
+                            style: TextStyle(
+                              fontSize: 17,
+                              decoration: TextDecoration.underline,
+                            )
+                          ),
+                          TextSpan(
+                            text: ": $service",
+                            style: TextStyle(
+                              fontSize: 17,
+                            )
+                          ),
+                        ]
+                      )
+                    )
                   ),
                 ]
               )
@@ -1292,37 +1385,100 @@ class TabsView {
                 allCards = List.generate(
                   defaultCtrl.platform.playlists.value.length,
                   (index) {
-                    return Theme(
-                      data: ThemeData(
-                        brightness: Brightness.dark
-                      ),
-                      child: Container(
-                        child: Card(
-                          child: ListTile(
-                            title: Text(defaultCtrl.platform.playlists.value[index].name),
-                            leading: FractionallySizedBox(
-                              heightFactor: 0.8,
-                              child: AspectRatio(
-                                aspectRatio: 1,
-                                child: new Container(
-                                  decoration: new BoxDecoration(
-                                    image: new DecorationImage(
-                                      fit: BoxFit.fitHeight,
-                                      alignment: FractionalOffset.center,
-                                      image: NetworkImage(defaultCtrl.platform.playlists.value[index].imageUrl),
-                                    )
-                                  ),
-                                ),
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 3),
+                      child: ListTile(
+                        title: Text(defaultCtrl.platform.playlists.value[index].name),
+                        leading: AspectRatio(
+                          aspectRatio: 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                fit: BoxFit.fitHeight,
+                                alignment: FractionalOffset.center,
+                                image: NetworkImage(defaultCtrl.platform.playlists.value[index].imageUrl),
                               )
                             ),
-                            subtitle: Text(defaultCtrl.platform.playlists.value[index].tracks.length.toString() + " "+AppLocalizations.of(context).globalTracks),
-                            onTap: () {
-                              Navigator.pop(dialogContext);
-                              //TODO Message de confirmation
-                              defaultCtrl.mergePlaylist(defaultCtrl.platform.playlists.value[index], playlist);
-                            },
-                          )
-                        )
+                          ),
+                        ),
+                        subtitle: Text(defaultCtrl.platform.playlists.value[index].tracks.length.toString() + " " + AppLocalizations.of(context).globalTracks),
+                        onTap: () {
+                          Navigator.pop(dialogContext);
+                          showDialog(context: dialogContext, builder: (BuildContext bldctx) {
+                            return AlertDialog(
+                              title: Text(AppLocalizations.of(context).tabsViewMergePlaylist + " ?"),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    title: Text(playlist.name),
+                                    leading: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            fit: BoxFit.fitHeight,
+                                            alignment: FractionalOffset.center,
+                                            image: NetworkImage(playlist.imageUrl),
+                                          )
+                                        ),
+                                      ),
+                                    ),
+                                    subtitle: Text.rich(
+                                      TextSpan(
+                                        children: <TextSpan>[
+                                          TextSpan(
+                                            text: playlist.tracks.length.toString(),
+                                            style: TextStyle(decoration: TextDecoration.underline)
+                                          ),
+                                          TextSpan(text: " " +AppLocalizations.of(context).globalTracks)
+                                        ]
+                                      )
+                                    )
+                                  ),
+                                  Icon(Icons.arrow_downward),
+                                  ListTile(
+                                    title: Text(defaultCtrl.platform.playlists.value[index].name),
+                                    leading: AspectRatio(
+                                      aspectRatio: 1,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+                                            fit: BoxFit.fitHeight,
+                                            alignment: FractionalOffset.center,
+                                            image: NetworkImage(defaultCtrl.platform.playlists.value[index].imageUrl),
+                                          )
+                                        ),
+                                      ),
+                                    ),
+                                    subtitle: Text.rich(
+                                      TextSpan(
+                                        children: <TextSpan>[
+                                          TextSpan(text: defaultCtrl.platform.playlists.value[index].tracks.length.toString() + "+"),
+                                          TextSpan(
+                                            text: playlist.tracks.length.toString(),
+                                            style: TextStyle(decoration: TextDecoration.underline)
+                                          ),
+                                          TextSpan(text: " " +AppLocalizations.of(context).globalTracks)
+                                        ]
+                                      )
+                                    )
+                                  )
+                                ]
+                              ),
+                              actions: [
+                                FlatButton(
+                                  child: Text(AppLocalizations.of(context).cancel, style: TextStyle(color: Colors.white)),
+                                  onPressed: () => Navigator.pop(bldctx),
+                                ),
+                                FlatButton(
+                                  child: Text(AppLocalizations.of(context).confirm, style: TextStyle(color: Colors.white)),
+                                  onPressed: () => defaultCtrl.mergePlaylist(defaultCtrl.platform.playlists.value[index], playlist),
+                                ),
+                              ],
+                            );
+                          });
+                        },
                       )
                     );
                   }
@@ -1339,7 +1495,6 @@ class TabsView {
               }.call()
             )
           ),
-          backgroundColor: Colors.black,
         );
       }
     );
