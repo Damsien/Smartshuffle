@@ -38,6 +38,14 @@ class GlobalAppController {
     return plat;
   }
 
+  static List<PlatformsController> getAllConnectedControllers() {
+    List<PlatformsController> plat = List<PlatformsController>();
+    PlatformsLister.platforms.forEach((key, value) {
+      if(value.platform.userInformations['isConnected']) plat.add(value);
+    });
+    return plat;
+  }
+
   static Future<void> storageInit() async {
     final storage = FlutterSecureStorage();
     

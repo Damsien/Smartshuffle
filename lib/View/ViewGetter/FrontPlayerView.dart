@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:focus_detector/focus_detector.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -551,9 +552,12 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                               }.call(),
                               enable: {
                                 PopupMenuConstants.TRACKSMAINDIALOG_ADDTOQUEUE: true,
-                                PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST: true,
+                                PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST:
+                                  PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service].features[PlatformsCtrlFeatures.TRACK_ADD_ANOTHER_PLAYLIST],
                                 PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST:
-                                  (FrontPlayerController().currentPlaylist.getTracks.indexOf(FrontPlayerController().currentTrack.value) == -1 ? false : true),
+                                  (FrontPlayerController().currentPlaylist.getTracks.indexOf(FrontPlayerController().currentTrack.value) == -1
+                                    && PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service].features[PlatformsCtrlFeatures.TRACK_REMOVE]
+                                    ? false : true),
                                 PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS:true,
                                 PopupMenuConstants.TRACKSMAINDIALOG_REPORT: true
                               }

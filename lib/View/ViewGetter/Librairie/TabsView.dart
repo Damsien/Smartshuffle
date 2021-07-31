@@ -191,7 +191,10 @@ class _TracksViewState extends State<TracksView> {
                                   Container(
                                     width: MediaQuery.of(context).size.width/2,
                                     child: InkWell(
-                                      onTap: () => TabsView(objectState: this).renamePlaylist(_playlist),
+                                      onTap: () => (_ctrl.features[PlatformsCtrlFeatures.PLAYLIST_RENAME] ?
+                                        TabsView(objectState: this).renamePlaylist(_playlist)
+                                        : SizedBox.shrink()
+                                      ),
                                       child: Text(
                                         _playlist.name, 
                                         style: ((300/_playlist.name.length+5) > 30 ?
@@ -463,7 +466,15 @@ class _TrackViewState extends State<TrackView> {
                 builder: (BuildContext bContext) {
                   return FractionallySizedBox(
                     heightFactor: 1,
-                    child: TabsView(objectState: this).trackMainDialog(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist))
+                    child: TabsView(objectState: this).trackMainDialog(track, ctrl: ctrl, index: ctrl.platform.playlists.value.indexOf(playlist),
+                      enable:{
+                        PopupMenuConstants.TRACKSMAINDIALOG_ADDTOQUEUE: true,
+                        PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST: ctrl.features[PlatformsCtrlFeatures.TRACK_ADD_ANOTHER_PLAYLIST],
+                        PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST: ctrl.features[PlatformsCtrlFeatures.TRACK_REMOVE],
+                        PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS: true,
+                        PopupMenuConstants.TRACKSMAINDIALOG_REPORT: true
+                      }
+                    )
                   );
                 }
               )
@@ -539,6 +550,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                                 margin: EdgeInsets.only(top: 30, bottom: 20),
                                 child: Text(ctrl.getPlatformInformations()['name'], style: TextStyle(fontSize: 30))
                               ),
+                              (ctrl.features[PlatformsCtrlFeatures.PLAYLIST_ADD] ?
                               Container(
                                 child: MaterialButton(
                                   shape: ContinuousRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
@@ -553,7 +565,9 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                                     ]
                                   )
                                 )
-                              ),
+                              )
+                              : SizedBox.shrink()
+                              )
                             ]
                           ),
                           InkWell(
@@ -600,7 +614,14 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                                       subtitle: Text(playlists.elementAt(index).tracks.length.toString()+" "+AppLocalizations.of(context).globalTracks),
                                       onTap: () => widget.openPlaylist(playlists[index]),
                                     ),
-                                    onLongPressStart: (LongPressStartDetails detail) => TabsView(objectState: this).playlistMainOptions(playlists[index], ctrl: ctrl, index: index, detail: detail),
+                                    onLongPressStart: (LongPressStartDetails detail) => TabsView(objectState: this).playlistMainOptions(playlists[index], ctrl: ctrl, index: index, detail: detail,
+                                      enable: {
+                                        PopupMenuConstants.PLAYLISTSMAINDIALOG_RENAME: ctrl.features[PlatformsCtrlFeatures.PLAYLIST_RENAME],
+                                        PopupMenuConstants.PLAYLISTSMAINDIALOG_CLONE: ctrl.features[PlatformsCtrlFeatures.PLAYLIST_CLONE],
+                                        PopupMenuConstants.PLAYLISTSMAINDIALOG_MERGE: ctrl.features[PlatformsCtrlFeatures.PLAYLIST_MERGE],
+                                        PopupMenuConstants.PLAYLISTSMAINDIALOG_DELETE: ctrl.features[PlatformsCtrlFeatures.PLAYLIST_REMOVE]
+                                      }
+                                    ),
                                   )
                                 ),
                                 Flexible(
@@ -1152,16 +1173,35 @@ class TabsView {
   void playlistMainOptions(Playlist playlist, {
     @required PlatformsController ctrl,
     @required int index,
-    @required LongPressStartDetails detail
+    @required LongPressStartDetails detail,
+    Map<String, bool> enable
   }) async {
     HapticFeedback.lightImpact();
     String name = playlist.name;
-
+    Map<String, PopupMenuEntry> popUpMenuEntry =
+    {
+      PopupMenuConstants.PLAYLISTSMAINDIALOG_RENAME: PlaylistsPopupItemRename().build(context),
+      PopupMenuConstants.PLAYLISTSMAINDIALOG_CLONE: PlaylistsPopupItemClone().build(context),
+      PopupMenuConstants.PLAYLISTSMAINDIALOG_MERGE: PlaylistsPopupItemMerge().build(context),
+      PopupMenuConstants.PLAYLISTSMAINDIALOG_DELETE: PlaylistsPopupItemDelete().build(context),
+    };
     List<PopupMenuEntry> items = [];
-    items.add(PlaylistsPopupItemRename().build(context));
-    if(ctrl.platform.name != 'SmartShuffle')  items.add(PlaylistsPopupItemClone().build(context));
-    if(ctrl.platform.name != 'SmartShuffle')  items.add(PlaylistsPopupItemMerge().build(context));
-    items.add(PlaylistsPopupItemDelete().build(context));
+
+    if(enable == null) {
+      items.add(PlaylistsPopupItemRename().build(context));
+      items.add(PlaylistsPopupItemClone().build(context));
+      items.add(PlaylistsPopupItemMerge().build(context));
+      items.add(PlaylistsPopupItemDelete().build(context));
+    } else {
+      for(MapEntry<String, bool> me in enable.entries) {
+        if(me.value) {
+          print(me.key);
+          items.add(popUpMenuEntry[me.key]);
+        }
+      }
+    }
+
+
 
     await showMenu(
         context: context,

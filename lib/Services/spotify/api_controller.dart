@@ -22,6 +22,7 @@ class API {
   
   String _displayName;
   String _email;
+  String _userId;
 
   get displayName => _displayName;
   get email => _email;
@@ -90,6 +91,7 @@ class API {
 
     _displayName = json['display_name'];
     _email = json['email'];
+    _userId = json['id'];
   }
 
   ///
@@ -98,6 +100,28 @@ class API {
   void setPlaylistName(Playlist p) {
     String body = '{"name": "' + p.name + '"}';
     put(APIPath.getPlaylist(p), headers: _prepareHeader(), body: body);
+  }
+
+  Future<Playlist> createPlaylist(Playlist p) async {
+    String body = '{"name": "${p.name}", "public": false}';
+    final response = await post(APIPath.createPlaylist(_userId), headers: _prepareHeader(), body: body);
+    p.setUri(jsonDecode(response.body)['uri']);
+    p.setId(jsonDecode(response.body)['id']);
+    return p;
+  }
+
+  void addTracks(Playlist p, List<String> uris) {
+    post(APIPath.addTracks(p, uris), headers: _prepareHeader());
+  }
+
+  void removeTracks(Playlist p, List<String> uris) {
+    String body = '{"tracks": [';
+    for(String uri in uris) {
+      body += '{"uri":"$uri"},';
+    }
+    body.substring(0, body.length-1);
+    body += ']}';
+    delete(APIPath.removeTracks(p, uris), body: body);
   }
 
   ///
@@ -117,6 +141,7 @@ class API {
     } else {
       _isLoggedIn = true;
       _token = storeToken;
+      await _getUserProfile();
     }
     // print('Spotify token :');
     // print(token);

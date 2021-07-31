@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -17,6 +18,19 @@ class PlatformYoutubeController extends PlatformsController {
         'assets/logo/icons/youtube_icon.png';
     platform.platformInformations['main_color'] = Colors.red[500];
     platform.platformInformations['secondary_color'] = Colors.red[200];
+
+    features = {
+      PlatformsCtrlFeatures.PLAYLIST_ADD: false,
+      PlatformsCtrlFeatures.PLAYLIST_GET: true,
+      PlatformsCtrlFeatures.PLAYLIST_CLONE: true,
+      PlatformsCtrlFeatures.PLAYLIST_MERGE: true,
+      PlatformsCtrlFeatures.PLAYLIST_REMOVE: false,
+      PlatformsCtrlFeatures.PLAYLIST_RENAME: false,
+      PlatformsCtrlFeatures.TRACK_ADD_ANOTHER_PLAYLIST: false,
+      PlatformsCtrlFeatures.TRACK_ADD: false,
+      PlatformsCtrlFeatures.TRACK_GET: true,
+      PlatformsCtrlFeatures.TRACK_REMOVE: false
+    };
   }
 
   ytController.API yt = new ytController.API();
@@ -104,6 +118,9 @@ class PlatformYoutubeController extends PlatformsController {
   disconnect() async {
     yt.disconnect();
     platform.userInformations['isConnected'] = yt.isLoggedIn;
+    for(int i=0; i<platform.playlists.value.length; i++) {
+      platform.removePlaylist(i);
+    }
     DataBaseController().updatePlatform(platform);
     PlatformsController.updateStates();
   }
@@ -114,7 +131,7 @@ class PlatformYoutubeController extends PlatformsController {
   }
 
   @override
-  Playlist addPlaylist(
+  FutureOr<Playlist> addPlaylist(
       {Playlist playlist,
       String name,
       String ownerId,
@@ -128,7 +145,6 @@ class PlatformYoutubeController extends PlatformsController {
 
   @override
   Playlist removePlaylist(int playlistIndex) {
-    // TODO: implement removePlaylist
     throw UnimplementedError();
   }
 
@@ -141,6 +157,7 @@ class PlatformYoutubeController extends PlatformsController {
   @override
   void renamePlaylist(Playlist playlist, String name) {
     // TODO: implement renamePlaylist
+    throw UnimplementedError();
   }
 
   @override

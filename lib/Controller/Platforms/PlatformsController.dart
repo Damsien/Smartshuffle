@@ -18,10 +18,25 @@ import 'package:sqflite/sqflite.dart';
 import 'package:protobuf/protobuf.dart';
 
 
+enum PlatformsCtrlFeatures {
+  PLAYLIST_ADD,
+  PLAYLIST_RENAME,
+  PLAYLIST_GET,
+  PLAYLIST_CLONE,
+  PLAYLIST_MERGE,
+  PLAYLIST_REMOVE,
+  TRACK_ADD_ANOTHER_PLAYLIST,
+  TRACK_ADD,
+  TRACK_GET,
+  TRACK_REMOVE
+}
+
 abstract class PlatformsController {
   static Map<String, State> states = new Map<String, State>();
   Map<String, Track> allTracks = Map<String, Track>();
   Platform platform;
+
+  Map<PlatformsCtrlFeatures, bool> features = Map<PlatformsCtrlFeatures, bool>();
 
   PlatformsController(Platform platform, {bool isBack}) {
     this.platform = platform;
@@ -75,7 +90,10 @@ abstract class PlatformsController {
   getUserInformations();
 
   FutureOr<List<Playlist>> getPlaylists({bool refreshing}) async {
-    if((refreshing == null || !refreshing) && platform.playlists.value.isEmpty) {
+    if((refreshing == null || !refreshing)) {
+      if(platform.playlists.value.isNotEmpty) {
+        return platform.playlists.value;
+      }
       List<Playlist> playlists = await DataBaseController().getPlaylists(platform);
       if(playlists.isNotEmpty) {
         platform.setPlaylist(playlists, isNew: false);
@@ -86,9 +104,6 @@ abstract class PlatformsController {
       } else {
         return null;
       }
-    }
-    if(platform.playlists.value.isNotEmpty) {
-      return platform.playlists.value;
     }
     return null;
   }
@@ -128,7 +143,7 @@ abstract class PlatformsController {
   }
 
   //Add the track to the app's playlist
-  Playlist addPlaylist(
+  FutureOr<Playlist> addPlaylist(
       {Playlist playlist,
       String name,
       String ownerId,
