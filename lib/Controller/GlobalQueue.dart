@@ -33,17 +33,20 @@ class GlobalQueue {
     }
 
     //Is inevitably next track
-    for(int i=lastIndex; i<(currentQueueIndex-lastIndex); i++) {
-      //If is in permanent queue is true
-      if(queue.value[i].value) {
-        //Move last track from permanent queue to no permanent queue
-        // if(value < 0) {
-        //   GlobalQueue().moveFromPermanentToNoPermanent(queue.value.length-1);
-        // } else {
-          GlobalQueue().moveFromPermanentToNoPermanent(i);
-        // }
-      }
-    }
+    if(queue.value[currentQueueIndex].value) GlobalQueue().moveFromPermanentToNoPermanent(currentQueueIndex);
+
+    // for(int i=lastIndex; i<(currentQueueIndex-lastIndex)+1; i++) {
+    //   print('    boucl');
+    //   //If is in permanent queue is true
+    //   if(queue.value[i].value) {
+    //     //Move last track from permanent queue to no permanent queue
+    //     // if(value < 0) {
+    //     //   GlobalQueue().moveFromPermanentToNoPermanent(queue.value.length-1);
+    //     // } else {
+    //       GlobalQueue().moveFromPermanentToNoPermanent(i);
+    //     // }
+    //   }
+    // }
   }
 
   void reBuildQueue() {
@@ -121,7 +124,8 @@ class GlobalQueue {
         'id': queue.value[lastPermanentIndex].key.id,
         'name': queue.value[lastPermanentIndex].key.title,
         'artist': queue.value[lastPermanentIndex].key.artist,
-        'image': queue.value[lastPermanentIndex].key.imageUrlLarge,
+        'imagelarge': queue.value[lastPermanentIndex].key.imageUrlLarge,
+        'imagelittle': queue.value[lastPermanentIndex].key.imageUrlLittle,
         'service': queue.value[lastPermanentIndex].key.serviceName
       }
     });
@@ -144,8 +148,10 @@ class GlobalQueue {
   }
 
   void moveFromPermanentToNoPermanent(int index) {
+    print('insert $index');
     noPermanentQueue.value.insert(index, permanentQueue.value[0]);
     permanentQueue.value.removeAt(0);
+    reBuildQueue();
   }
 
   void removeLastPermanent() {
@@ -178,12 +184,23 @@ class GlobalQueue {
 
     //Back player reorder variables
     int bOldIndex;
+    int bOldList = oldList;
     int bNewIndex;
+    int bNewList = newList;
 
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
-    switch(oldList) {
+    if (oldList == 0 && newList == 0 && permanentQueue.value.isEmpty) {
+      bOldList = 1;
+      bNewList = 1;
+    }
+          print('============');
+          print(oldIndex);
+          print(oldList);
+          print(newIndex);
+          print(newList);
+    switch(bOldList) {
       case 0: {
         switch(newList) {
           case 0: {
@@ -201,7 +218,7 @@ class GlobalQueue {
         }
       } break;
       case 1: {
-        switch(newList) {
+        switch(bNewList) {
           case 0: {
             Track track = noPermanentQueue.value.removeAt(oldIndex+currentQueueIndex+1-permanentQueue.value.length);
             permanentQueue.value.insert(newIndex, track);

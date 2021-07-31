@@ -22,11 +22,11 @@ class SearchAlgorithm {
     return _instance;
   }
 
-  Future<YTB.YouTubeApi> _login() async {
-    Map<dynamic, dynamic> infos = await APIAuth.loginWithoutAllScopes();
-    var _httpClient = infos.entries.first.key;
-    return YTB.YouTubeApi(_httpClient);
-  }
+  // Future<YTB.YouTubeApi> _login() async {
+  //   Map<dynamic, dynamic> infos = await APIAuth.loginWithoutAllScopes();
+  //   var _httpClient = infos.entries.first.key;
+  //   return YTB.YouTubeApi(_httpClient);
+  // }
 
   int _parseTime(String duration, String timeUnit) {
     final timeMatch = RegExp(r"\d+" + timeUnit).firstMatch(duration);

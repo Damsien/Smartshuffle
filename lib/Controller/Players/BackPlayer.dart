@@ -8,6 +8,7 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart' as SM;
@@ -29,6 +30,10 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   @override
   Future<void> onStart(Map<String, dynamic> params) async {
+
+    PlatformsLister.initBackPlayer();
+    await DataBaseController().backDatabase;
+
     // Listen to state changes on the player...
     _player.playerStateStream.listen((playerState) {
       // ... and forward them to all audio_service clients.
@@ -148,6 +153,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
           id: searchingItem.id,
           title: track.title,
           artist: track.artist,
+          imageUrlLittle: track.imageUrlLittle,
           imageUrlLarge: track.imageUrlLarge,
           totalDuration: track.totalDuration.value
         ),
@@ -161,7 +167,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
   }
 
   Future<void> _playTrack(Track track) async {
-    print('_playTrack');
 
     // int notificationColor = await _getMainImageColor(track.imageUrlLarge);
     MapEntry<Track, File> foundTrack = await _getFilePath(track);
@@ -239,7 +244,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
             id: arguments['queue']['id'][i],
             title: arguments['queue']['name'][i],
             artist: arguments['queue']['artist'][i],
-            imageUrlLarge: arguments['queue']['image'][i],
+            imageUrlLittle: arguments['queue']['imageurllittle'][i],
+            imageUrlLarge: arguments['queue']['imageurllarge'][i],
             service: PlatformsLister.nameToService(arguments['queue']['service'][i]),
             totalDuration: _parseDuration(arguments['queue']['duration'][i])
           ));
@@ -271,7 +277,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
           id: arguments['track']['id'],
           title: arguments['track']['name'],
           artist: arguments['track']['artist'],
-          imageUrlLarge: arguments['track']['image'],
+          imageUrlLittle: arguments['track']['imageLittle'],
+          imageUrlLarge: arguments['track']['imageLarge'],
           service: PlatformsLister.nameToService(arguments['track']['service'])
         );
         trackQueue.insert(arguments['index'], tr);

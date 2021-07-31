@@ -19,10 +19,18 @@ class DataBaseController {
   Batch _batch;
   ValueNotifier<bool> isOperationFinished = ValueNotifier<bool>(false);
 
-  Future<Database> get database async => await _initDatabase();
+  Future<Database> get database async => await _initFrontDatabase();
+
+  Future<Database> get backDatabase async => await _initDatabase();
 
   Future<bool> databaseExists(String path) =>
     databaseFactory.databaseExists(path);
+
+  Future<Database> _initFrontDatabase() async {
+    Database database = await _initDatabase();
+    await GlobalAppController.storageInit();
+    return database;
+  }
 
   Future<Database> _initDatabase() async {
     String documentsDirectory = await getDatabasesPath();
@@ -44,8 +52,6 @@ class DataBaseController {
       }
     });
 
-    await GlobalAppController.storageInit();
-
     return _db;
   }
 
@@ -62,7 +68,7 @@ class DataBaseController {
       CREATE TABLE platform(
         name TEXT NOT NULL PRIMARY KEY,
         userinformations_name TEXT,
-        userinformations_account TEXT,
+        userinformations_email TEXT,
         userinformations_isconnected INTEGER,
         platformInformations_logo TEXT,
         platformInformations_icon TEXT,
@@ -128,7 +134,7 @@ class DataBaseController {
   }
 
   Future<void> removeTrack(Track track) async {
-    await _db.delete('track', where: 'id = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
+    await _db.delete('track', where: 'trackid = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
     await _db.delete('link_playlist_track', where: 'track_id = ? AND track_service = ?', whereArgs: [track.id, track.serviceName]);
   }
 
@@ -149,7 +155,7 @@ class DataBaseController {
   }
 
   Future<void> updateTrack(Track track) async {
-    await _db.update('track', track.toMap(), where: 'id = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
+    await _db.update('track', track.toMap(), where: 'trackid = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
   }
 
   Future<void> insertPlatform(Platform platform) async {

@@ -50,7 +50,7 @@ class _EmailSender {
 class _SubmitButton extends StatelessWidget {
 
   Function _sendingFunction;
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
 
   _SubmitButton(Function sendingFunction) {
     _sendingFunction = sendingFunction;
@@ -89,7 +89,7 @@ class FormReport extends StatefulWidget {
 
 class _FormReport extends State<FormReport> {
 
-  final MaterialColor _materialColor = MaterialColorApplication.material_color;
+  final MaterialColor _materialColor = GlobalTheme.material_color;
 
   final _formKey = GlobalKey<FormState>();
 

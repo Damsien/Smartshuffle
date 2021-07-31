@@ -20,14 +20,17 @@ version: 1.0.0+1
 environment:
   sdk: ">=2.9.0 <3.0.0"
 
+dependency_overrides:
+  json_annotation: any
+
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-    
+
+  intl: ^0.17.0
   build_runner: ^1.10.0
-  intl: any
   spotify_sdk: any
   just_audio: any
   audio_service: any
@@ -38,11 +41,11 @@ dependencies:
   device_apps: any
   sliding_up_panel: any
   #reorderables: ^0.4.1
-  drag_and_drop_lists: any
+  drag_and_drop_lists: ^0.3.2
   palette_generator: any
   focus_detector: any
   visibility_detector: any
-  youtube_explode_dart: ^1.9.6
+  youtube_explode_dart: ^1.10.4
   sqflite: any
 
     #google sign in

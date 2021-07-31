@@ -11,7 +11,7 @@ class Platform {
   Map platformInformations = new Map();
   Map userInformations = {
       'name': 'unknow',
-      'account': 'xxx@xxx.com',
+      'email': 'xxx@xxx.com',
       'isConnected': false
   };
   ValueNotifier<List<Playlist>> playlists = ValueNotifier<List<Playlist>>(List<Playlist>());
@@ -119,7 +119,7 @@ class Platform {
     json['name'],
     userInformations: {
       'name': json['userinformations_name'],
-      'account': json['userinformations_account'],
+      'email': json['userinformations_email'],
       'isConnected': json['userinformations_isconnected'] == 1 ? true : false
     },
     platformInformations: {
@@ -134,7 +134,7 @@ class Platform {
   {
     'name': name,
     'userinformations_name': userInformations['name'],
-    'userinformations_account': userInformations['account'],
+    'userinformations_email': userInformations['email'],
     'userinformations_isconnected': userInformations['isConnected'] == true ? 1 : 0,
     'platformInformations_logo': platformInformations['logo'],
     'platformInformations_icon': platformInformations['icon'],
