@@ -119,9 +119,12 @@ class PlatformSpotifyController extends PlatformsController {
   }
 
   @override
-  disconnect() {
+  disconnect() async {
     spController.disconnect();
     platform.userInformations['isConnected'] = spController.isLoggedIn;
+    for(int i=0; i<platform.playlists.value.length; i++) {
+      platform.removePlaylist(i);
+    }
     DataBaseController().updatePlatform(platform);
     PlatformsController.updateStates();
   }

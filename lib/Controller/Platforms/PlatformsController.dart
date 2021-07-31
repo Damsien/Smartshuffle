@@ -90,7 +90,10 @@ abstract class PlatformsController {
   getUserInformations();
 
   FutureOr<List<Playlist>> getPlaylists({bool refreshing}) async {
-    if((refreshing == null || !refreshing) && platform.playlists.value.isEmpty) {
+    if((refreshing == null || !refreshing)) {
+      if(platform.playlists.value.isNotEmpty) {
+        return platform.playlists.value;
+      }
       List<Playlist> playlists = await DataBaseController().getPlaylists(platform);
       if(playlists.isNotEmpty) {
         platform.setPlaylist(playlists, isNew: false);
@@ -102,9 +105,6 @@ abstract class PlatformsController {
         return null;
       }
     }
-    // if(platform.playlists.value.isNotEmpty) {
-    //   return platform.playlists.value;
-    // }
     return null;
   }
 

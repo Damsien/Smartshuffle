@@ -118,6 +118,9 @@ class PlatformYoutubeController extends PlatformsController {
   disconnect() async {
     yt.disconnect();
     platform.userInformations['isConnected'] = yt.isLoggedIn;
+    for(int i=0; i<platform.playlists.value.length; i++) {
+      platform.removePlaylist(i);
+    }
     DataBaseController().updatePlatform(platform);
     PlatformsController.updateStates();
   }

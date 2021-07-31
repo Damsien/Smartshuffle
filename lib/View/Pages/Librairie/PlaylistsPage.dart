@@ -132,8 +132,8 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
           controller: tabController,
           children: List.generate(tabController.length, (index) {
             return Container(
-              key: PageStorageKey(GlobalAppController.getAllControllers()[index].platform.name),
-              child: TabView(GlobalAppController.getAllControllers()[index], parent: this),
+              key: PageStorageKey(GlobalAppController.getAllConnectedControllers()[index].platform.name),
+              child: TabView(GlobalAppController.getAllConnectedControllers()[index], parent: this),
             );
           }),
         ),

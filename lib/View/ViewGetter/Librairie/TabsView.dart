@@ -1195,6 +1195,7 @@ class TabsView {
     } else {
       for(MapEntry<String, bool> me in enable.entries) {
         if(me.value) {
+          print(me.key);
           items.add(popUpMenuEntry[me.key]);
         }
       }
