@@ -1,6 +1,8 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
 import 'package:smartshuffle/Controller/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
@@ -39,6 +41,7 @@ class FrontPlayerController {
     imageUrlLittle: '',
     imageUrlLarge: '',)
   );
+  FlutterSecureStorage _storage = FlutterSecureStorage();
 
 
   // Controllers
@@ -65,6 +68,9 @@ class FrontPlayerController {
     _initPageController();
     _screenStateListener();
 
+    // Init queue
+    _storage.read(key: 'current_queue_index').then((value) => _initQueue(int.parse(value)));
+
     // Fake track to avoid panel controller error on first app runtime
     GlobalQueue.queue.value.add(MapEntry(currentTrack.value, false));
   }
@@ -82,10 +88,10 @@ class FrontPlayerController {
   /* ============================================ */
 
   /// Create queue depending of [playlist], [isShuffle] and potentially [track] and set up all the tabs
-  void createQueueAndPlay(Playlist playlist, {
+  Future<void> createQueueAndPlay(Playlist playlist, {
     bool isShuffle,
     Track track
-  }) {
+  }) async {
 
     if(track.id != currentTrack.value.id) {
 
@@ -94,7 +100,7 @@ class FrontPlayerController {
       }
 
       //Init queue
-      _createQueue(playlist, isShuffle: isShuffle, track: track);
+      await _createQueue(playlist, isShuffle: isShuffle, track: track);
 
       //Play track
       if (track != null) {
@@ -197,10 +203,32 @@ class FrontPlayerController {
 
   // PRIVATE
 
+  void _initQueue(int index) async {
+    List<Track> tracks = await DataBaseController().getQueue();
+
+    if(tracks.length != 0) {
+      GlobalQueue.queue.value.removeAt(0);
+      GlobalQueue.noPermanentQueue.value = tracks;
+      for(Track track in tracks) {
+        GlobalQueue.queue.value.add(MapEntry(track, false));
+      }
+      GlobalQueue.currentQueueIndex = index;
+
+      Track track = GlobalQueue.queue.value[index].key;
+      _playTrack(track);
+      currentTrack.value = track;
+
+      await _loadBackQueue(GlobalQueue.queue.value);
+
+      AudioService.pause();
+    }
+  }
+
   /// Set the current track to [track] and initialize back player listener for it
   void _playTrack(Track track) {
     _seekAllTrackToZero();
     currentTrack.value = track;
+    _storage.write(key: 'current_queue_index', value: GlobalQueue.currentQueueIndex.toString());
     
     //Listen to track changes in the notification back player
     views['player'].setState(() {
@@ -252,7 +280,7 @@ class FrontPlayerController {
   /// Create queue depending of [playlist] selected
   /// Queue generation depends of [isShuffle] parameter to have an ordered list or not
   /// Can depends of [track] if start with a specific track is wanted
-  void _createQueue(Playlist playlist, {
+  Future<void> _createQueue(Playlist playlist, {
     @required bool isShuffle,
     Track track
   }) {
@@ -277,6 +305,8 @@ class FrontPlayerController {
       }
 
     }
+
+    GlobalQueue().queueDatabase();
   }
 
   /// Listen to screen state update

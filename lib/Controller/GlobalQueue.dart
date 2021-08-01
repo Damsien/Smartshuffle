@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/DatabaseController.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -33,20 +34,15 @@ class GlobalQueue {
     }
 
     //Is inevitably next track
-    if(queue.value[currentQueueIndex].value) GlobalQueue().moveFromPermanentToNoPermanent(currentQueueIndex);
+    if(queue.value.isNotEmpty && queue.value[currentQueueIndex].value) GlobalQueue().moveFromPermanentToNoPermanent(currentQueueIndex);
+  }
 
-    // for(int i=lastIndex; i<(currentQueueIndex-lastIndex)+1; i++) {
-    //   print('    boucl');
-    //   //If is in permanent queue is true
-    //   if(queue.value[i].value) {
-    //     //Move last track from permanent queue to no permanent queue
-    //     // if(value < 0) {
-    //     //   GlobalQueue().moveFromPermanentToNoPermanent(queue.value.length-1);
-    //     // } else {
-    //       GlobalQueue().moveFromPermanentToNoPermanent(i);
-    //     // }
-    //   }
-    // }
+  void queueDatabase() async {
+    await DataBaseController().resetQueue();
+    for(MapEntry<Track, bool> t in queue.value) {
+      DataBaseController().insertTrackInQueue(t.key, queue.value.length);
+    }
+    DataBaseController().isOperationFinished.value = true;
   }
 
   void reBuildQueue() {
@@ -55,8 +51,13 @@ class GlobalQueue {
       queue.value.add(MapEntry(t, false));
     }
     for(Track t in permanentQueue.value.reversed) {
-      if(queue.value.isEmpty) queue.value.insert(0, MapEntry(t, true));
-      else queue.value.insert(currentQueueIndex+1, MapEntry(t, true));
+      if(queue.value.isEmpty) {
+        queue.value.insert(0, MapEntry(t, true));
+        // DataBaseController().insertTrackInQueue(t, 0);
+      } else {
+        queue.value.insert(currentQueueIndex+1, MapEntry(t, true));
+        // DataBaseController().insertTrackInQueue(t, currentQueueIndex+1);
+      }
     }
 
     noPermanentQueue.value.clear();
@@ -148,7 +149,6 @@ class GlobalQueue {
   }
 
   void moveFromPermanentToNoPermanent(int index) {
-    print('insert $index');
     noPermanentQueue.value.insert(index, permanentQueue.value[0]);
     permanentQueue.value.removeAt(0);
     reBuildQueue();
@@ -195,11 +195,6 @@ class GlobalQueue {
       bOldList = 1;
       bNewList = 1;
     }
-          print('============');
-          print(oldIndex);
-          print(oldList);
-          print(newIndex);
-          print(newList);
     switch(bOldList) {
       case 0: {
         switch(newList) {
