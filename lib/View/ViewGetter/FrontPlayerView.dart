@@ -258,6 +258,9 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
   void initState() {
     FrontPlayerController().onInitPage();
     _initAudioService();
+    AudioService.notificationClickEventStream.listen((event) {
+      if(event) _panelCtrl.open();
+    });
 
     super.initState();
   }
@@ -676,15 +679,13 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                     ],
                   ),
                 );
-            },
+              },
+            ),
           ),
-        ),
           ValueListenableBuilder(
             valueListenable: _isPanelQueueDraggable,
             builder: (BuildContext context, bool value, Widget child) {
               
-              
-
 
 
               return IgnorePointer(

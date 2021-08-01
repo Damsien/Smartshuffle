@@ -115,6 +115,13 @@ class DataBaseController {
         PRIMARY KEY(trackid, service)
       );
     ''');
+    await db.execute('''
+      CREATE TABLE queue(
+        track_id TEXT NOT NULL,
+        track_service TEXT NOT NULL,
+        position INTEGER NOT NULL
+      );
+    ''');
   }
 
   Future<void> removePlatform(Platform platform) async {
@@ -131,6 +138,10 @@ class DataBaseController {
       where: 'track_id = ? AND track_service = ? AND playlist_id = ? AND playlist_service = ?',
       whereArgs: [track.id, track.serviceName, playlist.id, serviceToString(playlist.service)]
     );
+  }
+
+  Future<void> resetQueue() async {
+    await _db.delete('queue');
   }
 
   Future<void> removeTrack(Track track) async {
@@ -154,6 +165,13 @@ class DataBaseController {
     await _db.update('playlist', playlist.toMap(), where: 'id = ? AND service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
   }
 
+  Future<void> updateQueue(Track track, int position) async {
+    Map obj = track.toMap();
+    await _db.update('queue', {'track_id': obj['trackid'], 'track_service': obj['service'], 'position': position},
+      where: 'posision = ?', whereArgs: [position]
+    );
+  }
+
   Future<void> updateTrack(Track track) async {
     await _db.update('track', track.toMap(), where: 'trackid = ? AND service = ?', whereArgs: [track.id, track.serviceName]);
   }
@@ -166,6 +184,11 @@ class DataBaseController {
     Map obj = playlist.toMap();
     obj['platform_name'] = platform.name;
     _batch.insert('playlist', obj, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  void insertTrackInQueue(Track track, int position) {
+    Map obj = track.toMap();
+    _batch.insert('queue', {'track_id': obj['trackid'], 'track_service': obj['service'], 'position': position});
   }
 
   void insertTrack(Playlist playlist, Track track) {
@@ -192,6 +215,19 @@ class DataBaseController {
     List<Playlist> playlists = query.isNotEmpty ?
       query.map((e) => Playlist.fromMap(e)).toList() : [];
     return playlists;
+  }
+
+  Future<List<Track>> getQueue() async {
+    Database db = await DataBaseController().database;
+    var query = await db.rawQuery('''
+      SELECT DISTINCT track.*
+      FROM track
+      INNER JOIN queue
+      ON track.trackid = queue.track_id AND track.service = queue.track_service;
+    ''');
+    List<Track> tracks = query.isNotEmpty ?
+      query.map((e) => Track.fromMap(e)).toList() : [];
+    return tracks;
   }
 
   Future<List<Track>> getTracks(Playlist playlist) async {
