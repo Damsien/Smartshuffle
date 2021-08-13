@@ -971,15 +971,14 @@ class _QueueListState extends State<QueueList> {
   @override
   void initState() {
     parent = widget.parent;
+    FrontPlayerController().currentTrack.addListener(() {
+      setState(() {});
+    });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-
-    FrontPlayerController().currentTrack.addListener(() {
-      setState(() {});
-    });
 
     _listBuilder();
 

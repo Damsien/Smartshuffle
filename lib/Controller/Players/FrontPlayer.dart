@@ -93,8 +93,6 @@ class FrontPlayerController {
     Track track
   }) async {
 
-    if(track.id != currentTrack.value.id) {
-
       if(isShuffle == null) {
         isShuffle = this.isShuffle;
       }
@@ -105,14 +103,19 @@ class FrontPlayerController {
       //Play track
       if (track != null) {
 
-        _playTrack(track);
-        if(pageCtrl.hasClients) {
-          if(isShuffle) {
-            pageCtrl.jumpToPage(0);
-          } else {
-            pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
-          }
+        if(track.id != currentTrack.value.id) {
+          _playTrack(track);
+          if(pageCtrl.hasClients) {
+            if(isShuffle) {
+              pageCtrl.jumpToPage(0);
+            } else {
+              pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+            }
+          }  
+        } else {
+          currentTrack.value.setIsSelected(true);
         }
+
 
       } else {
 
@@ -124,12 +127,6 @@ class FrontPlayerController {
       }
 
       _loadBackQueue(GlobalQueue.queue.value);
-
-    } else {
-
-      currentTrack.value.setIsSelected(true);
-
-    }
 
   }
 
