@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -202,6 +204,8 @@ class FrontPlayerController {
 
   void _initQueue(int index) async {
     List<Track> tracks = await DataBaseController().getQueue();
+    log(tracks.toString());
+    print(index);
 
     if(tracks.length != 0) {
       GlobalQueue.queue.value.removeAt(0);

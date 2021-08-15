@@ -1,6 +1,7 @@
 
 
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
@@ -170,13 +171,15 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
     // int notificationColor = await _getMainImageColor(track.imageUrlLarge);
     MapEntry<Track, File> foundTrack = await _getFilePath(track);
+    final MediaItem mediaItem = _queue.firstWhere((element) => 
+    (element.id == foundTrack.key.id),
+    orElse: () => null);
 
-    if(foundTrack.key.id != null) {
+    if(foundTrack.key.id != null && mediaItem != null) {
 
       print(foundTrack.key);
 
       // await AudioService.stop();
-      final MediaItem mediaItem = _queue[currentIndex];
       
       // Tell the UI and media notification what we're playing.
       AudioServiceBackground.setMediaItem(mediaItem);
