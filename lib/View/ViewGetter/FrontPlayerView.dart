@@ -992,7 +992,11 @@ class _QueueListState extends State<QueueList> {
             child: IconButton(
               icon: Icon(Icons.done),
               tooltip: AppLocalizations.of(context).confirm,
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                FrontPlayerController.fakeScreenUpdate = true;
+                parent.setState(() {});
+                Navigator.of(context).pop();
+              },
             )
           )
         ]

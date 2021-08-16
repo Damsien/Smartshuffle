@@ -27,6 +27,7 @@ class FrontPlayerController {
   static const String SCREEN_IDLE = "screen_idle";
 
   ValueNotifier<String> screenState = ValueNotifier<String>(SCREEN_VISIBLE);
+  static bool fakeScreenUpdate = false;
 
   //Objects
   Playlist currentPlaylist = Playlist(
@@ -314,7 +315,7 @@ class FrontPlayerController {
     String lastScreenState = SCREEN_IDLE;
     
     screenState.addListener(() async {
-      if(lastScreenState == SCREEN_IDLE && screenState.value == SCREEN_VISIBLE && isPlayerReady) {
+      if(lastScreenState == SCREEN_IDLE && screenState.value == SCREEN_VISIBLE && isPlayerReady && !fakeScreenUpdate) {
 
         // if (
         //   panelCtrl.isAttached
@@ -342,6 +343,7 @@ class FrontPlayerController {
         }
       }
       lastScreenState = screenState.value;
+      fakeScreenUpdate = false;
     });
   }
 
