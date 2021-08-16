@@ -325,18 +325,20 @@ class FrontPlayerController {
         //   panelCtrl.show();
         // }
 
-        await AudioService.customAction('INDEX_QUEUE_REQUEST');
-        var track = GlobalQueue.queue.value[backIndex];
+        if(AudioService.connected) {
+          await AudioService.customAction('INDEX_QUEUE_REQUEST');
+          var track = GlobalQueue.queue.value[backIndex];
 
-        if(currentTrack.value.id != track.key.id || currentTrack.value.serviceName != track.key.serviceName) {
-          int index = GlobalQueue.queue.value.indexOf(track);
-          GlobalQueue().setCurrentQueueIndex(index);
-          pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
-          _playTrack(GlobalQueue.queue.value[index].key);
+          if(currentTrack.value.id != track.key.id || currentTrack.value.serviceName != track.key.serviceName) {
+            int index = GlobalQueue.queue.value.indexOf(track);
+            GlobalQueue().setCurrentQueueIndex(index);
+            pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+            _playTrack(GlobalQueue.queue.value[index].key);
 
-          views.forEach((key, value) {
-            value.setState(() {});
-          });
+            views.forEach((key, value) {
+              value.setState(() {});
+            });
+          }
         }
       }
       lastScreenState = screenState.value;

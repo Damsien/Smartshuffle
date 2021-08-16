@@ -1,4 +1,6 @@
 
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
@@ -47,7 +49,9 @@ class DataBaseController {
 
     isOperationFinished.addListener(() async {
       if(isOperationFinished.value == true) {
-        await _batch.commit(noResult: true);
+        try {
+          await _batch.commit(noResult: true);
+        } catch(e) {}
         isOperationFinished.value = false;
       }
     });

@@ -172,7 +172,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
     // int notificationColor = await _getMainImageColor(track.imageUrlLarge);
     MapEntry<Track, File> foundTrack = await _getFilePath(track);
     final MediaItem mediaItem = _queue.firstWhere((element) => 
-    (element.id == foundTrack.key.id),
+    (element.extras['track_id'] == foundTrack.key.id && element.extras['service_name'] == foundTrack.key.serviceName),
     orElse: () => null);
 
     if(foundTrack.key.id != null && mediaItem != null) {
@@ -207,10 +207,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
           }
         }
       );
-
-    } else {
-
-      AudioService.skipToNext();
 
     }
 
@@ -428,6 +424,7 @@ class PlayerListener {
 
 
           case 'SKIP_NEXT' : {
+            log('next $_track');
             FrontPlayerController().nextTrack(backProvider: true);
           } break;
 
