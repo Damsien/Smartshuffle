@@ -70,11 +70,11 @@ class FrontPlayerController {
     _initPageController();
     _screenStateListener();
 
-    // Init queue
-    _storage.read(key: 'current_queue_index').then((value) => _initQueue(int.parse(value)));
-
     // Fake track to avoid panel controller error on first app runtime
     GlobalQueue.queue.value.add(MapEntry(currentTrack.value, false));
+
+    // Init queue
+    _storage.read(key: 'current_queue_index').then((value) => _initQueue(int.parse(value)));
   }
 
   void onBuildPage({State view}) {
@@ -84,7 +84,7 @@ class FrontPlayerController {
   }
 
   void addView(String name, State view) {
-    views['player'] = view;
+    views[name] = view;
   }
 
   /* ============================================ */
@@ -128,7 +128,8 @@ class FrontPlayerController {
 
       }
 
-      _loadBackQueue(GlobalQueue.queue.value);
+      await _loadBackQueue(GlobalQueue.queue.value);
+      await AudioService.customAction('PLAY_TRACK', {'index': 0});
 
   }
 
@@ -204,8 +205,6 @@ class FrontPlayerController {
 
   void _initQueue(int index) async {
     List<Track> tracks = await DataBaseController().getQueue();
-    log(tracks.toString());
-    print(index);
 
     if(tracks.length != 0) {
       GlobalQueue.queue.value.removeAt(0);
@@ -217,9 +216,9 @@ class FrontPlayerController {
 
       Track track = GlobalQueue.queue.value[index].key;
       _playTrack(track);
-      currentTrack.value = track;
 
       await _loadBackQueue(GlobalQueue.queue.value);
+      await AudioService.customAction('PLAY_TRACK', {'index': index});
 
       AudioService.pause();
     }

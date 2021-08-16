@@ -236,6 +236,13 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
     switch(type) {
 
+      case 'PLAY_TRACK' : {
+        Track track = trackQueue[arguments['index']];
+        await _playTrack(track);
+
+      } break;
+      
+
       case 'LAUNCH_QUEUE' : {
         // await AudioService.pause();
 
@@ -268,8 +275,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
         _queue.add(mediaItem);
 
-        Track firstTrack = trackQueue.first;
-        await _playTrack(firstTrack);
         _queueLoader();
 
       } break;
