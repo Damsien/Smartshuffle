@@ -325,7 +325,7 @@ class FrontPlayerController {
         //   panelCtrl.show();
         // }
 
-        if(AudioService.connected) {
+        if(AudioService.running) {
           await AudioService.customAction('INDEX_QUEUE_REQUEST');
           var track = GlobalQueue.queue.value[backIndex];
 

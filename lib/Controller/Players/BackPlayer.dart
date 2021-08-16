@@ -67,12 +67,12 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   Future<void> _nextTrack() async {
     await AudioService.pause();
-    currentIndex++;
 
-    if(currentIndex >= trackQueue.length) {
+    if(currentIndex+1 >= trackQueue.length) {
       currentIndex = 0;
     }
     await _playTrack(trackQueue[currentIndex]);
+    currentIndex++;
   }
 
   @override
@@ -85,8 +85,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   Future<void> _previousTrack() async {
     await AudioService.pause();
-    currentIndex--;
     await _playTrack(trackQueue[currentIndex]);
+    currentIndex--;
   }
 
   @override
@@ -115,7 +115,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
   @override
   Future<void> onPause() async {
     AudioServiceBackground.setState(
-      playing: true,
+      playing: false,
       processingState: AudioProcessingState.ready
     );
     await _player.pause();
@@ -163,23 +163,38 @@ class AudioPlayerTask extends BackgroundAudioTask {
       return Future<MapEntry<Track, File>>.value(me);
     } else {
       File file = await track.loadFile();
+      _synchroTrackMediaitem(file, track, track);
       return MapEntry(track, file);
     }
+  }
+  
+  void _synchroTrackMediaitem(File file, Track foundTrack, Track track) {
+    final MediaItem mediaItem = MediaItem(
+      id: file.path,
+      album: track.artist,
+      title: track.title,
+      artUri: Uri.parse(track.imageUrlLarge),
+      duration: foundTrack.totalDuration.value,
+      extras: {'track_id': track.id, 'service_name': track.serviceName}
+    );
+    _queue.add(mediaItem);
   }
 
   Future<void> _playTrack(Track track) async {
 
-    // int notificationColor = await _getMainImageColor(track.imageUrlLarge);
+    if (AudioService.playbackState != null) {
+      await AudioService.seekTo(Duration.zero);
+      await AudioService.pause();
+    }
+
     MapEntry<Track, File> foundTrack = await _getFilePath(track);
     final MediaItem mediaItem = _queue.firstWhere((element) => 
-    (element.extras['track_id'] == foundTrack.key.id && element.extras['service_name'] == foundTrack.key.serviceName),
+    (element.extras['track_id'] == track.id && element.extras['service_name'] == track.serviceName),
     orElse: () => null);
 
     if(foundTrack.key.id != null && mediaItem != null) {
 
       print(foundTrack.key);
-
-      // await AudioService.stop();
       
       // Tell the UI and media notification what we're playing.
       AudioServiceBackground.setMediaItem(mediaItem);
@@ -191,9 +206,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
       // Start loading something (will play when ready).
       print('mediaitem : ${mediaItem.id}');
-      if (AudioService.playbackState != null) {
-        await AudioService.seekTo(Duration.zero);
-      }
       await _player.setFilePath(mediaItem.id);
       _isTrackDone = false;
       
@@ -234,6 +246,10 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
       case 'PLAY_TRACK' : {
         Track track = trackQueue[arguments['index']];
+        MapEntry<Track, File> foundTrack = await _getFilePath(track);
+
+        _synchroTrackMediaitem(foundTrack.value, foundTrack.key, track);
+
         await _playTrack(track);
 
       } break;
@@ -256,20 +272,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
             totalDuration: _parseDuration(arguments['queue']['duration'][i])
           ));
         }
-
-        Track track = trackQueue[0];
-        MapEntry<Track, File> foundTrack = await _getFilePath(track);
-        
-        final MediaItem mediaItem = MediaItem(
-          id: foundTrack.value.path,
-          album: track.artist,
-          title: track.title,
-          artUri: Uri.parse(track.imageUrlLarge),
-          duration: foundTrack.key.totalDuration.value,
-          extras: {'track_id': track.id, 'service_name': track.serviceName}
-        );
-
-        _queue.add(mediaItem);
 
         _queueLoader();
 
@@ -337,7 +339,13 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
 
       case 'INDEX_QUEUE_REQUEST' : {
-        AudioServiceBackground.sendCustomEvent({'INDEX': currentIndex});
+        AudioServiceBackground.sendCustomEvent({'INDEX': trackQueue.indexOf(
+          trackQueue.firstWhere((element) => 
+            element.id == AudioServiceBackground.mediaItem.extras['track_id'] &&
+            element.serviceName == AudioServiceBackground.mediaItem.extras['service_name'],
+            orElse: null))
+          }
+        );
 
       } break;
 
@@ -365,16 +373,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
           if(file != null) {
 
-            MediaItem mi = MediaItem(
-              id: file.path,
-              album: track.artist,
-              title: track.title,
-              artUri: Uri.parse(track.imageUrlLarge),
-              duration: Duration(seconds: track.totalDuration.value.inSeconds),
-              extras: {'track_id': track.id, 'service_name': track.serviceName}
-            );
-
-            _queue.add(mi);
+            _synchroTrackMediaitem(file, track, track);
 
           } else {
             
@@ -424,7 +423,6 @@ class PlayerListener {
 
 
           case 'SKIP_NEXT' : {
-            log('next $_track');
             FrontPlayerController().nextTrack(backProvider: true);
           } break;
 
