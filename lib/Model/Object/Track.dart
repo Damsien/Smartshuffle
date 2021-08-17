@@ -12,16 +12,16 @@ class Track {
 
   static const String DEFAULT_IMAGE_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Solid_purple.svg/2048px-Solid_purple.svg.png';
 
-  String _id;
-  String _title;
-  String _artist;
-  String _album;
+  String id;
+  String title;
+  String artist;
+  String album;
   ValueNotifier<Duration> _currentDuration = ValueNotifier<Duration>(Duration(seconds: 0));
-  ValueNotifier<Duration> _totalDuration = ValueNotifier<Duration>(Duration(seconds: 30));
-  ServicesLister _service;
-  String _imageUrlLittle = DEFAULT_IMAGE_URL;
-  String _imageUrlLarge = DEFAULT_IMAGE_URL;
-  DateTime _addDate;
+  ValueNotifier<Duration> totalDuration = ValueNotifier<Duration>(Duration(seconds: 30));
+  ServicesLister service;
+  String imageUrlLittle = DEFAULT_IMAGE_URL;
+  String imageUrlLarge = DEFAULT_IMAGE_URL;
+  DateTime addedDate;
 
   // static const String PLAYMODE_PLAY = "play";
   static const String PLAYMODE_RESUME = "resume";
@@ -30,96 +30,60 @@ class Track {
   ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
   ValueNotifier<bool> _isSelected = ValueNotifier<bool>(false);
 
-  Track _streamTrack;
+  Track streamTrack;
   File _file;
 
   Track(
     {
-      @required String title,
-      @required String artist,
-      @required ServicesLister service,
-      @required id,
-      @required Duration totalDuration,
-      String album,
-      @required String imageUrlLittle,
-      @required String imageUrlLarge,
-      DateTime addDate,
-      Track streamTrack
+      @required this.id,
+      @required this.title,
+      @required this.artist,
+      @required this.service,
+      @required totalDuration,
+      @required this.imageUrlLittle,
+      @required this.imageUrlLarge,
+      this.album,
+      this.addedDate,
+      this.streamTrack
     }
   ) {
-    _id = id;
-    _title = title;
-    _artist = artist;
-    _album = album;
-    if (imageUrlLittle != null) _imageUrlLittle = imageUrlLittle;
-    if (imageUrlLarge != null) _imageUrlLarge = imageUrlLarge;
-    _service = service;
-    if (addDate != null) _addDate = addDate;
-    else _addDate = DateTime.now();
-    if (totalDuration != null) _totalDuration.value = totalDuration;
-    if (streamTrack != null) _streamTrack = streamTrack;
+    this.totalDuration.value = totalDuration;
   }
-
-  ValueListenable<bool> get isSelected => _isSelected;
-  ValueListenable<bool> get isPlaying => _isPlaying;
-
-  String get id => _id;
-
-  String get title => _title;
-  String get artist => _artist;
-  String get album => _album;
   
-  void setCurrentDuration(Duration duration) => _currentDuration.value = duration;
-  ValueNotifier<Duration>  get currentDuration => _currentDuration;
-  ValueNotifier<Duration>  get totalDuration => _totalDuration;
-  
-  String get imageUrlLittle => _imageUrlLittle;
-  String get imageUrlLarge => _imageUrlLarge;
+  set currentDuration(Duration duration) => _currentDuration.value = duration;
+  get currentDuration => _currentDuration;
 
-
-  DateTime get addedDate => _addDate;
-  
-  ServicesLister get service => _service;
-  String get serviceName => _service.toString().split(".")[1];  
-  // Stream get serviceStream => _stream;
-
-  Track get streamTrack => _streamTrack;
+  String get serviceName => Util.serviceToString(service);
 
   Future<File> loadFile() async {
     if(_file != null) {
       return _file;
     } else {
-      MapEntry<Track, File> me = await PlatformsLister.platforms[_service].getFile(this);
-      _streamTrack = me.key;
-      _totalDuration = _streamTrack.totalDuration;
-      _totalDuration.notifyListeners();
+      MapEntry<Track, File> me = await PlatformsLister.platforms[service].getFile(this);
+      streamTrack = me.key;
+      totalDuration = streamTrack.totalDuration;
+      totalDuration.notifyListeners();
       DataBaseController().updateTrack(this);
       return _file = me.value;
     }
   }
 
-  bool setIsSelected(bool isSelected) {
+  set isSelected(bool isSelected) {
     _isSelected.value = isSelected;
     if(!isSelected) seekTo(Duration.zero, false);
-    return _isSelected.value;
   }
+  get isSelected => _isSelected;
 
-  Future<bool> setIsPlaying(bool isPlaying) async {
+  set isPlaying(bool isPlaying) {
     _isPlaying.value = isPlaying;
-    // if(isPlaying) await _backPlayer(PLAYMODE_PLAY);
-    setIsSelected(isPlaying);
+    this.isSelected = isPlaying;
     _isPlaying.notifyListeners();
-    return _isPlaying.value;
   }
-
-  void setId(String id) {
-    _id = id;
-    DataBaseController().updateTrack(this);
-  }
+  get isPlaying => _isPlaying;
 
   @override
   String toString() {
-    return "{$_title - $_artist}";
+    return "{$title - $artist}";
   }
 
 
@@ -143,12 +107,8 @@ class Track {
   }
 
   Future<void> _backPlayer(String playMode) async {
-    PlatformsController ctrl = PlatformsLister.platforms[_service];
+    PlatformsController ctrl = PlatformsLister.platforms[service];
     switch(playMode) {
-      // case PLAYMODE_PLAY : {
-      //   if(_file == null) await loadFile();
-      //   ctrl.play(_file, this);
-      // } break;
       case PLAYMODE_RESUME: ctrl.resume(_file); break;
       case PLAYMODE_PAUSE: ctrl.pause(); break;
     }
@@ -157,7 +117,7 @@ class Track {
   void seekTo(Duration position, bool influence) {
     _currentDuration.value = position;
     if(influence) {
-      PlatformsController ctrl = PlatformsLister.platforms[_service];
+      PlatformsController ctrl = PlatformsLister.platforms[service];
       ctrl.seekTo(position);
     }
   }
@@ -175,22 +135,22 @@ class Track {
     service: PlatformsLister.nameToService(json['service']),
     totalDuration: Util.parseDuration(json['duration']),
     streamTrack: json['streamtrack'],
-    addDate: DateTime.parse(json['adddate'])
+    addedDate: DateTime.parse(json['adddate'])
   );
 
   Map<String, dynamic> toMap() =>
   {
-    'trackid': _id,
+    'trackid': id,
     'service': serviceName,
-    'title': _title,
-    'artist': _artist,
-    'album': _album,
-    'imageurllittle': _imageUrlLittle,
-    'imageurllarge': _imageUrlLarge,
-    'duration': _totalDuration.value.toString(),
-    'adddate': _addDate.toString(),
-    'streamtrack_id': _streamTrack == null ? '' : _streamTrack.id ,
-    'streamtrack_service': _streamTrack == null ? '' : _streamTrack.serviceName
+    'title': title,
+    'artist': artist,
+    'album': album,
+    'imageurllittle': imageUrlLittle,
+    'imageurllarge': imageUrlLarge,
+    'duration': totalDuration.value.toString(),
+    'adddate': addedDate.toString(),
+    'streamtrack_id': streamTrack == null ? '' : streamTrack.id ,
+    'streamtrack_service': streamTrack == null ? '' : streamTrack.serviceName
   };
 
 

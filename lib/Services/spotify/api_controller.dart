@@ -102,8 +102,8 @@ class API {
   Future<Playlist> createPlaylist(Playlist p) async {
     String body = '{"name": "${p.name}", "public": false}';
     final response = await post(APIPath.createPlaylist(_userId), headers: _prepareHeader(), body: body);
-    p.setUri(jsonDecode(response.body)['uri']);
-    p.setId(jsonDecode(response.body)['id']);
+    p.uri = jsonDecode(response.body)['uri'];
+    p.id = jsonDecode(response.body)['id'];
     return p;
   }
 
@@ -212,7 +212,7 @@ class API {
             id: id,
             title: name,
             artist: artist,
-            addDate: DateTime.parse(addDate),
+            addedDate: DateTime.parse(addDate),
             imageUrlLittle: imageUrlLittle,
             imageUrlLarge: imageUrlLarge,
             totalDuration: duration,

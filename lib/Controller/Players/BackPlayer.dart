@@ -409,7 +409,7 @@ class PlayerListener {
         switch (data) {
 
           case 'STOP' : {
-            _track.setIsPlaying(false);
+            _track.isPlaying = false;
           } break;
 
 
@@ -442,9 +442,9 @@ class PlayerListener {
     _track = track;
 
     for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
-      me.key.setIsPlaying(false);
+      me.key.isPlaying = false;
     }
-    track.setIsPlaying(true);
+    track.isPlaying = true;
     
   }
 

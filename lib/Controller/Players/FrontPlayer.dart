@@ -114,7 +114,7 @@ class FrontPlayerController {
             }
           }  
         } else {
-          currentTrack.value.setIsSelected(true);
+          currentTrack.value.isSelected = true;
         }
 
 

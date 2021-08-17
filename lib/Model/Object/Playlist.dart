@@ -9,47 +9,32 @@ class Playlist {
 
   static const String DEFAULT_IMAGE_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Solid_purple.svg/2048px-Solid_purple.svg.png';
 
-  String _id;
-  String _name;
+  String id;
+  String name;
   Uri _uri;
-  String _ownerId;
-  String _ownerName;
-  String _imageUrl = DEFAULT_IMAGE_URL;
+  String ownerId;
+  String ownerName;
+  String imageUrl = DEFAULT_IMAGE_URL;
   ServicesLister _service;
 
-  List<MapEntry<Track, DateTime>> _tracks =
-      <MapEntry<Track, DateTime>>[];
+  List<MapEntry<Track, DateTime>> tracks = <MapEntry<Track, DateTime>>[];
 
   Map<String, bool> _sortDirection = {'title': null, 'last_added': null, 'artist': null};
 
   Playlist(
-      {@required String name,
-      @required String id,
+      {@required this.name,
+      @required this.id,
       @required ServicesLister service,
-      @required String ownerId,
-      String imageUrl,
+      @required this.ownerId,
+      this.imageUrl,
       Uri uri,
-      String ownerName,
-      List<MapEntry<Track, DateTime>> tracks}) {
-    _id = id;
-    _name = name;
-    _ownerId = ownerId;
-    if(imageUrl != null) _imageUrl = imageUrl;
-    _uri = uri;
-    _ownerName = ownerName;
-    _service = service;
-    if (tracks != null) _tracks = tracks;
-  }
+      this.ownerName,
+      this.tracks}) {
+        _uri = uri;
+        _service = service;
+      }
 
-  String get id => _id;
-  String get name => _name;
-  String get ownerId => _ownerId;
-  String get ownerName => _ownerName;
-  String get imageUrl => _imageUrl;
   Map<String, bool> get sortDirection => _sortDirection;
-  Uri get uri => _uri;
-  ServicesLister  get service => _service;
-  List<MapEntry<Track, DateTime>> get tracks => _tracks;
 
   String addTrack(Track track, {@required bool isNew}) {
     tracks.insert(0, MapEntry(track, DateTime.now()));
@@ -64,33 +49,30 @@ class Playlist {
     return deletedTrack;
   }
 
-  void setId(String id) {
-    _id = id;
-    // DataBaseController().updatePlaylist(this);
+  set uri(String newUri) {
+    _uri = Uri.parse(newUri);
+    DataBaseController().updatePlaylist(this);
   }
+  get uri => _uri;
 
-  void setUri(String uri) {
-    _uri = Uri.parse(uri);
-  }
-
-  void rename(String name) {
-    _name = name;
+  void rename(String newName) {
+    name = newName;
     DataBaseController().updatePlaylist(this);
   }
 
   List<Track> get getTracks {
     List<Track> finalTracks = <Track>[];
-    for (MapEntry<Track, DateTime> track in _tracks) {
+    for (MapEntry<Track, DateTime> track in tracks) {
       finalTracks.add(track.key);
     }
     return finalTracks;
   }
 
-  List<Track> setTracks(List<Track> tracks, {@required bool isNew}) {
-    List<Track> allTracks = tracks;
-    _tracks.clear();
+  List<Track> setTracks(List<Track> newTracks, {@required bool isNew}) {
+    List<Track> allTracks = newTracks;
+    tracks.clear();
     for (Track track in allTracks) {
-      _tracks.add(MapEntry(track, track.addedDate));
+      tracks.add(MapEntry(track, track.addedDate));
       if(isNew) {
         DataBaseController().insertTrack(this, track);
       }
@@ -99,8 +81,8 @@ class Playlist {
     return allTracks;
   }
 
-  List<Track> addTracks(List<Track> tracks, {@required bool isNew}) {
-    List<Track> allTracks = tracks;
+  List<Track> addTracks(List<Track> newTracks, {@required bool isNew}) {
+    List<Track> allTracks = newTracks;
     for (Track track in allTracks) {
       bool exist = false;
       for (Track rTrack in getTracks) {
@@ -115,24 +97,25 @@ class Playlist {
   }
 
   String _updateImage() {
-    if(_imageUrl == Playlist.DEFAULT_IMAGE_URL) {
-      if(_tracks.length >= 1) {
-        _imageUrl = _tracks[0].key.imageUrlLarge;
+    if(imageUrl == Playlist.DEFAULT_IMAGE_URL) {
+      if(tracks.length >= 1) {
+        imageUrl = tracks[0].key.imageUrlLarge;
       }
     }
     DataBaseController().updatePlaylist(this);
-    return _imageUrl;
+    return imageUrl;
   }
 
   set service(ServicesLister service) {
     _service = service;
     DataBaseController().updatePlaylist(this);
   }
+  get service => _service;
 
   List<Track> reorder(int oldIndex, int newIndex) {
     MapEntry elem = tracks.removeAt(oldIndex);
     tracks.insert(newIndex, elem);
-    //Save in system
+    //Todo Save in system
     return getTracks;
   }
 
@@ -246,7 +229,7 @@ class Playlist {
 
   Map<String, dynamic> toMap() =>
   {
-    'id': _id,
+    'id': id,
     'service': _service.toString().split(".")[1],
     'platform_name': PlatformsLister.platforms[_service].platform.name,
     'ordersort': PlatformsLister.platforms[_service].platform.playlists.value.indexOf(this),
@@ -254,6 +237,6 @@ class Playlist {
     'ownerid': ownerId,
     'ownername': ownerName,
     'imageurl': imageUrl,
-    'uri': uri.toString()
+    'uri': _uri.toString()
   };
 }
