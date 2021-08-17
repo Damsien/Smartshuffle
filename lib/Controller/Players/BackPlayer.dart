@@ -1,24 +1,15 @@
 
 
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:audio_session/audio_session.dart';
-import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:palette_generator/palette_generator.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
-import 'package:smartshuffle/Model/Object/Playlist.dart' as SM;
-import 'package:smartshuffle/Controller/GlobalQueue.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/Players/Youtube/SearchAlgorithm.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
-import 'package:path_provider/path_provider.dart';
 class AudioPlayerTask extends BackgroundAudioTask {
 
   static const int DEFAULT_LENGTH_QUEUE = 5;

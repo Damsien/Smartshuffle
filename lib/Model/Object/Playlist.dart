@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 
@@ -19,7 +18,7 @@ class Playlist {
   ServicesLister _service;
 
   List<MapEntry<Track, DateTime>> _tracks =
-      new List<MapEntry<Track, DateTime>>();
+      <MapEntry<Track, DateTime>>[];
 
   Map<String, bool> _sortDirection = {'title': null, 'last_added': null, 'artist': null};
 
@@ -52,10 +51,6 @@ class Playlist {
   ServicesLister  get service => _service;
   List<MapEntry<Track, DateTime>> get tracks => _tracks;
 
-  ///Les paramètres à comparer pour savoir si ils sont égales
-  @override
-  List<Object> get props => [name, id];
-
   String addTrack(Track track, {@required bool isNew}) {
     tracks.insert(0, MapEntry(track, DateTime.now()));
     if(isNew) {
@@ -84,7 +79,7 @@ class Playlist {
   }
 
   List<Track> get getTracks {
-    List<Track> finalTracks = new List<Track>();
+    List<Track> finalTracks = <Track>[];
     for (MapEntry<Track, DateTime> track in _tracks) {
       finalTracks.add(track.key);
     }
@@ -119,16 +114,17 @@ class Playlist {
     return allTracks;
   }
 
-  NetworkImage _updateImage() {
+  String _updateImage() {
     if(_imageUrl == Playlist.DEFAULT_IMAGE_URL) {
       if(_tracks.length >= 1) {
         _imageUrl = _tracks[0].key.imageUrlLarge;
       }
     }
     DataBaseController().updatePlaylist(this);
+    return _imageUrl;
   }
 
-  ServicesLister setService(ServicesLister service) {
+  set service(ServicesLister service) {
     _service = service;
     DataBaseController().updatePlaylist(this);
   }

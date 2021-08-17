@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Model/Util.dart';
 
 class PlatformsInformation {
 
@@ -14,8 +15,8 @@ class PlatformsInformation {
 
 
   static Widget _genericInformations(PlatformsController ctrl, String serviceName) {
-    var name = ctrl.getUserInformations()['name'];
-    var account = ctrl.getUserInformations()['email'];
+    var name = ctrl.userInformations['name'];
+    var account = ctrl.userInformations['email'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -24,7 +25,7 @@ class PlatformsInformation {
           children: [
               Row(
                 children: [
-                  Image(image: AssetImage(ctrl.getPlatformInformations()['logo']), height: 30.0),
+                  Image(image: AssetImage(ctrl.userInformations['logo']), height: 30.0),
                   Padding(
                     padding: const EdgeInsets.only(left: 10),
                     child: Text(
@@ -36,7 +37,7 @@ class PlatformsInformation {
             ),
             SizedBox(height: 20),
             Container(
-              width: MediaQuery.of(PlatformsController.states['ProfilePage'].context).size.width*0.6,
+              width: MediaQuery.of(StatesManager.states['ProfilePage'].context).size.width*0.6,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

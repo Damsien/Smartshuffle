@@ -1,14 +1,10 @@
-import 'dart:developer';
-
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
-import 'package:smartshuffle/Controller/GlobalQueue.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/page_controller.dart';
@@ -60,6 +56,8 @@ class FrontPlayerController {
   bool isPlayerReady = false;
 
   double botBarHeight;
+
+  // ignore: non_constant_identifier_names
   final double bot_bar_height = 56;
 
   int backIndex = 0;
@@ -232,6 +230,8 @@ class FrontPlayerController {
     _storage.write(key: 'current_queue_index', value: GlobalQueue.currentQueueIndex.toString());
     
     //Listen to track changes in the notification back player
+
+    // ignore: invalid_use_of_protected_member
     views['player'].setState(() {
       PlayerListener().listen(track);
     });
@@ -242,6 +242,8 @@ class FrontPlayerController {
     
     isPlayerReady = false;
     //Reload front player state to show it
+
+    // ignore: invalid_use_of_protected_member
     views['player'].setState(() {});
 
     if(!AudioService.connected) {
@@ -249,13 +251,13 @@ class FrontPlayerController {
     }
 
     Map<String, List<String>> queue = Map<String, List<String>>();
-    queue['name'] = List<String>();
-    queue['artist'] = List<String>();
-    queue['imageurllarge'] = List<String>();
-    queue['imageurllittle'] = List<String>();
-    queue['id'] = List<String>();
-    queue['service'] = List<String>();
-    queue['duration'] = List<String>();
+    queue['name'] = <String>[];
+    queue['artist'] = <String>[];
+    queue['imageurllarge'] = <String>[];
+    queue['imageurllittle'] = <String>[];
+    queue['id'] = <String>[];
+    queue['service'] = <String>[];
+    queue['duration'] = <String>[];
     for(MapEntry<Track, bool> me in frontQueue) {
       queue['name'].add(me.key.title);
       queue['artist'].add(me.key.artist);
@@ -275,6 +277,8 @@ class FrontPlayerController {
     //Front player can be displayed when the back player is completely initialized
     isPlayerReady = true;
     //Reload front player state to show it
+    
+    // ignore: invalid_use_of_protected_member
     views['player'].setState(() {});
   }
 
@@ -284,7 +288,7 @@ class FrontPlayerController {
   Future<void> _createQueue(Playlist playlist, {
     @required bool isShuffle,
     Track track
-  }) {
+  }) async {
     currentPlaylist = playlist;
 
     this.isShuffle = isShuffle;
@@ -307,7 +311,7 @@ class FrontPlayerController {
 
     }
 
-    GlobalQueue().queueDatabase();
+    await GlobalQueue().queueDatabase();
   }
 
   /// Listen to screen state update
@@ -337,6 +341,7 @@ class FrontPlayerController {
             _playTrack(GlobalQueue.queue.value[index].key);
 
             views.forEach((key, value) {
+              // ignore: invalid_use_of_protected_member
               value.setState(() {});
             });
           }

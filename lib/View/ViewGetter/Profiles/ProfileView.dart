@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/View/ViewGetter/Profiles/PlatformsConnection.dart';
 import 'package:smartshuffle/View/ViewGetter/Profiles/PlatformsInformation.dart';
 

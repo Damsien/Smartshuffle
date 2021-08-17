@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Util.dart';
@@ -14,7 +13,7 @@ class Platform {
       'email': 'xxx@xxx.com',
       'isConnected': false
   };
-  ValueNotifier<List<Playlist>> playlists = ValueNotifier<List<Playlist>>(List<Playlist>());
+  ValueNotifier<List<Playlist>> playlists = ValueNotifier<List<Playlist>>(<Playlist>[]);
 
   Platform(String name, {Map platformInformations, Map userInformations, List<Playlist> playlists}) {
     this.name = name;

@@ -3,19 +3,11 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/widgets.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
-import 'package:smartshuffle/Controller/GlobalQueue.dart';
-import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:smartshuffle/View/ViewGetter/Profiles/ProfileView.dart';
-import 'package:palette_generator/palette_generator.dart';
-import 'package:sqflite/sqflite.dart';
-
-import 'package:protobuf/protobuf.dart';
+import 'package:smartshuffle/Model/Util.dart';
 
 
 enum PlatformsCtrlFeatures {
@@ -32,7 +24,6 @@ enum PlatformsCtrlFeatures {
 }
 
 abstract class PlatformsController {
-  static Map<String, State> states = new Map<String, State>();
   Map<String, Track> allTracks = Map<String, Track>();
   Platform platform;
 
@@ -43,51 +34,16 @@ abstract class PlatformsController {
     if(isBack == null || isBack == false) {
       DataBaseController().insertPlatform(platform);
     }
-    this.updateInformations();
-  }
-
-  /*  STATE MANAGER */
-
-  static void setPlaylistsPageState(State state) {
-    states['PlaylistsPage'] = state;
-  }
-
-  static void setSearchPageState(State state) {
-    states['SearchPage'] = state;
-  }
-
-  static void setProfilePageState(State state) {
-    states['ProfilePage'] = state;
-  }
-
-  void updateState(String stringState) {
-    State<dynamic> state = states[stringState];
-    state.setState(() {
-      // state.widget.createState().key = UniqueKey();
-    });
-  }
-
-  static void updateStates() {
-    for (MapEntry state in states.entries) {
-      state.value.setState(() {
-        // state.value.widget.createState().key = UniqueKey();
-      });
-    }
-  }
-
-  updateInformations();
-
-  /*  VIEWS   */
-
-  Widget getView({@required ServicesLister service, @required ProfileViewType view, Map parameters}) {
-    return ProfileView.getView(service: service, view: view, parameters: parameters);
   }
 
   /*  INFORMATIONS  */
 
-  getPlatformInformations();
+  get platformInformations;
 
-  getUserInformations();
+  get userInformations;
+
+
+  /* DATA */
 
   FutureOr<List<Playlist>> getPlaylists({bool refreshing}) async {
     if((refreshing == null || !refreshing)) {
@@ -122,11 +78,19 @@ abstract class PlatformsController {
 
   ValueNotifier<List<Playlist>> getPlaylistsUpdate();
 
-  /*  CONNECTION    */
+  /*  CONNEXION    */
 
-  connect();
+  connect() {
+    DataBaseController().updatePlatform(platform);
+    // ignore: invalid_use_of_protected_member
+    StatesManager.states['ProfilePage'].setState(() {});
+  }
 
-  disconnect();
+  disconnect() {
+    DataBaseController().updatePlatform(platform);
+    // ignore: invalid_use_of_protected_member
+    StatesManager.states['ProfilePage'].setState(() {});
+  }
 
   /*  USER'S SERVICES */
 

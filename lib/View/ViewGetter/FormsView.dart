@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'dart:io';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:smartshuffle/View/GlobalApp.dart';
+import 'package:smartshuffle/Model/Util.dart';
 
 
 

@@ -1,7 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/widgets.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
-import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
@@ -9,9 +8,9 @@ class GlobalQueue {
   
   // static Track currentTrack;
 
-  static ValueNotifier<List<Track>> permanentQueue = ValueNotifier<List<Track>>(List<Track>());
-  static ValueNotifier<List<Track>> noPermanentQueue = ValueNotifier<List<Track>>(List<Track>());
-  static ValueNotifier<List<MapEntry<Track, bool>>> queue = ValueNotifier<List<MapEntry<Track, bool>>>(List<MapEntry<Track, bool>>()); //bool : isPermanent ?
+  static ValueNotifier<List<Track>> permanentQueue = ValueNotifier<List<Track>>(<Track>[]);
+  static ValueNotifier<List<Track>> noPermanentQueue = ValueNotifier<List<Track>>(<Track>[]);
+  static ValueNotifier<List<MapEntry<Track, bool>>> queue = ValueNotifier<List<MapEntry<Track, bool>>>(<MapEntry<Track, bool>>[]); //bool : isPermanent ?
   static int currentQueueIndex = 0;
 
   static final GlobalQueue _globalQueue = GlobalQueue._instance();
@@ -23,8 +22,7 @@ class GlobalQueue {
   GlobalQueue._instance();
 
   void setCurrentQueueIndex(int value) {
-    int lastIndex = currentQueueIndex;
-
+    
     if(value < 0) {
       currentQueueIndex = queue.value.length-1;
     } else if(value >= queue.value.length) {
@@ -37,7 +35,7 @@ class GlobalQueue {
     if(queue.value.isNotEmpty && queue.value[currentQueueIndex].value) GlobalQueue().moveFromPermanentToNoPermanent(currentQueueIndex);
   }
 
-  void queueDatabase() async {
+  Future<void> queueDatabase() async {
     await DataBaseController().resetQueue();
     for(MapEntry<Track, bool> t in queue.value) {
       DataBaseController().insertTrackInQueue(t.key, queue.value.length);

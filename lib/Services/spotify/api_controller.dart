@@ -1,8 +1,5 @@
-import 'dart:ffi';
-
-import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
 import 'api_path.dart';
@@ -48,7 +45,7 @@ class API {
 
     String next = json['next'];
 
-    List<Playlist> list = new List();
+    List<Playlist> list = [];
 
     do {
       next = json['next'];
@@ -69,7 +66,7 @@ class API {
 
     String next = json['next'];
 
-    List<Track> tracks = new List();
+    List<Track> tracks = <Track>[];
 
     do {
       next = json['next'];
@@ -191,14 +188,14 @@ class API {
     for (int i = 0; i < items.length; i++) {
       String name = "None";
       String artist = "None";
-      String id = null;
+      String id;
       //* Le format d'image est 64x64
-      String imageUrlLittle = null;
+      String imageUrlLittle;
       //* Le format d'image est 640x640
-      String imageUrlLarge = null;
-      String addDate = null;
+      String imageUrlLarge;
+      String addDate;
 
-      Duration duration = null;
+      Duration duration;
       try {
         id = items[i]['track']['id'];
         name = items[i]['track']['name'];

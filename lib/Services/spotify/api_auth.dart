@@ -1,8 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'api_controller.dart' as controller;
 
 class APIAuth {
   static String _scopes =
