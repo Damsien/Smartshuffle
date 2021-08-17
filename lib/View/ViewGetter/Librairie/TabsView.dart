@@ -1,4 +1,6 @@
 
+import 'dart:developer';
+
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/services.dart';
@@ -67,16 +69,18 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    
     return WillPopScope(
       child: tab,
-      onWillPop: () async {
-        if(_isPlaylistOpen) {
+      onWillPop: () {
+        // if(_isPlaylistOpen) {
           returnToPlaylist();
-        } else {
-          if(widget.parent.tabController.index == 0) widget.parent.exitDialog();
-          else widget.parent.tabController.animateTo(0);
-        }
-        return false;
+          return Future<bool>.value(true);
+        // } else {
+        //   if(widget.parent.tabController.index == 0) widget.parent.exitDialog();
+        //   else widget.parent.tabController.animateTo(0);
+        //   return Future<bool>.value(false);
+        // }
       },
     );
   }
