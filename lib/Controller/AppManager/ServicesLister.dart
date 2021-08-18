@@ -30,24 +30,8 @@ class PlatformsLister {
     if(name == "DEFAULT") return ServicesLister.DEFAULT;
     if(name == "SPOTIFY") return ServicesLister.SPOTIFY;
     if(name == "YOUTUBE") return ServicesLister.YOUTUBE;
-    else return null;
   }
   
-
-  static List<PlatformsController> get allControllers {
-    List<PlatformsController> plat = <PlatformsController>[];
-    PlatformsLister.platforms.forEach((key, value) {
-      plat.add(value);
-    });
-    return plat;
-  }
-
-  static List<PlatformsController> get allConnectedControllers {
-    List<PlatformsController> plat = <PlatformsController>[];
-    PlatformsLister.platforms.forEach((key, value) {
-      if(value.platform.userInformations['isConnected']) plat.add(value);
-    });
-    return plat;
-  }
+  static String serviceToString(ServicesLister service) => service.toString().split(".")[1];
 
 }

@@ -14,8 +14,8 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   static const int DEFAULT_LENGTH_QUEUE = 5;
   final AudioPlayer _player = AudioPlayer();
-  List<MediaItem> _queue = List<MediaItem>();
-  List<Track> trackQueue = List<Track>();
+  List<MediaItem> _queue = <MediaItem>[];
+  List<Track> trackQueue = <Track>[];
   int currentIndex = 0;
 
   bool _isTrackDone = false;
@@ -409,7 +409,7 @@ class PlayerListener {
         switch (data) {
 
           case 'STOP' : {
-            _track.isPlaying = false;
+            _track.playing = false;
           } break;
 
 
@@ -442,9 +442,9 @@ class PlayerListener {
     _track = track;
 
     for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
-      me.key.isPlaying = false;
+      me.key.playing = false;
     }
-    track.isPlaying = true;
+    track.playing = true;
     
   }
 

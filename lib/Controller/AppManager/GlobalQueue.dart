@@ -22,7 +22,8 @@ class GlobalQueue {
   GlobalQueue._instance();
 
   void setCurrentQueueIndex(int value) {
-    
+    int lastIndex = currentQueueIndex;
+
     if(value < 0) {
       currentQueueIndex = queue.value.length-1;
     } else if(value >= queue.value.length) {

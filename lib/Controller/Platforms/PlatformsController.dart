@@ -8,6 +8,7 @@ import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Util.dart';
+import 'package:smartshuffle/View/Pages/Librairie/PlaylistsPage.dart';
 
 
 enum PlatformsCtrlFeatures {

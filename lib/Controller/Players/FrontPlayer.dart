@@ -56,8 +56,6 @@ class FrontPlayerController {
   bool isPlayerReady = false;
 
   double botBarHeight;
-
-  // ignore: non_constant_identifier_names
   final double bot_bar_height = 56;
 
   int backIndex = 0;
@@ -114,7 +112,7 @@ class FrontPlayerController {
             }
           }  
         } else {
-          currentTrack.value.isSelected = true;
+          currentTrack.value.selecting = true;
         }
 
 
@@ -230,8 +228,6 @@ class FrontPlayerController {
     _storage.write(key: 'current_queue_index', value: GlobalQueue.currentQueueIndex.toString());
     
     //Listen to track changes in the notification back player
-
-    // ignore: invalid_use_of_protected_member
     views['player'].setState(() {
       PlayerListener().listen(track);
     });
@@ -242,8 +238,6 @@ class FrontPlayerController {
     
     isPlayerReady = false;
     //Reload front player state to show it
-
-    // ignore: invalid_use_of_protected_member
     views['player'].setState(() {});
 
     if(!AudioService.connected) {
@@ -277,8 +271,6 @@ class FrontPlayerController {
     //Front player can be displayed when the back player is completely initialized
     isPlayerReady = true;
     //Reload front player state to show it
-    
-    // ignore: invalid_use_of_protected_member
     views['player'].setState(() {});
   }
 
@@ -341,7 +333,6 @@ class FrontPlayerController {
             _playTrack(GlobalQueue.queue.value[index].key);
 
             views.forEach((key, value) {
-              // ignore: invalid_use_of_protected_member
               value.setState(() {});
             });
           }

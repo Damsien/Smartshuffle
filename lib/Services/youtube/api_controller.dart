@@ -184,7 +184,7 @@ class API {
   }
 
   Future<List<Track>> _songsList(YTB.PlaylistItemListResponse songs) async {
-    List<Track> list = <Track>[];
+    List<Track> list = [];
 
     List<YTB.PlaylistItem> items = songs.items;
     for (int i = 0; i < items.length; i++) {

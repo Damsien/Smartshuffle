@@ -45,7 +45,7 @@ class API {
 
     String next = json['next'];
 
-    List<Playlist> list = [];
+    List<Playlist> list = <Playlist>[];
 
     do {
       next = json['next'];
@@ -102,7 +102,7 @@ class API {
   Future<Playlist> createPlaylist(Playlist p) async {
     String body = '{"name": "${p.name}", "public": false}';
     final response = await post(APIPath.createPlaylist(_userId), headers: _prepareHeader(), body: body);
-    p.uri = jsonDecode(response.body)['uri'];
+    p.uriPath = jsonDecode(response.body)['uri'];
     p.id = jsonDecode(response.body)['id'];
     return p;
   }
@@ -188,14 +188,14 @@ class API {
     for (int i = 0; i < items.length; i++) {
       String name = "None";
       String artist = "None";
-      String id;
+      String id = null;
       //* Le format d'image est 64x64
-      String imageUrlLittle;
+      String imageUrlLittle = null;
       //* Le format d'image est 640x640
-      String imageUrlLarge;
-      String addDate;
+      String imageUrlLarge = null;
+      String addDate = null;
 
-      Duration duration;
+      Duration duration = null;
       try {
         id = items[i]['track']['id'];
         name = items[i]['track']['name'];

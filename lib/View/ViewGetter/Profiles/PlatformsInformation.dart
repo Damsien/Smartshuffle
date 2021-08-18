@@ -25,7 +25,7 @@ class PlatformsInformation {
           children: [
               Row(
                 children: [
-                  Image(image: AssetImage(ctrl.userInformations['logo']), height: 30.0),
+                  Image(image: AssetImage(ctrl.platformInformations['logo']), height: 30.0),
                   Padding(
                     padding: const EdgeInsets.only(left: 10),
                     child: Text(

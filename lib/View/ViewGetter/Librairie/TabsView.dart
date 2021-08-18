@@ -546,7 +546,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                             children: [
                               Container(
                                 margin: EdgeInsets.only(top: 30, bottom: 20),
-                                child: Text(ctrl.userInformations['name'], style: TextStyle(fontSize: 30))
+                                child: Text(ctrl.platformInformations['name'], style: TextStyle(fontSize: 30))
                               ),
                               (ctrl.features[PlatformsCtrlFeatures.PLAYLIST_ADD] ?
                               Container(
@@ -808,7 +808,6 @@ class TabsView {
       },
       onSelected: (value) {
         trackMainDialogOptions(value, name: name, ctrl: ctrl, track: track, index: index, refresh: refresh);
-        // ignore: invalid_use_of_protected_member
         this.state.setState(() {});
       },
     );
@@ -1270,9 +1269,8 @@ class TabsView {
               child: Text(AppLocalizations.of(context).confirm, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
-                // ignore: invalid_use_of_protected_member
                 state.setState(() {
-                  ctrl.addPlaylist(name: value, ownerId: ctrl.userInformations['ownerId']);
+                  ctrl.addPlaylist(name: value, ownerId: ctrl.platformInformations['ownerId']);
                 });
               },
             ),
@@ -1306,7 +1304,6 @@ class TabsView {
               child: Text(AppLocalizations.of(context).yes, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
-                // ignore: invalid_use_of_protected_member
                 state.setState(() {
                   ctrl.removePlaylist(index);
                 });
@@ -1349,9 +1346,8 @@ class TabsView {
               child: Text(AppLocalizations.of(context).confirm, style: TextStyle(color: Colors.white)),
               onPressed: () {
                 Navigator.pop(dialogContext);
-                // ignore: invalid_use_of_protected_member
                 state.setState(() {
-                  playlist.rename(value);
+                  playlist.name = value;
                 });
               },
             ),
@@ -1380,7 +1376,6 @@ class TabsView {
               onPressed: () {
                 Navigator.pop(dialogContext);
                 Playlist play;
-                // ignore: invalid_use_of_protected_member
                 state.setState(() {
                   play = PlatformsLister.platforms[ServicesLister.DEFAULT].addPlaylist(playlist: playlist,);
                 });

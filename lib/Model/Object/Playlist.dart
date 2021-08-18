@@ -9,32 +9,94 @@ class Playlist {
 
   static const String DEFAULT_IMAGE_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Solid_purple.svg/2048px-Solid_purple.svg.png';
 
-  String id;
-  String name;
+  String _id;
+  String _name;
   Uri _uri;
-  String ownerId;
-  String ownerName;
-  String imageUrl = DEFAULT_IMAGE_URL;
+  String _ownerId;
+  String _ownerName;
+  String _imageUrl = DEFAULT_IMAGE_URL;
   ServicesLister _service;
 
-  List<MapEntry<Track, DateTime>> tracks = <MapEntry<Track, DateTime>>[];
+  List<MapEntry<Track, DateTime>> _tracks = <MapEntry<Track, DateTime>>[];
 
   Map<String, bool> _sortDirection = {'title': null, 'last_added': null, 'artist': null};
 
   Playlist(
-      {@required this.name,
-      @required this.id,
+      {@required String name,
+      @required String id,
       @required ServicesLister service,
-      @required this.ownerId,
-      this.imageUrl,
+      @required String ownerId,
+      String imageUrl,
       Uri uri,
-      this.ownerName,
-      this.tracks}) {
-        _uri = uri;
-        _service = service;
-      }
+      String ownerName,
+      List<MapEntry<Track, DateTime>> tracks}) {
+    _id = id;
+    _name = name;
+    _ownerId = ownerId;
+    _uri = uri;
+    _ownerName = ownerName;
+    _service = service;
+    if(imageUrl != null) _imageUrl = imageUrl;
+    if (tracks != null) _tracks = tracks;
+  }
 
+  /*  SETTERS AND GETTER  */
+
+  // Id
+  set id(String id) {
+    _id = id;
+    // DataBaseController().updatePlaylist(this);
+  }
+  String get id => _id;
+
+  // Name
+  set name(String name) {
+    _name = name;
+    DataBaseController().updatePlaylist(this);
+  }
+  String get name => _name;
+  
+  // Owner
+  set ownerId(String ownerId) {
+    _ownerId = ownerId;
+    DataBaseController().updatePlaylist(this);
+  }
+  String get ownerId => _ownerId;
+  set ownerName(String ownerName) {
+    _ownerName = ownerName;
+    DataBaseController().updatePlaylist(this);
+  }
+  String get ownerName => _ownerName;
+
+  // Image url
+  set imageUrl(String imageUrl) {
+    _imageUrl = imageUrl;
+    DataBaseController().updatePlaylist(this);
+  }
+  String get imageUrl => _imageUrl;
+
+  // Sort direction
   Map<String, bool> get sortDirection => _sortDirection;
+
+  // Uri
+  set uriPath(String uri) {
+    _uri = Uri.parse(uri);
+    DataBaseController().updatePlaylist(this);
+  }
+  Uri get uri => _uri;
+
+  // Service
+  set service(ServicesLister service) {
+    _service = service;
+    DataBaseController().updatePlaylist(this);
+  }
+  ServicesLister get service => _service;
+
+  // Tracks
+  List<MapEntry<Track, DateTime>> get tracks => _tracks;
+
+
+  /*  TRACKS MANAGER  */
 
   String addTrack(Track track, {@required bool isNew}) {
     tracks.insert(0, MapEntry(track, DateTime.now()));
@@ -49,30 +111,19 @@ class Playlist {
     return deletedTrack;
   }
 
-  set uri(String newUri) {
-    _uri = Uri.parse(newUri);
-    DataBaseController().updatePlaylist(this);
-  }
-  get uri => _uri;
-
-  void rename(String newName) {
-    name = newName;
-    DataBaseController().updatePlaylist(this);
-  }
-
   List<Track> get getTracks {
     List<Track> finalTracks = <Track>[];
-    for (MapEntry<Track, DateTime> track in tracks) {
+    for (MapEntry<Track, DateTime> track in _tracks) {
       finalTracks.add(track.key);
     }
     return finalTracks;
   }
 
-  List<Track> setTracks(List<Track> newTracks, {@required bool isNew}) {
-    List<Track> allTracks = newTracks;
-    tracks.clear();
+  List<Track> setTracks(List<Track> tracks, {@required bool isNew}) {
+    List<Track> allTracks = tracks;
+    _tracks.clear();
     for (Track track in allTracks) {
-      tracks.add(MapEntry(track, track.addedDate));
+      _tracks.add(MapEntry(track, track.addedDate));
       if(isNew) {
         DataBaseController().insertTrack(this, track);
       }
@@ -81,8 +132,8 @@ class Playlist {
     return allTracks;
   }
 
-  List<Track> addTracks(List<Track> newTracks, {@required bool isNew}) {
-    List<Track> allTracks = newTracks;
+  List<Track> addTracks(List<Track> tracks, {@required bool isNew}) {
+    List<Track> allTracks = tracks;
     for (Track track in allTracks) {
       bool exist = false;
       for (Track rTrack in getTracks) {
@@ -96,26 +147,22 @@ class Playlist {
     return allTracks;
   }
 
+  
+
   String _updateImage() {
-    if(imageUrl == Playlist.DEFAULT_IMAGE_URL) {
-      if(tracks.length >= 1) {
-        imageUrl = tracks[0].key.imageUrlLarge;
+    if(_imageUrl == Playlist.DEFAULT_IMAGE_URL) {
+      if(_tracks.length >= 1) {
+        _imageUrl = _tracks[0].key.imageUrlLarge;
       }
     }
     DataBaseController().updatePlaylist(this);
-    return imageUrl;
+    return _imageUrl;
   }
-
-  set service(ServicesLister service) {
-    _service = service;
-    DataBaseController().updatePlaylist(this);
-  }
-  get service => _service;
 
   List<Track> reorder(int oldIndex, int newIndex) {
     MapEntry elem = tracks.removeAt(oldIndex);
     tracks.insert(newIndex, elem);
-    //Todo Save in system
+    //Save in system
     return getTracks;
   }
 
@@ -229,7 +276,7 @@ class Playlist {
 
   Map<String, dynamic> toMap() =>
   {
-    'id': id,
+    'id': _id,
     'service': _service.toString().split(".")[1],
     'platform_name': PlatformsLister.platforms[_service].platform.name,
     'ordersort': PlatformsLister.platforms[_service].platform.playlists.value.indexOf(this),
@@ -237,6 +284,6 @@ class Playlist {
     'ownerid': ownerId,
     'ownername': ownerName,
     'imageurl': imageUrl,
-    'uri': _uri.toString()
+    'uri': uri.toString()
   };
 }

@@ -46,30 +46,18 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
   /* =========================== */
   
   // Global frontend strucutre variables;
-
-  // ignore: non_constant_identifier_names
   double _screen_width;
-  // ignore: non_constant_identifier_names
   double _screen_height;
   double _ratio = 1;
 
   // Front constant
-  
-  // ignore: non_constant_identifier_names
   static double _image_size_large;
-  // ignore: non_constant_identifier_names
   static double _image_size_little;
-  // ignore: non_constant_identifier_names
   static double _side_marge;
-  // ignore: non_constant_identifier_names
   static double _playbutton_size_large;
-  // ignore: non_constant_identifier_names
   static double _playbutton_size_little;
-  // ignore: non_constant_identifier_names
   static double _text_size_large;
-  // ignore: non_constant_identifier_names
   static double _text_size_little;
-  // ignore: non_constant_identifier_names
   static Color _main_image_color = Colors.black;
 
   // Front variables

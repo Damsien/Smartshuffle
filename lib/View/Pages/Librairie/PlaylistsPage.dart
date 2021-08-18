@@ -4,9 +4,11 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:smartshuffle/Controller/AppManager/AppInit.dart';
 import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
+
 import 'package:smartshuffle/Model/Util.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
@@ -67,7 +69,7 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
   Widget tabBar() {
     List elements = <Widget>[];
     for(MapEntry elem in this.userPlatforms.entries) {
-      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.getPlatformInformations()['icon']))));
+      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
     }
     return TabBar(
       controller: this.tabController,
@@ -95,7 +97,7 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
 
     List elements = <Widget>[];
     for(MapEntry elem in this.userPlatforms.entries) {
-      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.getPlatformInformations()['icon']))));
+      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
     }
 
     return MaterialApp(
@@ -126,8 +128,8 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
           controller: tabController,
           children: List.generate(tabController.length, (index) {
             return Container(
-              key: PageStorageKey(PlatformsLister.allConnectedControllers[index].platform.name),
-              child: TabView(PlatformsLister.allConnectedControllers[index], parent: this),
+              key: PageStorageKey(GlobalAppController.getAllConnectedControllers()[index].platform.name),
+              child: TabView(GlobalAppController.getAllConnectedControllers()[index], parent: this),
             );
           }),
         ),

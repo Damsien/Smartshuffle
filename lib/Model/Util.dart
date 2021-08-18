@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
-
 
 class GlobalTheme {
 
@@ -17,7 +15,6 @@ class GlobalTheme {
     900: Colors.deepPurple[900]
   };
 
-  // ignore: non_constant_identifier_names
   static final MaterialColor material_color = MaterialColor(0xFF7E57C2, _colorCodes);
 
   static ThemeData themeData = ThemeData(
@@ -32,6 +29,28 @@ class GlobalTheme {
   );
 
 }
+
+class SnackBarController {
+
+  GlobalKey<ScaffoldState> _scaffoldKey;
+  
+  SnackBarController._singleton();
+  factory SnackBarController() {
+    return _instance;
+  }
+
+  static final SnackBarController _instance = SnackBarController._singleton();
+
+  set key(GlobalKey<ScaffoldState> scaffoldKey) => _scaffoldKey = scaffoldKey;
+
+  void showSnackBar(SnackBar snackBar) {
+    ScaffoldMessenger.of(_scaffoldKey.currentContext).showSnackBar(snackBar);
+  }
+  
+
+}
+
+
 
 class StatesManager {
   static Map<String, State> states = Map<String, State>();
@@ -65,25 +84,6 @@ class StatesManager {
   }
 }
 
-class SnackBarController {
-
-  GlobalKey<ScaffoldState> _scaffoldKey;
-  
-  SnackBarController._singleton();
-  factory SnackBarController() {
-    return _instance;
-  }
-
-  static final SnackBarController _instance = SnackBarController._singleton();
-
-  set key(GlobalKey<ScaffoldState> scaffoldKey) => _scaffoldKey = scaffoldKey;
-
-  void showSnackBar(SnackBar snackBar) {
-    ScaffoldMessenger.of(_scaffoldKey.currentContext).showSnackBar(snackBar);
-  }
-  
-
-}
 
 class Util {
 
@@ -108,8 +108,6 @@ class Util {
     return Color(value);
   }
 
-  static String serviceToString(ServicesLister service) => service.toString().split(".")[1];
-
   static int _parseTime(String duration, String timeUnit) {
     final timeMatch = RegExp(r"\d+" + timeUnit).firstMatch(duration);
 
@@ -119,7 +117,7 @@ class Util {
     final timeString = timeMatch.group(0);
     return int.parse(timeString.substring(0, timeString.length - 1));
   }
-  static Duration toDuration(String isoString) {
+  static Duration _toDuration(String isoString) {
     if (!RegExp(
             r"^(-|\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$")
         .hasMatch(isoString)) {
@@ -139,6 +137,5 @@ class Util {
       seconds: seconds,
     );
   }
-
 
 }
