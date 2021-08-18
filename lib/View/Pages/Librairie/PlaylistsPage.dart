@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -32,6 +33,8 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
   bool exitPage = true;
   TabController tabController;
   ValueNotifier<int> initialTabIndex = ValueNotifier<int>(0);
+
+  Map<TabView, bool> isPlaylistOpen = <TabView, bool>{};
 
   Map<ServicesLister, PlatformsController> userPlatforms = new Map<ServicesLister, PlatformsController>();
 
@@ -95,6 +98,10 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
     userPlatformsInit();
     tabController = TabController(initialIndex: initialTabIndex.value, length: this.userPlatforms.length, vsync: this);
 
+    List<TabView> tabs = List.generate(tabController.length, (index) {
+      return TabView(GlobalAppController.getAllConnectedControllers()[index], parent: this);
+    });
+
     List elements = <Widget>[];
     for(MapEntry elem in this.userPlatforms.entries) {
       elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
@@ -124,15 +131,21 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
           ),
           foregroundColor: _materialColor.shade300,
         ),
-        body: TabBarView(
-          controller: tabController,
-          children: List.generate(tabController.length, (index) {
-            return Container(
-              key: PageStorageKey(GlobalAppController.getAllConnectedControllers()[index].platform.name),
-              child: TabView(GlobalAppController.getAllConnectedControllers()[index], parent: this),
-            );
-          }),
-        ),
+        body: WillPopScope(
+            child: TabBarView(
+            controller: tabController,
+            children: tabs,
+          ),
+          onWillPop: () async {
+            if(!isPlaylistOpen[tabs[tabController.index]]) {
+              if(tabController.index == 0) exitDialog();
+              else tabController.animateTo(0);
+              return false;
+            } else {
+              return true;
+            }
+          }
+        )
       )
     );
     

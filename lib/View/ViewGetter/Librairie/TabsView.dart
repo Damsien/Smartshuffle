@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/services.dart';
@@ -26,14 +28,13 @@ class TabView extends StatefulWidget {
   TabView(this.ctrl, {Key key, this.parent}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => _TabViewState();
+  State<StatefulWidget> createState() => TabViewState();
 
 }
 
-class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
+class TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
 
   Widget tab;
-  bool _isPlaylistOpen;
 
   void refresh() {
     setState(() {});
@@ -41,21 +42,21 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
 
   void returnToPlaylist() {
     setState(() {
-      _isPlaylistOpen = false;
       tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist);
+      widget.parent.isPlaylistOpen[widget] = false;
     });
   }
 
   void openPlaylist(Playlist playlist) {
-    _isPlaylistOpen = true;
     setState(() {
       tab = TracksView(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist, notifyParent: refresh,);
+      widget.parent.isPlaylistOpen[widget] = true;
     });
   }
 
   @override
   void initState() {
-    _isPlaylistOpen = false;
+    widget.parent.isPlaylistOpen[widget] = false;
     tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist);
     super.initState();
   }
@@ -63,19 +64,9 @@ class _TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    
-    return WillPopScope(
+    return Container(
+      key: PageStorageKey(widget.ctrl.platform.name),
       child: tab,
-      onWillPop: () {
-        // if(_isPlaylistOpen) {
-          returnToPlaylist();
-          return Future<bool>.value(true);
-        // } else {
-        //   if(widget.parent.tabController.index == 0) widget.parent.exitDialog();
-        //   else widget.parent.tabController.animateTo(0);
-        //   return Future<bool>.value(false);
-        // }
-      },
     );
   }
 
@@ -339,11 +330,10 @@ class _TracksViewState extends State<TracksView> {
       onWillPop: () async {
         if(_tracks.length != _playlist.getTracks.length) {
           setResearch('');
-          return false;
         } else {
           _returnToPlaylist();
-          return false;
         }
+        return false;
       },
     );
   }
@@ -662,7 +652,8 @@ class _PlaylistsViewState extends State<PlaylistsView> {
 
         return finalWidget;
 
-      });
+      }
+    );
   }
   
 }
