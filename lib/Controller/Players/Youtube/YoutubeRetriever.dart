@@ -31,22 +31,18 @@ class YoutubeRetriever {
     if(tr.id == null) {
       return MapEntry(tr, null);
     } else {
-      log(tr.toString());
-      log(tr.id.toString());
       return MapEntry(tr, await streamById(tr.id));
     }
   }
 
   Future<File> streamById(String id) async {
 
-    if(id == null) return null;
-
     StreamManifest manifest = await _yt.videos.streamsClient.getManifest(id);
     AudioOnlyStreamInfo streamInfo;
     try {
       streamInfo = manifest.audioOnly.withHighestBitrate();
     } catch(e) {
-      streamInfo = manifest.audioOnly.first;
+      return null;
     }
 
     File file;

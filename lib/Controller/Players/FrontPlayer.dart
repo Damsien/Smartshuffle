@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -26,20 +28,8 @@ class FrontPlayerController {
   static bool fakeScreenUpdate = false;
 
   //Objects
-  Playlist currentPlaylist = Playlist(
-    ownerId: '',
-    service: null,
-    id: null,
-    name: ''
-  );
-  ValueNotifier<Track> currentTrack = ValueNotifier<Track>(Track(
-    service: ServicesLister.SMARTSHUFFLE,
-    artist: '',
-    title: '',
-    id: null,
-    imageUrlLittle: '',
-    imageUrlLarge: '',)
-  );
+  Playlist currentPlaylist = null;
+  ValueNotifier<Track> currentTrack = ValueNotifier<Track>(null);
   FlutterSecureStorage _storage = FlutterSecureStorage();
 
 
@@ -71,7 +61,7 @@ class FrontPlayerController {
     GlobalQueue.queue.value.add(MapEntry(currentTrack.value, false));
 
     // Init queue
-    _storage.read(key: 'current_queue_index').then((value) => _initQueue(int.parse(value)));
+    _storage.read(key: 'current_queue_index').then((value) => value != null ? _initQueue(int.parse(value)) : null);
   }
 
   void onBuildPage({State view}) {
@@ -323,18 +313,24 @@ class FrontPlayerController {
         // }
 
         if(AudioService.running) {
-          await AudioService.customAction('INDEX_QUEUE_REQUEST');
-          var track = GlobalQueue.queue.value[backIndex];
+          try {
 
-          if(currentTrack.value.id != track.key.id || currentTrack.value.serviceName != track.key.serviceName) {
-            int index = GlobalQueue.queue.value.indexOf(track);
-            GlobalQueue().setCurrentQueueIndex(index);
-            pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
-            _playTrack(GlobalQueue.queue.value[index].key);
+            await AudioService.customAction('INDEX_QUEUE_REQUEST');
+            var track = GlobalQueue.queue.value[backIndex];
 
-            views.forEach((key, value) {
-              value.setState(() {});
-            });
+            if(currentTrack.value.id != track.key.id || currentTrack.value.serviceName != track.key.serviceName) {
+              int index = GlobalQueue.queue.value.indexOf(track);
+              GlobalQueue().setCurrentQueueIndex(index);
+              pageCtrl.jumpToPage(GlobalQueue.currentQueueIndex);
+              _playTrack(GlobalQueue.queue.value[index].key);
+
+              views.forEach((key, value) {
+                value.setState(() {});
+              });
+            }
+
+          } catch(e) {
+            print("Background audio service not running");
           }
         }
       }
