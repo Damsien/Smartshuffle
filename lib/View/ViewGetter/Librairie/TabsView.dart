@@ -428,7 +428,7 @@ class _TrackViewState extends State<TrackView> {
                 builder: (_, value, __) {
                   return Text(
                     track.title,
-                    style: (value ?
+                    style: (track.isSelected.value ?
                       TextStyle(color: _materialColor.shade300) : TextStyle(color: Colors.white)
                     )
                   );
