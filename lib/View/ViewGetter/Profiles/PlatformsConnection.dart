@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
 
 class PlatformsConnection {
   static getView(ServicesLister service, String buttonString) {
-    if (service != null && service != ServicesLister.DEFAULT)
+    if (service != null && service != ServicesLister.SMARTSHUFFLE)
       return PlatformsConnection._genericButton(PlatformsLister.platforms[service],
        buttonString, AssetImage(PlatformsLister.platforms[service].platform.platformInformations['logo']),
        PlatformsLister.platforms[service].platform.platformInformations['main_color'], PlatformsLister.platforms[service].platform.platformInformations['secondary_color']);

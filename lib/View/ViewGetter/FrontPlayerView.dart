@@ -10,13 +10,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus_detector/focus_detector.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:smartshuffle/Controller/GlobalQueue.dart';
+import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
-import 'package:smartshuffle/View/GlobalApp.dart';
+import 'package:smartshuffle/Model/Util.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
@@ -119,7 +119,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
 
 
   List<Widget> _queueListBuilder(List<Track> queue, int length) {
-    List<Widget> list = List<Widget>();
+    List<Widget> list = <Widget>[];
     for(int index=0; index<length; index++) {
       Track track = queue[index];
 
@@ -186,13 +186,13 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
     int noPermaLength = (GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) > -1 ?
         GlobalQueue.noPermanentQueue.value.length-(GlobalQueue.currentQueueIndex+1) : 0);
 
-    List<Track> permanentQueue = List<Track>();
+    List<Track> permanentQueue = <Track>[];
 
     for(Track tr in GlobalQueue.permanentQueue.value) {
       permanentQueue.add(tr);
     }
 
-    List<Track> noPermanentQueue = List<Track>();
+    List<Track> noPermanentQueue = <Track>[];
 
     //TODO subString on list to cut it and retrieve only tracks who are after the current one
     for(int i=0; i<GlobalQueue.noPermanentQueue.value.length; i++) {
@@ -201,7 +201,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
       }
     }
 
-    List<Widget> listView = List<Widget>();
+    List<Widget> listView = <Widget>[];
     if (permaLength != 0) {
 
       listView.add(
@@ -283,7 +283,7 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
     ) {
       _panelCtrl.show();
     }
-    List<Widget> listView = List<Widget>();
+    List<Widget> listView = <Widget>[];
     
     _constantBuilder();
     _sizeBuilder();
@@ -823,8 +823,8 @@ class _QueueListState extends State<QueueList> {
     List<DragAndDropItem> permanentItems;
     List<DragAndDropItem> noPermanentItems;
 
-    List<Track> permanentQueue = List<Track>();
-    List<Track> noPermanentQueue = List<Track>();
+    List<Track> permanentQueue = <Track>[];
+    List<Track> noPermanentQueue = <Track>[];
 
                       
     for(Track tr in GlobalQueue.permanentQueue.value) {

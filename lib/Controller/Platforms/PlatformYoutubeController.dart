@@ -2,14 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:smartshuffle/Services/youtube/api_controller.dart'
-    as ytController;
+import 'package:smartshuffle/Services/youtube/api_controller.dart' as ytController;
 
 class PlatformYoutubeController extends PlatformsController {
   PlatformYoutubeController(Platform platform, {bool isBack}) : super(platform, isBack: isBack) {
@@ -35,12 +34,13 @@ class PlatformYoutubeController extends PlatformsController {
 
   ytController.API yt = new ytController.API();
 
-  getPlatformInformations() {
+  @override
+  get platformInformations {
     return platform.platformInformations;
   }
 
   @override
-  getUserInformations() {
+  get userInformations {
     return platform.userInformations;
   }
 
@@ -48,7 +48,7 @@ class PlatformYoutubeController extends PlatformsController {
   Future<List<Playlist>> getPlaylists({bool refreshing}) async {
     var parent = await super.getPlaylists(refreshing: refreshing);
     if(parent != null) return parent;
-    List<Playlist> finalPlaylists = List<Playlist>();
+    List<Playlist> finalPlaylists = <Playlist>[];
     List<Playlist> playlists = await yt.getPlaylistsList();
     for (Playlist play in platform.playlists.value) {
       for (int i = 0; i < playlists.length; i++) {
@@ -82,7 +82,7 @@ class PlatformYoutubeController extends PlatformsController {
 
   @override
   Future<List<Track>> getTracks(Playlist playlist) async {
-    List<Track> finalTracks = List<Track>();
+    List<Track> finalTracks = <Track>[];
 
     if (playlist.getTracks.length == 0) {
       List<Track> tracks = await yt.getPlaylistSongs(playlist);
@@ -110,8 +110,7 @@ class PlatformYoutubeController extends PlatformsController {
     platform.userInformations['isConnected'] = yt.isLoggedIn;
     platform.userInformations['name'] = yt.displayName;
     platform.userInformations['email'] = yt.email;
-    DataBaseController().updatePlatform(platform);
-    PlatformsController.updateStates();
+    super.connect();
   }
 
   @override
@@ -121,13 +120,9 @@ class PlatformYoutubeController extends PlatformsController {
     for(int i=0; i<platform.playlists.value.length; i++) {
       platform.removePlaylist(i);
     }
-    DataBaseController().updatePlatform(platform);
-    PlatformsController.updateStates();
-  }
-
-  @override
-  updateInformations() {
-    return null;
+    this.platform.removeAllPlaylists();
+    DataBaseController().removePlatform(this.platform);
+    super.disconnect();
   }
 
   @override

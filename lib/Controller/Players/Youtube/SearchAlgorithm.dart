@@ -3,11 +3,8 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:googleapis/youtube/v3.dart' as YTB;
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:smartshuffle/Services/youtube/api_auth.dart';
-import 'package:smartshuffle/Services/youtube/api_controller.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 class SearchAlgorithm {
@@ -15,7 +12,6 @@ class SearchAlgorithm {
   SearchAlgorithm._singleton();
 
   static final SearchAlgorithm _instance = SearchAlgorithm._singleton();
-  YTB.YouTubeApi _youtubeApi;
   YoutubeExplode _ytbE = YoutubeExplode();
 
   factory SearchAlgorithm() {
@@ -27,36 +23,6 @@ class SearchAlgorithm {
   //   var _httpClient = infos.entries.first.key;
   //   return YTB.YouTubeApi(_httpClient);
   // }
-
-  int _parseTime(String duration, String timeUnit) {
-    final timeMatch = RegExp(r"\d+" + timeUnit).firstMatch(duration);
-
-    if (timeMatch == null) {
-      return 0;
-    }
-    final timeString = timeMatch.group(0);
-    return int.parse(timeString.substring(0, timeString.length - 1));
-  }
-  Duration _toDuration(String isoString) {
-    if (!RegExp(
-            r"^(-|\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$")
-        .hasMatch(isoString)) {
-      throw ArgumentError("String does not follow correct format");
-    }
-
-    final weeks = _parseTime(isoString, "W");
-    final days = _parseTime(isoString, "D");
-    final hours = _parseTime(isoString, "H");
-    final minutes = _parseTime(isoString, "M");
-    final seconds = _parseTime(isoString, "S");
-
-    return Duration(
-      days: days + (weeks * 7),
-      hours: hours,
-      minutes: minutes,
-      seconds: seconds,
-    );
-  }
 
 
   String _findVideoId(Map json, {String title, String artist}) {

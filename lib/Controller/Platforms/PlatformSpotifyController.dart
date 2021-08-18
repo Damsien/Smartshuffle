@@ -1,19 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:googleapis/composer/v1.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Services/spotify/api_controller.dart' as spotify;
-import 'package:spotify_sdk/spotify_sdk.dart';
 
 class PlatformSpotifyController extends PlatformsController {
   PlatformSpotifyController(Platform platform, {bool isBack}) : super(platform, isBack: isBack) {
@@ -40,12 +37,12 @@ class PlatformSpotifyController extends PlatformsController {
   spotify.API spController = new spotify.API();
 
   @override
-  getPlatformInformations() {
+  get platformInformations {
     return platform.platformInformations;
   }
 
   @override
-  getUserInformations() {
+  get userInformations {
     return platform.userInformations;
   }
 
@@ -53,7 +50,7 @@ class PlatformSpotifyController extends PlatformsController {
   Future<List<Playlist>> getPlaylists({bool refreshing}) async {
     var parent = await super.getPlaylists(refreshing: refreshing);
     if(parent != null) return parent;
-    List<Playlist> finalPlaylists = List<Playlist>();
+    List<Playlist> finalPlaylists = <Playlist>[];
     List<Playlist> playlists = await spController.getPlaylistsList();
     for (Playlist play in platform.playlists.value) {
       for (int i = 0; i < playlists.length; i++) {
@@ -87,7 +84,7 @@ class PlatformSpotifyController extends PlatformsController {
 
   @override
   Future<List<Track>> getTracks(Playlist playlist) async {
-    List<Track> finalTracks = List<Track>();
+    List<Track> finalTracks = <Track>[];
 
     if (playlist.getTracks.isEmpty) {
       List<Track> tracks = await spController.getPlaylistSongs(playlist);
@@ -114,8 +111,7 @@ class PlatformSpotifyController extends PlatformsController {
     platform.userInformations['isConnected'] = spController.isLoggedIn;
     platform.userInformations['name'] = spController.displayName;
     platform.userInformations['email'] = spController.email;
-    DataBaseController().updatePlatform(platform);
-    PlatformsController.updateStates();
+    super.connect();
   }
 
   @override
@@ -125,13 +121,9 @@ class PlatformSpotifyController extends PlatformsController {
     for(int i=0; i<platform.playlists.value.length; i++) {
       platform.removePlaylist(i);
     }
-    DataBaseController().updatePlatform(platform);
-    PlatformsController.updateStates();
-  }
-
-  @override
-  updateInformations() {
-    return null;
+    this.platform.removeAllPlaylists();
+    DataBaseController().removePlatform(this.platform);
+    super.disconnect();
   }
 
   @override
@@ -145,7 +137,7 @@ class PlatformSpotifyController extends PlatformsController {
 
   @override
   Track removeTrackFromPlaylist(int playlistIndex, int trackIndex) {
-    
+    throw UnimplementedError();
   }
 
   @override
@@ -176,7 +168,7 @@ class PlatformSpotifyController extends PlatformsController {
   @override
   Playlist mergePlaylist(Playlist toMergeTo, Playlist toMerge) {
     toMergeTo..addTracks(toMerge.getTracks, isNew: true);
-    List<String> uris = List<String>();
+    List<String> uris = <String>[];
     for(Track tr in toMerge.getTracks) {
       uris.add('spotify:track:${tr.id}');
     }
@@ -186,7 +178,7 @@ class PlatformSpotifyController extends PlatformsController {
 
   @override
   void renamePlaylist(Playlist playlist, String name) {
-    playlist.rename(name);
+    playlist.name = name;
     spotify.API().setPlaylistName(playlist);
   }
 

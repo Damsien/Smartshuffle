@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -31,12 +31,12 @@ class PlatformDefaultController extends PlatformsController {
   }
 
   @override
-  getPlatformInformations() {
+  get platformInformations {
     return platform.platformInformations;
   }
 
   @override
-  getUserInformations() {
+  get userInformations {
     return platform.userInformations;
   }
 
@@ -70,10 +70,6 @@ class PlatformDefaultController extends PlatformsController {
     throw UnimplementedError();
   }
 
-  @override
-  updateInformations() {
-    return null;
-  }
 
   @override
   FutureOr<Playlist> addPlaylist(
@@ -88,7 +84,7 @@ class PlatformDefaultController extends PlatformsController {
       for (Playlist play in this.platform.playlists.value) {
         if (play.id == playlist.id) return null;
       }
-      playlist.setService(ServicesLister.DEFAULT);
+      playlist.service = ServicesLister.SMARTSHUFFLE;
       return this.platform.addPlaylist(playlist..setTracks(playlist.getTracks, isNew: true), isNew: true);
     }
     return this.platform.addPlaylist(
@@ -97,7 +93,7 @@ class PlatformDefaultController extends PlatformsController {
         ownerId: ownerId,
         ownerName: ownerName,
         id: this.platform.playlists.value.length.toString(),
-        service: ServicesLister.DEFAULT,
+        service: ServicesLister.SMARTSHUFFLE,
         imageUrl: imageUrl,
         uri: (playlistUri != null ? Uri.parse(playlistUri) : Uri.http("", ""))
       ),

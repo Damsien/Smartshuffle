@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Model/Util.dart';
 
-import 'package:smartshuffle/Controller/ServicesLister.dart';
-import 'package:smartshuffle/View/GlobalApp.dart';
 import 'package:smartshuffle/View/ViewGetter/FormsView.dart';
 import 'package:smartshuffle/View/ViewGetter/Profiles/ProfileView.dart';
 
@@ -31,11 +31,11 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
 
   Widget getPlatforms(MapEntry plat) {
     Widget platform;
-    if(plat.value.getUserInformations()['isConnected'] == false)
-      platform = plat.value.getView(service: plat.key, view: ProfileViewType.PlatformConnection,
+    if(plat.value.userInformations['isConnected'] == false)
+      platform = ProfileView.getView(service: plat.key, view: ProfileViewType.PlatformConnection,
        parameters: {'buttonString': AppLocalizations.of(context).globalConnect+" "+plat.value.platform.name});
     else
-      platform = plat.value.getView(service: plat.key, view: ProfileViewType.PlatformInformation);
+      platform = ProfileView.getView(service: plat.key, view: ProfileViewType.PlatformInformation);
     return Container(
       alignment: Alignment.centerLeft,
       margin: EdgeInsets.only(bottom: 20),
@@ -59,7 +59,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    PlatformsController.setProfilePageState(this);
+    StatesManager.setProfilePageState(this);
 
     return MaterialApp(
       key: this.key,

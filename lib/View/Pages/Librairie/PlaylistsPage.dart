@@ -1,19 +1,16 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:smartshuffle/Controller/AppManager/AppInit.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
-import 'package:smartshuffle/Model/Object/Platform.dart';
 
-import 'package:smartshuffle/Model/Object/Playlist.dart';
-import 'package:device_apps/device_apps.dart';
-import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:smartshuffle/View/GlobalApp.dart';
+import 'package:smartshuffle/Model/Util.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 
@@ -36,6 +33,8 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
   bool exitPage = true;
   TabController tabController;
   ValueNotifier<int> initialTabIndex = ValueNotifier<int>(0);
+
+  Map<TabView, bool> isPlaylistOpen = <TabView, bool>{};
 
   Map<ServicesLister, PlatformsController> userPlatforms = new Map<ServicesLister, PlatformsController>();
 
@@ -71,9 +70,9 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
 
 
   Widget tabBar() {
-    List elements = new List<Widget>();
+    List elements = <Widget>[];
     for(MapEntry elem in this.userPlatforms.entries) {
-      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.getPlatformInformations()['icon']))));
+      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
     }
     return TabBar(
       controller: this.tabController,
@@ -85,7 +84,7 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
   void userPlatformsInit() {
     this.userPlatforms.clear();
     for(MapEntry<ServicesLister, PlatformsController> elem in PlatformsLister.platforms.entries) {
-      if(elem.value.getUserInformations()['isConnected'] == true)
+      if(elem.value.userInformations['isConnected'] == true)
         this.userPlatforms[elem.key] = elem.value;
     }
   }
@@ -94,14 +93,18 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    PlatformsController.setPlaylistsPageState(this);
+    StatesManager.setPlaylistsPageState(this);
 
     userPlatformsInit();
     tabController = TabController(initialIndex: initialTabIndex.value, length: this.userPlatforms.length, vsync: this);
 
-    List elements = List<Widget>();
+    List<TabView> tabs = List.generate(tabController.length, (index) {
+      return TabView(GlobalAppController.getAllConnectedControllers()[index], parent: this);
+    });
+
+    List elements = <Widget>[];
     for(MapEntry elem in this.userPlatforms.entries) {
-      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.getPlatformInformations()['icon']))));
+      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
     }
 
     return MaterialApp(
@@ -128,15 +131,21 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
           ),
           foregroundColor: _materialColor.shade300,
         ),
-        body: TabBarView(
-          controller: tabController,
-          children: List.generate(tabController.length, (index) {
-            return Container(
-              key: PageStorageKey(GlobalAppController.getAllConnectedControllers()[index].platform.name),
-              child: TabView(GlobalAppController.getAllConnectedControllers()[index], parent: this),
-            );
-          }),
-        ),
+        body: WillPopScope(
+            child: TabBarView(
+            controller: tabController,
+            children: tabs,
+          ),
+          onWillPop: () async {
+            if(!isPlaylistOpen[tabs[tabController.index]]) {
+              if(tabController.index == 0) exitDialog();
+              else tabController.animateTo(0);
+              return false;
+            } else {
+              return true;
+            }
+          }
+        )
       )
     );
     

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 
@@ -18,8 +17,7 @@ class Playlist {
   String _imageUrl = DEFAULT_IMAGE_URL;
   ServicesLister _service;
 
-  List<MapEntry<Track, DateTime>> _tracks =
-      new List<MapEntry<Track, DateTime>>();
+  List<MapEntry<Track, DateTime>> _tracks = <MapEntry<Track, DateTime>>[];
 
   Map<String, bool> _sortDirection = {'title': null, 'last_added': null, 'artist': null};
 
@@ -35,26 +33,70 @@ class Playlist {
     _id = id;
     _name = name;
     _ownerId = ownerId;
-    if(imageUrl != null) _imageUrl = imageUrl;
     _uri = uri;
     _ownerName = ownerName;
     _service = service;
+    if(imageUrl != null) _imageUrl = imageUrl;
     if (tracks != null) _tracks = tracks;
   }
 
+  /*  SETTERS AND GETTER  */
+
+  // Id
+  set id(String id) {
+    _id = id;
+    // DataBaseController().updatePlaylist(this);
+  }
   String get id => _id;
+
+  // Name
+  set name(String name) {
+    _name = name;
+    DataBaseController().updatePlaylist(this);
+  }
   String get name => _name;
+  
+  // Owner
+  set ownerId(String ownerId) {
+    _ownerId = ownerId;
+    DataBaseController().updatePlaylist(this);
+  }
   String get ownerId => _ownerId;
+  set ownerName(String ownerName) {
+    _ownerName = ownerName;
+    DataBaseController().updatePlaylist(this);
+  }
   String get ownerName => _ownerName;
+
+  // Image url
+  set imageUrl(String imageUrl) {
+    _imageUrl = imageUrl;
+    DataBaseController().updatePlaylist(this);
+  }
   String get imageUrl => _imageUrl;
+
+  // Sort direction
   Map<String, bool> get sortDirection => _sortDirection;
+
+  // Uri
+  set uriPath(String uri) {
+    _uri = Uri.parse(uri);
+    DataBaseController().updatePlaylist(this);
+  }
   Uri get uri => _uri;
-  ServicesLister  get service => _service;
+
+  // Service
+  set service(ServicesLister service) {
+    _service = service;
+    DataBaseController().updatePlaylist(this);
+  }
+  ServicesLister get service => _service;
+
+  // Tracks
   List<MapEntry<Track, DateTime>> get tracks => _tracks;
 
-  ///Les paramètres à comparer pour savoir si ils sont égales
-  @override
-  List<Object> get props => [name, id];
+
+  /*  TRACKS MANAGER  */
 
   String addTrack(Track track, {@required bool isNew}) {
     tracks.insert(0, MapEntry(track, DateTime.now()));
@@ -69,22 +111,8 @@ class Playlist {
     return deletedTrack;
   }
 
-  void setId(String id) {
-    _id = id;
-    // DataBaseController().updatePlaylist(this);
-  }
-
-  void setUri(String uri) {
-    _uri = Uri.parse(uri);
-  }
-
-  void rename(String name) {
-    _name = name;
-    DataBaseController().updatePlaylist(this);
-  }
-
   List<Track> get getTracks {
-    List<Track> finalTracks = new List<Track>();
+    List<Track> finalTracks = <Track>[];
     for (MapEntry<Track, DateTime> track in _tracks) {
       finalTracks.add(track.key);
     }
@@ -119,18 +147,16 @@ class Playlist {
     return allTracks;
   }
 
-  NetworkImage _updateImage() {
+  
+
+  String _updateImage() {
     if(_imageUrl == Playlist.DEFAULT_IMAGE_URL) {
       if(_tracks.length >= 1) {
         _imageUrl = _tracks[0].key.imageUrlLarge;
       }
     }
     DataBaseController().updatePlaylist(this);
-  }
-
-  ServicesLister setService(ServicesLister service) {
-    _service = service;
-    DataBaseController().updatePlaylist(this);
+    return _imageUrl;
   }
 
   List<Track> reorder(int oldIndex, int newIndex) {

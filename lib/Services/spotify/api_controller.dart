@@ -1,8 +1,5 @@
-import 'dart:ffi';
-
-import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 
 import 'api_path.dart';
@@ -48,7 +45,7 @@ class API {
 
     String next = json['next'];
 
-    List<Playlist> list = new List();
+    List<Playlist> list = <Playlist>[];
 
     do {
       next = json['next'];
@@ -69,7 +66,7 @@ class API {
 
     String next = json['next'];
 
-    List<Track> tracks = new List();
+    List<Track> tracks = <Track>[];
 
     do {
       next = json['next'];
@@ -105,8 +102,8 @@ class API {
   Future<Playlist> createPlaylist(Playlist p) async {
     String body = '{"name": "${p.name}", "public": false}';
     final response = await post(APIPath.createPlaylist(_userId), headers: _prepareHeader(), body: body);
-    p.setUri(jsonDecode(response.body)['uri']);
-    p.setId(jsonDecode(response.body)['id']);
+    p.uriPath = jsonDecode(response.body)['uri'];
+    p.id = jsonDecode(response.body)['id'];
     return p;
   }
 
@@ -215,7 +212,7 @@ class API {
             id: id,
             title: name,
             artist: artist,
-            addDate: DateTime.parse(addDate),
+            addedDate: DateTime.parse(addDate),
             imageUrlLittle: imageUrlLittle,
             imageUrlLarge: imageUrlLarge,
             totalDuration: duration,

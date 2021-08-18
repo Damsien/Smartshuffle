@@ -1,14 +1,10 @@
-import 'dart:developer';
-
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:smartshuffle/Controller/DatabaseController.dart';
-import 'package:smartshuffle/Controller/GlobalQueue.dart';
-import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/page_controller.dart';
@@ -37,7 +33,7 @@ class FrontPlayerController {
     name: ''
   );
   ValueNotifier<Track> currentTrack = ValueNotifier<Track>(Track(
-    service: ServicesLister.DEFAULT,
+    service: ServicesLister.SMARTSHUFFLE,
     artist: '',
     title: '',
     id: null,
@@ -116,7 +112,7 @@ class FrontPlayerController {
             }
           }  
         } else {
-          currentTrack.value.setIsSelected(true);
+          currentTrack.value.selecting = true;
         }
 
 
@@ -249,13 +245,13 @@ class FrontPlayerController {
     }
 
     Map<String, List<String>> queue = Map<String, List<String>>();
-    queue['name'] = List<String>();
-    queue['artist'] = List<String>();
-    queue['imageurllarge'] = List<String>();
-    queue['imageurllittle'] = List<String>();
-    queue['id'] = List<String>();
-    queue['service'] = List<String>();
-    queue['duration'] = List<String>();
+    queue['name'] = <String>[];
+    queue['artist'] = <String>[];
+    queue['imageurllarge'] = <String>[];
+    queue['imageurllittle'] = <String>[];
+    queue['id'] = <String>[];
+    queue['service'] = <String>[];
+    queue['duration'] = <String>[];
     for(MapEntry<Track, bool> me in frontQueue) {
       queue['name'].add(me.key.title);
       queue['artist'].add(me.key.artist);
@@ -284,7 +280,7 @@ class FrontPlayerController {
   Future<void> _createQueue(Playlist playlist, {
     @required bool isShuffle,
     Track track
-  }) {
+  }) async {
     currentPlaylist = playlist;
 
     this.isShuffle = isShuffle;
@@ -307,7 +303,7 @@ class FrontPlayerController {
 
     }
 
-    GlobalQueue().queueDatabase();
+    await GlobalQueue().queueDatabase();
   }
 
   /// Listen to screen state update

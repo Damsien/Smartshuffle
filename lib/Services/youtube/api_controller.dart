@@ -1,14 +1,9 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/youtube/v3.dart' as YTB;
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 
-import 'api_path.dart';
-
-import 'package:http/http.dart';
 import 'dart:io';
-import 'dart:convert';
 
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -51,7 +46,7 @@ class API {
 
     String nextPageToken = response.nextPageToken;
 
-    List<Playlist> list = new List();
+    List<Playlist> list = <Playlist>[];
 
     do {
       nextPageToken = response.nextPageToken;
@@ -83,7 +78,7 @@ class API {
 
     String nextPageToken = response.nextPageToken;
 
-    List<Track> tracks = new List();
+    List<Track> tracks = <Track>[];
 
     do {
       nextPageToken = response.nextPageToken;

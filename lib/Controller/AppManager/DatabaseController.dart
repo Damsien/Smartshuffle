@@ -1,8 +1,6 @@
-
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:smartshuffle/Controller/ServicesLister.dart';
+import 'package:smartshuffle/Controller/AppManager/AppInit.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
@@ -91,7 +89,6 @@ class DataBaseController {
         ownername TEXT,
         imageurl TEXT,
         uri STRING,
-        FOREIGN KEY(platform_name) REFERENCES platform(name),
         PRIMARY KEY(id, service)
       );
     ''');
@@ -129,18 +126,25 @@ class DataBaseController {
   }
 
   Future<void> removePlatform(Platform platform) async {
+    await removePlaylistFromPlatform(platform);
     await _db.delete('platform', where: 'name = ?', whereArgs: [platform.name]);
   }
 
+  Future<void> removePlaylistFromPlatform(Platform platform) async {
+    for(Playlist playlist in platform.playlists.value) {
+      removePlaylist(playlist);
+    }
+  }
+
   Future<void> removePlaylist(Playlist playlist) async {
-    await _db.delete('playlist', where: 'id = ? AND service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
-    await _db.delete('link_playlist_track', where: 'playlist_id = ? AND playlist_service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
+    await _db.delete('playlist', where: 'id = ? AND service = ?', whereArgs: [playlist.id, PlatformsLister.serviceToString(playlist.service)]);
+    await _db.delete('link_playlist_track', where: 'playlist_id = ? AND playlist_service = ?', whereArgs: [playlist.id, PlatformsLister.serviceToString(playlist.service)]);
   }
 
   Future<void> removeLink(Playlist playlist, Track track) async {
     await _db.delete('link_playlist_track',
       where: 'track_id = ? AND track_service = ? AND playlist_id = ? AND playlist_service = ?',
-      whereArgs: [track.id, track.serviceName, playlist.id, serviceToString(playlist.service)]
+      whereArgs: [track.id, track.serviceName, playlist.id, PlatformsLister.serviceToString(playlist.service)]
     );
   }
 
@@ -166,7 +170,7 @@ class DataBaseController {
   }
 
   Future<void> updatePlaylist(Playlist playlist) async {
-    await _db.update('playlist', playlist.toMap(), where: 'id = ? AND service = ?', whereArgs: [playlist.id, serviceToString(playlist.service)]);
+    await _db.update('playlist', playlist.toMap(), where: 'id = ? AND service = ?', whereArgs: [playlist.id, PlatformsLister.serviceToString(playlist.service)]);
   }
 
   Future<void> updateQueue(Track track, int position) async {
@@ -198,7 +202,7 @@ class DataBaseController {
   void insertTrack(Playlist playlist, Track track) {
     _batch.insert('track', track.toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
     _batch.insert('link_playlist_track',
-      {'track_id': track.id, 'track_service': track.serviceName, 'playlist_id': playlist.id, 'playlist_service': serviceToString(playlist.service)},
+      {'track_id': track.id, 'track_service': track.serviceName, 'playlist_id': playlist.id, 'playlist_service': PlatformsLister.serviceToString(playlist.service)},
       conflictAlgorithm: ConflictAlgorithm.ignore
     );
   }
@@ -265,7 +269,7 @@ class DataBaseController {
       INNER JOIN link_playlist_track
       ON track.trackid = link_playlist_track.track_id AND track.service = link_playlist_track.track_service
       WHERE
-        link_playlist_track.playlist_id = "${playlist.id}" AND link_playlist_track.playlist_service = "${serviceToString(playlist.service)}";
+        link_playlist_track.playlist_id = "${playlist.id}" AND link_playlist_track.playlist_service = "${PlatformsLister.serviceToString(playlist.service)}";
     ''');
     List<Track> tracks = query.isNotEmpty ?
       query.map((e) => Track.fromMap(e)).toList() : [];
