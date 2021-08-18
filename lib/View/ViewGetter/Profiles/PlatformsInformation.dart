@@ -9,7 +9,7 @@ class PlatformsInformation {
 
 
   static getView(ServicesLister service) {
-    if(service != null && service != ServicesLister.DEFAULT) return PlatformsInformation._genericInformations(PlatformsLister.platforms[service], PlatformsLister.platforms[service].platform.name);
+    if(service != null && service != ServicesLister.SMARTSHUFFLE) return PlatformsInformation._genericInformations(PlatformsLister.platforms[service], PlatformsLister.platforms[service].platform.name);
     else return Container();
   }
 

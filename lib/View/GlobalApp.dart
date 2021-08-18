@@ -71,7 +71,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
 
   // void fakers() {
   //   PlatformsController ctrl =
-  //       PlatformsLister.platforms[ServicesLister.DEFAULT];
+  //       PlatformsLister.platforms[ServicesLister.SMARTSHUFFLE];
   //   for (int i = 0; i < 10; i++) {
   //     ctrl.addPlaylist(
   //         name: ctrl.platform.name + ' n°$i',
@@ -89,7 +89,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   //               totalDuration: Duration(
   //                   minutes: Random().nextInt(4),
   //                   seconds: Random().nextInt(59)),
-  //               service: ServicesLister.DEFAULT,
+  //               service: ServicesLister.SMARTSHUFFLE,
   //               imageUrlLittle: 'https://source.unsplash.com/random',
   //               imageUrlLarge: 'https://source.unsplash.com/random',
   //               id: j.toString()),

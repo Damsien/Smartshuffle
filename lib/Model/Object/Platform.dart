@@ -66,6 +66,10 @@ class Platform {
     return deletedPlaylist;
   }
 
+  Future<void> removeAllPlaylists() async {
+    playlists.value.clear();
+    await DataBaseController().removePlaylistFromPlatform(this);
+  }
 
 
   List<Playlist> setPlaylist(List<Playlist> playlists, {@required bool isNew}) {

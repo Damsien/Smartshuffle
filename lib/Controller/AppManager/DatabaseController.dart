@@ -89,7 +89,6 @@ class DataBaseController {
         ownername TEXT,
         imageurl TEXT,
         uri STRING,
-        FOREIGN KEY(platform_name) REFERENCES platform(name),
         PRIMARY KEY(id, service)
       );
     ''');
@@ -127,7 +126,14 @@ class DataBaseController {
   }
 
   Future<void> removePlatform(Platform platform) async {
+    await removePlaylistFromPlatform(platform);
     await _db.delete('platform', where: 'name = ?', whereArgs: [platform.name]);
+  }
+
+  Future<void> removePlaylistFromPlatform(Platform platform) async {
+    for(Playlist playlist in platform.playlists.value) {
+      removePlaylist(playlist);
+    }
   }
 
   Future<void> removePlaylist(Playlist playlist) async {

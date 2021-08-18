@@ -38,9 +38,9 @@ class GlobalAppController {
     Map<String, Platform> platforms = await DataBaseController().getPlatforms();
 
     if(platforms['SmartShuffle'] != null) {
-      PlatformsLister.platforms[ServicesLister.DEFAULT] = new PlatformDefaultController(platforms['Smartshuffle']);
+      PlatformsLister.platforms[ServicesLister.SMARTSHUFFLE] = new PlatformDefaultController(platforms['Smartshuffle']);
     } else {
-      PlatformsLister.platforms[ServicesLister.DEFAULT] = new PlatformDefaultController(Platform("Smartshuffle"));
+      PlatformsLister.platforms[ServicesLister.SMARTSHUFFLE] = new PlatformDefaultController(Platform("Smartshuffle"));
     }
 
     // if(await storage.containsKey(key: serviceToString(ServicesLister.SPOTIFY).toLowerCase())) {

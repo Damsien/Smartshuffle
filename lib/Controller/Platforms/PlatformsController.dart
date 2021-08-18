@@ -83,14 +83,12 @@ abstract class PlatformsController {
 
   connect() {
     DataBaseController().updatePlatform(platform);
-    // ignore: invalid_use_of_protected_member
-    StatesManager.states['ProfilePage'].setState(() {});
+    StatesManager.updateStates();
   }
 
   disconnect() {
     DataBaseController().updatePlatform(platform);
-    // ignore: invalid_use_of_protected_member
-    StatesManager.states['ProfilePage'].setState(() {});
+    StatesManager.updateStates();
   }
 
   /*  USER'S SERVICES */

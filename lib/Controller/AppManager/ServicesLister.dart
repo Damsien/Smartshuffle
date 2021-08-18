@@ -6,7 +6,7 @@ import 'package:smartshuffle/Model/Object/Platform.dart';
 
 
 enum ServicesLister {
-  DEFAULT,
+  SMARTSHUFFLE,
   SPOTIFY,
   YOUTUBE
 }
@@ -20,18 +20,20 @@ class PlatformsLister {
   static void initBackPlayer() {
     platforms =
     {
-      ServicesLister.DEFAULT: new PlatformDefaultController(Platform("SmartShuffle"), isBack: true),
+      ServicesLister.SMARTSHUFFLE: new PlatformDefaultController(Platform("Smartshuffle"), isBack: true),
       ServicesLister.SPOTIFY: new PlatformSpotifyController(Platform("Spotify", platformInformations: {'package': 'com.spotify.music'}), isBack: true),
       ServicesLister.YOUTUBE: new PlatformYoutubeController(Platform("Youtube", platformInformations: {'package': 'com.google.android.youtube'}), isBack: true)
     };
   }
 
   static ServicesLister nameToService(String name) {
-    if(name == "DEFAULT") return ServicesLister.DEFAULT;
-    if(name == "SPOTIFY") return ServicesLister.SPOTIFY;
-    if(name == "YOUTUBE") return ServicesLister.YOUTUBE;
+    if(name == "SMARTSHUFFLE" || name == "Smartshuffle") return ServicesLister.SMARTSHUFFLE;
+    if(name == "SPOTIFY" || name == "Spotify") return ServicesLister.SPOTIFY;
+    if(name == "YOUTUBE" || name == "Youtube") return ServicesLister.YOUTUBE;
   }
   
   static String serviceToString(ServicesLister service) => service.toString().split(".")[1];
+
+  static String serviceToName(ServicesLister service) => service.toString().split(".")[1].split("")[0].toUpperCase()+service.toString().split(".")[1].substring(1).toLowerCase();
 
 }

@@ -33,7 +33,7 @@ class FrontPlayerController {
     name: ''
   );
   ValueNotifier<Track> currentTrack = ValueNotifier<Track>(Track(
-    service: ServicesLister.DEFAULT,
+    service: ServicesLister.SMARTSHUFFLE,
     artist: '',
     title: '',
     id: null,

@@ -84,7 +84,7 @@ class PlatformDefaultController extends PlatformsController {
       for (Playlist play in this.platform.playlists.value) {
         if (play.id == playlist.id) return null;
       }
-      playlist.service = ServicesLister.DEFAULT;
+      playlist.service = ServicesLister.SMARTSHUFFLE;
       return this.platform.addPlaylist(playlist..setTracks(playlist.getTracks, isNew: true), isNew: true);
     }
     return this.platform.addPlaylist(
@@ -93,7 +93,7 @@ class PlatformDefaultController extends PlatformsController {
         ownerId: ownerId,
         ownerName: ownerName,
         id: this.platform.playlists.value.length.toString(),
-        service: ServicesLister.DEFAULT,
+        service: ServicesLister.SMARTSHUFFLE,
         imageUrl: imageUrl,
         uri: (playlistUri != null ? Uri.parse(playlistUri) : Uri.http("", ""))
       ),

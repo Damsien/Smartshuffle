@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:googleapis/composer/v1.dart';
+import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
 import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/Youtube/YoutubeRetriever.dart';
@@ -119,6 +121,8 @@ class PlatformSpotifyController extends PlatformsController {
     for(int i=0; i<platform.playlists.value.length; i++) {
       platform.removePlaylist(i);
     }
+    this.platform.removeAllPlaylists();
+    DataBaseController().removePlatform(this.platform);
     super.disconnect();
   }
 

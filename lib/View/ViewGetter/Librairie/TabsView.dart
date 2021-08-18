@@ -848,12 +848,12 @@ class TabsView {
                   child: Text(AppLocalizations.of(context).tabsViewAddToService+" SmartShuffle", style: TextStyle(color: Colors.white)),
                   onPressed: () {
                     Navigator.pop(dialogContext);
-                    choosePlaylistToAddTrack(track, ctrl: PlatformsLister.platforms[ServicesLister.DEFAULT]);
+                    choosePlaylistToAddTrack(track, ctrl: PlatformsLister.platforms[ServicesLister.SMARTSHUFFLE]);
                   },
                 ),
               ),
               () {
-                if(ctrl.platform.name != PlatformsLister.platforms[ServicesLister.DEFAULT].platform.name) {
+                if(ctrl.platform.name != PlatformsLister.platforms[ServicesLister.SMARTSHUFFLE].platform.name) {
                   return Container(
                     child: FlatButton(
                       child: Text(AppLocalizations.of(context).tabsViewAddToService+" $ctrlName", style: TextStyle(color: Colors.white)),
@@ -1368,7 +1368,7 @@ class TabsView {
                 Navigator.pop(dialogContext);
                 Playlist play;
                 state.setState(() {
-                  play = PlatformsLister.platforms[ServicesLister.DEFAULT].addPlaylist(playlist: playlist,);
+                  play = PlatformsLister.platforms[ServicesLister.SMARTSHUFFLE].addPlaylist(playlist: playlist,);
                 });
                 if(play == null) {
                   showDialog(
@@ -1399,7 +1399,7 @@ class TabsView {
   void mergePlaylist(Playlist playlist, {@required PlatformsController ctrl}) {
     String name = playlist.name;
     List<Widget> allCards;
-    PlatformsController defaultCtrl = PlatformsLister.platforms[ServicesLister.DEFAULT];
+    PlatformsController defaultCtrl = PlatformsLister.platforms[ServicesLister.SMARTSHUFFLE];
     
     showDialog(
       context: context,
