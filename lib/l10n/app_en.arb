@@ -30,6 +30,7 @@
     "globalReport": "Report",
     "globalPrecision": "Precision",
     "globalMoreInfo": "More info",
+    "globalTrackNotFound": "Error : track not found",
 
     "globalArtist": "Artist",
     "globalArtists": "Artists",

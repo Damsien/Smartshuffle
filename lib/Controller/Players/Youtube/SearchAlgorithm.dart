@@ -32,6 +32,7 @@ class SearchAlgorithm {
     String songIdType;
     int arrayNumber;
 
+    try {
       if(json['contents']['sectionListRenderer'] != null) {
 
         if(json['contents']['sectionListRenderer']['contents'][0]['musicShelfRenderer'] == null) {
@@ -109,6 +110,9 @@ class SearchAlgorithm {
 
         }
       }
+    } catch(e) {
+      videoId = null;
+    }
 
     return videoId;
 
@@ -188,35 +192,38 @@ class SearchAlgorithm {
       Map jsonResponse = jsonDecode(response.body);
 
       String videoId = _findVideoId(jsonResponse, title: tTitle, artist: tArtist);
+      
+      if(videoId != null) {
 
-      Video video = await _ytbE.videos.get(videoId);
+        Video video = await _ytbE.videos.get(videoId);
 
-      String name = video.title;
-      String artist = video.author;
-      if(artist.contains(' - Topic')) artist = artist.split(' - Topic')[0];
-      // print('Track found : $name $artist');
+        String name = video.title;
+        String artist = video.author;
+        if(artist.contains(' - Topic')) artist = artist.split(' - Topic')[0];
+        // print('Track found : $name $artist');
 
-      String id = videoId;
-      String imageUrlLittle = video.thumbnails.highResUrl;
-      String imageUrlLarge;
-      try {
-        imageUrlLarge = video.thumbnails.maxResUrl;
-      } catch(e) {
-        imageUrlLarge = 'https://source.unsplash.com/random';
+        String id = videoId;
+        String imageUrlLittle = video.thumbnails.highResUrl;
+        String imageUrlLarge;
+        try {
+          imageUrlLarge = video.thumbnails.maxResUrl;
+        } catch(e) {
+          imageUrlLarge = 'https://source.unsplash.com/random';
+        }
+        Duration duration = video.duration;
+
+        Track track = Track(
+          id: id,
+          title: name,
+          artist: artist,
+          imageUrlLittle: imageUrlLittle,
+          imageUrlLarge: imageUrlLarge,
+          totalDuration: duration,
+          service: ServicesLister.YOUTUBE
+        );
+
+        return track;
       }
-      Duration duration = video.duration;
-
-      Track track = Track(
-        id: id,
-        title: name,
-        artist: artist,
-        imageUrlLittle: imageUrlLittle,
-        imageUrlLarge: imageUrlLarge,
-        totalDuration: duration,
-        service: ServicesLister.YOUTUBE
-      );
-
-      return track;
 
     } catch(e, trace) {
       print(e);

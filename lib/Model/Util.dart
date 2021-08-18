@@ -1,4 +1,9 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
+import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 class GlobalTheme {
 
@@ -34,7 +39,20 @@ class SnackBarController {
 
   GlobalKey<ScaffoldState> _scaffoldKey;
   
-  SnackBarController._singleton();
+  SnackBarController._singleton() {
+    AudioService.customEventStream.listen((event) {
+      if(event is Map && event['SNACKBAR'] != null) {
+        switch(event['SNACKBAR']) {
+
+          case 'track_not_found': {
+            this.showSnackBar(SnackBar(content: Text(AppLocalizations.of(_scaffoldKey.currentContext).globalTrackNotFound)));
+          } break;
+
+        }
+      }
+    });
+  }
+  
   factory SnackBarController() {
     return _instance;
   }

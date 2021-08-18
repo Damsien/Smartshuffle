@@ -3,13 +3,17 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
 import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/Model/Util.dart';
 class AudioPlayerTask extends BackgroundAudioTask {
 
   static const int DEFAULT_LENGTH_QUEUE = 5;
@@ -154,8 +158,12 @@ class AudioPlayerTask extends BackgroundAudioTask {
       return Future<MapEntry<Track, File>>.value(me);
     } else {
       File file = await track.loadFile();
-      _synchroTrackMediaitem(file, track, track);
-      return MapEntry(track, file);
+      if(file != null) {
+        _synchroTrackMediaitem(file, track, track);
+        return MapEntry(track, file);
+      } else {
+        return MapEntry(track, null);
+      }
     }
   }
   
@@ -179,38 +187,44 @@ class AudioPlayerTask extends BackgroundAudioTask {
     }
 
     MapEntry<Track, File> foundTrack = await _getFilePath(track);
-    final MediaItem mediaItem = _queue.firstWhere((element) => 
-    (element.extras['track_id'] == track.id && element.extras['service_name'] == track.serviceName),
-    orElse: () => null);
 
-    if(foundTrack.key.id != null && mediaItem != null) {
+    if(foundTrack.value != null) {    
+      final MediaItem mediaItem = _queue.firstWhere((element) => 
+      (element.extras['track_id'] == track.id && element.extras['service_name'] == track.serviceName),
+      orElse: () => null);
 
-      print(foundTrack.key);
-      
-      // Tell the UI and media notification what we're playing.
-      AudioServiceBackground.setMediaItem(mediaItem);
+      if(foundTrack.key.id != null && mediaItem != null) {
 
-      // Play when ready.
-      if(!_player.playing) {
-        _player.play();
-      }
+        print(foundTrack.key);
+        
+        // Tell the UI and media notification what we're playing.
+        AudioServiceBackground.setMediaItem(mediaItem);
 
-      // Start loading something (will play when ready).
-      print('mediaitem : ${mediaItem.id}');
-      await _player.setFilePath(mediaItem.id);
-      _isTrackDone = false;
-      
-      _player.positionStream.listen(
-        (position) {
-          if(position.inMilliseconds >= _player.duration.inMilliseconds) {
-            if(!_isTrackDone) {
-              AudioService.skipToNext();
-            }
-            _isTrackDone = true;
-          }
+        // Play when ready.
+        if(!_player.playing) {
+          _player.play();
         }
-      );
 
+        // Start loading something (will play when ready).
+        print('mediaitem : ${mediaItem.id}');
+        await _player.setFilePath(mediaItem.id);
+        _isTrackDone = false;
+        
+        _player.positionStream.listen(
+          (position) {
+            if(position.inMilliseconds >= _player.duration.inMilliseconds) {
+              if(!_isTrackDone) {
+                AudioService.skipToNext();
+              }
+              _isTrackDone = true;
+            }
+          }
+        );
+
+      }
+    } else {
+      AudioServiceBackground.sendCustomEvent({'SNACKBAR': 'track_not_found'});
+      AudioService.skipToNext();
     }
 
   }
@@ -239,9 +253,14 @@ class AudioPlayerTask extends BackgroundAudioTask {
         Track track = trackQueue[arguments['index']];
         MapEntry<Track, File> foundTrack = await _getFilePath(track);
 
-        _synchroTrackMediaitem(foundTrack.value, foundTrack.key, track);
+        if(foundTrack.value != null) {
+          _synchroTrackMediaitem(foundTrack.value, foundTrack.key, track);
 
-        await _playTrack(track);
+          await _playTrack(track);
+        } else {
+          AudioServiceBackground.sendCustomEvent({'SNACKBAR': 'track_not_found'});
+          AudioService.skipToNext();
+        }
 
       } break;
       
@@ -280,15 +299,17 @@ class AudioPlayerTask extends BackgroundAudioTask {
         );
         trackQueue.insert(arguments['index'], tr);
         MapEntry<Track, File> me = await _getFilePath(tr);
-        final MediaItem mi = MediaItem(
-          id: me.value.path,
-          album: tr.artist,
-          title: tr.title,
-          artUri: Uri.parse(tr.imageUrlLarge),
-          duration: Duration(seconds: tr.totalDuration.value.inSeconds),
-          extras: {'track_id': tr.id, 'service_name': tr.serviceName}
-        );
-        _queue.insert(arguments['index'], mi);
+        if(me.value != null) {
+          final MediaItem mi = MediaItem(
+            id: me.value.path,
+            album: tr.artist,
+            title: tr.title,
+            artUri: Uri.parse(tr.imageUrlLarge),
+            duration: Duration(seconds: tr.totalDuration.value.inSeconds),
+            extras: {'track_id': tr.id, 'service_name': tr.serviceName}
+          );
+          _queue.insert(arguments['index'], mi);
+        }
         
       } break;
 

@@ -2,6 +2,7 @@
 
 
 
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:just_audio/just_audio.dart';
@@ -27,7 +28,13 @@ class YoutubeRetriever {
 
   Future<MapEntry<Track, File>> streamByName(Track track) async {
     Track tr = await SearchAlgorithm().search(tArtist: track.artist, tTitle: track.title, tDuration: track.totalDuration.value);
-    return MapEntry(tr, await streamById(tr.id));
+    if(tr.id == null) {
+      return MapEntry(tr, null);
+    } else {
+      log(tr.toString());
+      log(tr.id.toString());
+      return MapEntry(tr, await streamById(tr.id));
+    }
   }
 
   Future<File> streamById(String id) async {
@@ -35,7 +42,12 @@ class YoutubeRetriever {
     if(id == null) return null;
 
     StreamManifest manifest = await _yt.videos.streamsClient.getManifest(id);
-    AudioOnlyStreamInfo streamInfo = manifest.audioOnly.withHighestBitrate();
+    AudioOnlyStreamInfo streamInfo;
+    try {
+      streamInfo = manifest.audioOnly.withHighestBitrate();
+    } catch(e) {
+      streamInfo = manifest.audioOnly.first;
+    }
 
     File file;
     if (streamInfo != null) {

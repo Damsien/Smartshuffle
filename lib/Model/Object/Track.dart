@@ -149,10 +149,14 @@ class Track {
     } else {
       MapEntry<Track, File> me = await PlatformsLister.platforms[_service].getFile(this);
       _streamTrack = me.key;
-      _totalDuration = _streamTrack.totalDuration;
-      _totalDuration.notifyListeners();
-      DataBaseController().updateTrack(this);
-      return _file = me.value;
+      if(_streamTrack.id != null) {
+        _totalDuration = _streamTrack.totalDuration;
+        _totalDuration.notifyListeners();
+        DataBaseController().updateTrack(this);
+        return _file = me.value;
+      } else {
+        return null;
+      }
     }
   }
 

@@ -387,6 +387,10 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                         ValueListenableBuilder(
                                           valueListenable: trackUp.totalDuration,
                                           builder: (BuildContext context, Duration duration, __) {
+                                            if(trackUp.streamTrack.id != AudioService.currentMediaItem.id) {
+                                              trackUp = FrontPlayerController().currentTrack.value;
+                                            }
+
                                             return Positioned(
                                               top: (_screen_height * 0.77),
                                               right: (_screen_width / 2) - _screen_width * 0.45,
