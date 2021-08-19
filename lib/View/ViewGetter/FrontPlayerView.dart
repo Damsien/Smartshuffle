@@ -15,6 +15,7 @@ import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
+import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Object/UsefullWidget/extents_page_view.dart';
 import 'package:smartshuffle/Model/Util.dart';
@@ -228,7 +229,8 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
 
     listView.add(
       Text(
-        AppLocalizations.of(context).globalAppPlaylistNextFrom + " " + FrontPlayerController().currentPlaylist.name,
+        AppLocalizations.of(context).globalAppPlaylistNextFrom + " " + (FrontPlayerController().currentPlaylist == null ?
+          AppLocalizations.of(context).globalPlaylist : FrontPlayerController().currentPlaylist.name),
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 20
@@ -557,7 +559,9 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                 ctrl: PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service],
                                 iconSize: 35.0,
                                 index: () {
-                                  int index = FrontPlayerController().currentPlaylist.getTracks.indexOf(FrontPlayerController().currentTrack.value);
+                                  Playlist playlist = FrontPlayerController().currentPlaylist;
+                                  if(playlist == null) return null;
+                                  int index = playlist.getTracks.indexOf(FrontPlayerController().currentTrack.value);
                                   if(index == -1) {
                                     return null;
                                   } else {
@@ -569,8 +573,11 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
                                   PopupMenuConstants.TRACKSMAINDIALOG_ADDTOANOTHERPLAYLIST:
                                     PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service].features[PlatformsCtrlFeatures.TRACK_ADD_ANOTHER_PLAYLIST],
                                   PopupMenuConstants.TRACKSMAINDIALOG_REMOVEFROMPLAYLIST:
-                                    (FrontPlayerController().currentPlaylist.getTracks.indexOf(FrontPlayerController().currentTrack.value) == -1
-                                      && PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service].features[PlatformsCtrlFeatures.TRACK_REMOVE]
+                                    ( FrontPlayerController().currentPlaylist == null ||
+                                      (
+                                        FrontPlayerController().currentPlaylist.getTracks.indexOf(FrontPlayerController().currentTrack.value) == -1
+                                        && PlatformsLister.platforms[FrontPlayerController().currentTrack.value.service].features[PlatformsCtrlFeatures.TRACK_REMOVE]
+                                      )
                                       ? false : true),
                                   PopupMenuConstants.TRACKSMAINDIALOG_INFORMATIONS:true,
                                   PopupMenuConstants.TRACKSMAINDIALOG_REPORT: true
@@ -698,115 +705,106 @@ class _FrontPlayerViewState extends State<FrontPlayerView> {
           ValueListenableBuilder(
             valueListenable: _isPanelQueueDraggable,
             builder: (BuildContext context, bool value, Widget child) {
-              
-              if(FrontPlayerController().currentPlaylist == null) {
+            
+              listView = _queueListWidgetBuilder();
 
-                return SizedBox.shrink();
+              return IgnorePointer(
+                ignoring: (_elementsOpacity < 0.8 ? true : false),
+                child: Opacity(
+                  opacity: _elementsOpacity,
+                  child: SlidingUpPanel(
+                    controller: _panelQueueCtrl,
+                    isDraggable: value,
+                    minHeight: FrontPlayerController().bot_bar_height-10,
+                    maxHeight: _screen_height,
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
+                    panelBuilder: (ScrollController scrollCtrl) {
 
-              } else {
-
-
-                listView = _queueListWidgetBuilder();
-
-                return IgnorePointer(
-                  ignoring: (_elementsOpacity < 0.8 ? true : false),
-                  child: Opacity(
-                    opacity: _elementsOpacity,
-                    child: SlidingUpPanel(
-                      controller: _panelQueueCtrl,
-                      isDraggable: value,
-                      minHeight: FrontPlayerController().bot_bar_height-10,
-                      maxHeight: _screen_height,
-                      borderRadius: BorderRadius.only(topLeft: Radius.circular(18.0), topRight: Radius.circular(18.0)),
-                      panelBuilder: (ScrollController scrollCtrl) {
-
-                        return GestureDetector(
-                          onTap: () => _panelQueueCtrl.panelPosition < 0.3 ? _panelQueueCtrl.open() : null,
-                          onVerticalDragStart: (vertDragStart) {
-                            _isPanelQueueDraggable.value = true;
-                          },
+                      return GestureDetector(
+                        onTap: () => _panelQueueCtrl.panelPosition < 0.3 ? _panelQueueCtrl.open() : null,
+                        onVerticalDragStart: (vertDragStart) {
+                          _isPanelQueueDraggable.value = true;
+                        },
+                        child: Container(
+                          color: Colors.transparent,
                           child: Container(
-                            color: Colors.transparent,
-                            child: Container(
-                              decoration: new BoxDecoration(
-                                borderRadius: new BorderRadius.only(
-                                  topLeft: const Radius.circular(15.0),
-                                  topRight: const Radius.circular(15.0),
-                                ),
-                                color: Color(0xFF000000),
+                            decoration: new BoxDecoration(
+                              borderRadius: new BorderRadius.only(
+                                topLeft: const Radius.circular(15.0),
+                                topRight: const Radius.circular(15.0),
                               ),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    margin: EdgeInsets.all(10),
-                                    width: 30,
-                                    height: 5,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[300],
-                                      borderRadius: BorderRadius.all(Radius.circular(12.0))
-                                    ),
+                              color: Color(0xFF000000),
+                            ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  margin: EdgeInsets.all(10),
+                                  width: 30,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    borderRadius: BorderRadius.all(Radius.circular(12.0))
                                   ),
-                                  Container(
-                                    height: _screen_height-30,
-                                    child: DefaultTabController(
-                                      length: 2,
-                                      child: Scaffold(
-                                        appBar: AppBar(
-                                          backgroundColor: _main_image_color,
-                                          toolbarHeight: 5,
-                                        ),
-                                        body: GestureDetector(
-                                          onVerticalDragStart: (vertDragStart) {
-                                            _isPanelQueueDraggable.value = true;
-                                          },
-                                          child: TabBarView(
-                                            children: [
-                                              Scaffold(
-                                                appBar: AppBar(
-                                                  toolbarHeight: 40,
-                                                  backgroundColor: _main_image_color,
-                                                  leading: IconButton(
-                                                    icon: Icon(Icons.filter_list),
-                                                    onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => QueueList(this))),
-                                                  ),
-                                                  // actions: [
-                                                  //   Padding(
-                                                  //     padding: EdgeInsets.only(right: 15),
-                                                  //     child: Icon(Icons.radio_button_unchecked)
-                                                  //   )
-                                                  // ]
+                                ),
+                                Container(
+                                  height: _screen_height-30,
+                                  child: DefaultTabController(
+                                    length: 2,
+                                    child: Scaffold(
+                                      appBar: AppBar(
+                                        backgroundColor: _main_image_color,
+                                        toolbarHeight: 5,
+                                      ),
+                                      body: GestureDetector(
+                                        onVerticalDragStart: (vertDragStart) {
+                                          _isPanelQueueDraggable.value = true;
+                                        },
+                                        child: TabBarView(
+                                          children: [
+                                            Scaffold(
+                                              appBar: AppBar(
+                                                toolbarHeight: 40,
+                                                backgroundColor: _main_image_color,
+                                                leading: IconButton(
+                                                  icon: Icon(Icons.filter_list),
+                                                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => QueueList(this))),
                                                 ),
-                                                body: ListView(
-                                                  controller: scrollCtrl,
-                                                  children: listView,
-                                                )
+                                                // actions: [
+                                                //   Padding(
+                                                //     padding: EdgeInsets.only(right: 15),
+                                                //     child: Icon(Icons.radio_button_unchecked)
+                                                //   )
+                                                // ]
                                               ),
-                                              
+                                              body: ListView(
+                                                controller: scrollCtrl,
+                                                children: listView,
+                                              )
+                                            ),
+                                            
 
-                                              Text(AppLocalizations.of(context).globalWIP),
-                                            ],
-                                          ),
-                                        ),
-                                        bottomNavigationBar: TabBar(
-                                          tabs: [
-                                            Tab(text: AppLocalizations.of(context).globalAppTracksQueue),
-                                            Tab(text: AppLocalizations.of(context).globalAppTrackLyrics),
+                                            Text(AppLocalizations.of(context).globalWIP),
                                           ],
                                         ),
-                                      )
+                                      ),
+                                      bottomNavigationBar: TabBar(
+                                        tabs: [
+                                          Tab(text: AppLocalizations.of(context).globalAppTracksQueue),
+                                          Tab(text: AppLocalizations.of(context).globalAppTrackLyrics),
+                                        ],
+                                      ),
                                     )
                                   )
-                                ],
-                              )
+                                )
+                              ],
                             )
                           )
-                        );
-                      }
-                    )
+                        )
+                      );
+                    }
                   )
-                );
-
-              }
+                )
+              );
             }
           )
         ]
@@ -973,7 +971,8 @@ class _QueueListState extends State<QueueList> {
         width: double.infinity,
         margin: EdgeInsets.only(left: 15, right: 15, top: 10, bottom: 10),
         child: Text(
-          AppLocalizations.of(context).globalAppPlaylistNextFrom + " " + FrontPlayerController().currentPlaylist.name,
+          AppLocalizations.of(context).globalAppPlaylistNextFrom + " " + (FrontPlayerController().currentPlaylist == null ?
+            AppLocalizations.of(context).globalPlaylist : FrontPlayerController().currentPlaylist.name),
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 20

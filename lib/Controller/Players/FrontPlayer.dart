@@ -202,10 +202,12 @@ class FrontPlayerController {
       GlobalQueue.currentQueueIndex = index;
 
       Track track = GlobalQueue.queue.value[index].key;
+
       _playTrack(track);
 
       await _loadBackQueue(GlobalQueue.queue.value);
       await AudioService.customAction('PLAY_TRACK', {'index': index});
+      pageCtrl.jumpToPage(index);
 
       AudioService.pause();
     }
