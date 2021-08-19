@@ -464,7 +464,7 @@ class PlayerListener {
     _track = track;
 
     for(MapEntry<Track, bool> me in GlobalQueue.queue.value) {
-      me.key.playing = false;
+      me.key.selecting = false;
     }
     track.playing = true;
     

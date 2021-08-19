@@ -136,7 +136,7 @@ class Track {
 
   set playing(bool isPlaying) {
     _isPlaying.value = isPlaying;
-    this.selecting = isPlaying;
+    if(_isPlaying.value) this.selecting = isPlaying;
     _isPlaying.notifyListeners();
   }
   ValueListenable<bool> get isPlaying => _isPlaying;
