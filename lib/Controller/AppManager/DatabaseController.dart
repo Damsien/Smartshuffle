@@ -201,6 +201,10 @@ class DataBaseController {
 
   void insertTrack(Playlist playlist, Track track) {
     _batch.insert('track', track.toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
+    addRelation(playlist, track);
+  }
+
+  void addRelation(Playlist playlist, Track track) {
     _batch.insert('link_playlist_track',
       {'track_id': track.id, 'track_service': track.serviceName, 'playlist_id': playlist.id, 'playlist_service': PlatformsLister.serviceToString(playlist.service)},
       conflictAlgorithm: ConflictAlgorithm.ignore

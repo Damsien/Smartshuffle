@@ -14,6 +14,7 @@ class Platform {
       'isConnected': false
   };
   ValueNotifier<List<Playlist>> playlists = ValueNotifier<List<Playlist>>(<Playlist>[]);
+  List<Track> allPlatformTracks = <Track>[];
 
   Platform(String name, {Map platformInformations, Map userInformations, List<Playlist> playlists}) {
     this.name = name;
