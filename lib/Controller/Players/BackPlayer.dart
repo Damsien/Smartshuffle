@@ -67,7 +67,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
     if(currentIndex+1 >= trackQueue.length) {
       currentIndex = 0;
     }
-    await _playTrack(trackQueue[currentIndex]);
+    await _playTrack(trackQueue[currentIndex+1]);
     currentIndex++;
   }
 
@@ -213,7 +213,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
         
         _player.positionStream.listen(
           (position) {
-            if(position.inMilliseconds >= _player.duration.inMilliseconds) {
+            if(position.inMilliseconds >= mediaItem.duration.inMilliseconds) {
               if(!_isTrackDone) {
                 AudioService.skipToNext();
               }
@@ -257,6 +257,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
         if(foundTrack.value != null) {
           _synchroTrackMediaitem(foundTrack.value, foundTrack.key, track);
 
+          currentIndex = arguments['index'];
           await _playTrack(track);
         } else {
           AudioServiceBackground.sendCustomEvent({'SNACKBAR': 'track_not_found'});
