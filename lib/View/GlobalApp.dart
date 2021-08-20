@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart';
@@ -19,8 +20,6 @@ import 'package:smartshuffle/View/Pages/Librairie/PlaylistsPage.dart';
 import 'Pages/Profile/ProfilePage.dart';
 import 'Pages/Search/SearchPage.dart';
 
-
-void _entrypoint() => AudioServiceBackground.run(() => AudioPlayerTask());
 class GlobalAppMain extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -53,7 +52,7 @@ class _GlobalApp extends StatefulWidget {
   GlobalApp createState() => GlobalApp();
 }
 
-class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
+class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin, WidgetsBindingObserver {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   PageController pageController;
@@ -101,6 +100,30 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
   void refresh() {
     setState(() {});
   }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.detached:
+        AudioService.stop();
+      break;
+      case AppLifecycleState.resumed:
+        break;
+      case AppLifecycleState.inactive:
+        break;
+      case AppLifecycleState.paused:
+        break;
+    }
+  }
+
+  @override
+  void dispose() {
+    AudioService.stop();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -108,6 +131,7 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+    WidgetsBinding.instance.addObserver(this);
     this.initPage();
     super.initState();
     GlobalAppController.initApp(this);

@@ -1,8 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/Model/Util.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 
 class Playlist {
@@ -16,6 +22,7 @@ class Playlist {
   String _ownerName;
   String _imageUrl = DEFAULT_IMAGE_URL;
   ServicesLister _service;
+  Platform _platform;
 
   List<MapEntry<Track, DateTime>> _tracks = <MapEntry<Track, DateTime>>[];
 
@@ -36,6 +43,7 @@ class Playlist {
     _uri = uri;
     _ownerName = ownerName;
     _service = service;
+    _platform = PlatformsLister.platforms[_service].platform;
     if(imageUrl != null) _imageUrl = imageUrl;
     if (tracks != null) _tracks = tracks;
   }
@@ -99,9 +107,18 @@ class Playlist {
   /*  TRACKS MANAGER  */
 
   String addTrack(Track track, {@required bool isNew}) {
-    tracks.insert(0, MapEntry(track, DateTime.now()));
-    if(isNew) {
-      DataBaseController().insertTrack(this, track);
+    Track existingTrack = Util.checkTrackExistence(_platform, track);
+    if(_platform.allPlatformTracks.isEmpty || existingTrack == null) {
+      if(isNew) {
+        DataBaseController().insertTrack(this, track);
+      }
+      _platform.allPlatformTracks.add(track);
+      tracks.insert(0, MapEntry(track, DateTime.now()));
+    } else {
+      if(isNew) {
+        DataBaseController().addRelation(this, track);
+      }
+      tracks.insert(0, MapEntry(existingTrack, DateTime.now()));
     }
     return track.id;
   }
@@ -123,9 +140,18 @@ class Playlist {
     List<Track> allTracks = tracks;
     _tracks.clear();
     for (Track track in allTracks) {
-      _tracks.add(MapEntry(track, track.addedDate));
-      if(isNew) {
-        DataBaseController().insertTrack(this, track);
+      Track existingTrack = Util.checkTrackExistence(_platform, track);
+      if(_platform.allPlatformTracks.isEmpty || existingTrack == null) {
+        if(isNew) {
+          DataBaseController().insertTrack(this, track);
+        }
+        _platform.allPlatformTracks.add(track);
+        _tracks.add(MapEntry(track, track.addedDate));
+      } else {
+        if(isNew) {
+          DataBaseController().addRelation(this, track);
+        }
+        _tracks.add(MapEntry(existingTrack, track.addedDate));
       }
     }
     DataBaseController().isOperationFinished.value = true;

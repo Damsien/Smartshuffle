@@ -1,8 +1,14 @@
+import 'dart:developer';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
+import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
+import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/Model/Util.dart';
 
 class GlobalQueue {
   
@@ -237,6 +243,24 @@ class GlobalQueue {
     });
   }
 
+  List<Track> buildQueue(List<Track> tracks) {
+    List<Track> finalTracks = <Track>[];
+    Track tr;
+    for(Track track in tracks) {
+      for(PlatformsController ctrl in PlatformsLister.platforms.values) {
+        tr = Util.checkTrackExistence(ctrl.platform, track);
+        if(tr != null) {
+          break;
+        }
+      }
+      if(tr != null) {
+        finalTracks.add(tr);
+      } else {
+        finalTracks.add(track);
+      }
+    }
+    return finalTracks;
+  }
   
   
 }

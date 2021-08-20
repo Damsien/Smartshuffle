@@ -2,7 +2,10 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
+import 'package:smartshuffle/Model/Object/Platform.dart';
+import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 class GlobalTheme {
@@ -154,6 +157,19 @@ class Util {
       minutes: minutes,
       seconds: seconds,
     );
+  }
+
+  static Track checkTrackExistence(Platform platform, Track track) {
+    Track existingTrack = platform.allPlatformTracks.firstWhere((element) => 
+      element.id == track.id && element.service == track.service,
+      orElse: () => null
+    );
+    MapEntry<Track, bool> existingTrackQueue = GlobalQueue.queue.value.firstWhere((element) => 
+      element != null && element.key != null && element.key.id == track.id && element.key.service == track.service,
+      orElse: () => null
+    );
+
+    return existingTrack == null ? existingTrackQueue == null ? null : existingTrackQueue.key : null;
   }
 
 }
