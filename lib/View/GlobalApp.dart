@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:smartshuffle/Controller/AppManager/AppInit.dart';
 import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
-import 'package:smartshuffle/Controller/Players/BackPlayer.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Model/Util.dart';
 import 'package:smartshuffle/View/ViewGetter/FrontPlayerView.dart';

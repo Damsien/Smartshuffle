@@ -69,17 +69,17 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
 
 
 
-  Widget tabBar() {
-    List elements = <Widget>[];
-    for(MapEntry elem in this.userPlatforms.entries) {
-      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
-    }
-    return TabBar(
-      controller: this.tabController,
-      indicatorColor: _materialColor.shade300,
-      tabs: elements,
-    );
-  }
+  // Widget tabBar() {
+  //   List elements = <Widget>[];
+  //   for(MapEntry elem in this.userPlatforms.entries) {
+  //     elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
+  //   }
+  //   return TabBar(
+  //     controller: this.tabController,
+  //     indicatorColor: _materialColor.shade300,
+  //     tabs: elements,
+  //   );
+  // }
 
   void userPlatformsInit() {
     this.userPlatforms.clear();
@@ -125,6 +125,15 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: TabBar(
+            onTap: (int index) {
+              if(index == tabController.index) {
+                if(!isPlaylistOpen[tabs[tabController.index]]) {
+                  tabs[tabController.index].playlistScrollController.animateTo(0, duration: Duration(milliseconds: 150), curve: Curves.ease);
+                } else {
+                  tabs[tabController.index].tracksScrollController.animateTo(0, duration: Duration(milliseconds: 150), curve: Curves.ease);
+                }
+              }
+            },
             controller: tabController,
             indicatorColor: _materialColor.shade300,
             tabs: elements

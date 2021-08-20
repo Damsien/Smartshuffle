@@ -24,6 +24,8 @@ class TabView extends StatefulWidget {
 
   final PlatformsController ctrl;
   final PlaylistsPageState parent;
+  final ScrollController playlistScrollController = ScrollController();
+  final ScrollController tracksScrollController = ScrollController();
 
   TabView(this.ctrl, {Key key, this.parent}) : super(key: key);
 
@@ -42,14 +44,14 @@ class TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
 
   void returnToPlaylist() {
     setState(() {
-      tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist);
+      tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist, scrollController: widget.playlistScrollController,);
       widget.parent.isPlaylistOpen[widget] = false;
     });
   }
 
   void openPlaylist(Playlist playlist) {
     setState(() {
-      tab = TracksView(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist, notifyParent: refresh,);
+      tab = TracksView(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist, notifyParent: refresh, scrollController: widget.tracksScrollController);
       widget.parent.isPlaylistOpen[widget] = true;
     });
   }
@@ -57,7 +59,7 @@ class TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     widget.parent.isPlaylistOpen[widget] = false;
-    tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist);
+    tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist, scrollController: widget.playlistScrollController,);
     super.initState();
   }
 
@@ -82,12 +84,14 @@ class TracksView extends StatefulWidget {
   final Playlist playlist;
   final Function returnToPlaylist;
   final Function notifyParent;
+  final ScrollController scrollController;
 
   TracksView({
     Key key,
     @required this.ctrl,
     @required this.playlist,
     @required this.returnToPlaylist,
+    @required this.scrollController,
     this.notifyParent
   }) : super(key: key);
 
@@ -137,7 +141,7 @@ class _TracksViewState extends State<TracksView> {
     _playlist = widget.playlist;
     _returnToPlaylist = widget.returnToPlaylist;
     _tracks = _playlist.getTracks;
-    _scrollCtrl = ScrollController();
+    _scrollCtrl = widget.scrollController;
     super.initState();
   }
 
@@ -480,8 +484,9 @@ class PlaylistsView extends StatefulWidget {
 
   final PlatformsController ctrl;
   final Function openPlaylist;
+  final ScrollController scrollController;
 
-  PlaylistsView({Key key, @required this.ctrl, @required this.openPlaylist}) : super(key: key);
+  PlaylistsView({Key key, @required this.ctrl, @required this.openPlaylist, @required this.scrollController}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _PlaylistsViewState();
@@ -521,6 +526,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                 valueListenable: ctrl.getPlaylistsUpdate(),
                 builder: (_, List<Playlist> playlists, __) {
                   return ReorderableListView(
+                    scrollController: widget.scrollController,
                     onReorder: (int oldIndex, int newIndex) {
                       playlists = ctrl.platform.reorder(oldIndex, newIndex);
                     },
