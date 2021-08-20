@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:smartshuffle/Controller/AppManager/DatabaseController.dart';
+import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
 import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
@@ -103,9 +106,11 @@ class Playlist {
   /*  TRACKS MANAGER  */
 
   String addTrack(Track track, {@required bool isNew}) {
-    if(_platform.allPlatformTracks.isEmpty ||
-      _platform.allPlatformTracks.firstWhere((element) => 
-        element.hashCode == track.hashCode, orElse: null) == null) {
+    Track existingTrack = _platform.allPlatformTracks.firstWhere((element) => 
+      element.id == track.id && element.service == track.service, orElse: () => null);
+    MapEntry<Track, bool> existingTrackQueue = GlobalQueue.queue.value.firstWhere((element) => 
+      element.key.id == track.id && element.key.service == track.service, orElse: () => null);
+    if(_platform.allPlatformTracks.isEmpty || (existingTrack == null && existingTrackQueue == null)) {
       if(isNew) {
         DataBaseController().insertTrack(this, track);
       }
@@ -115,9 +120,10 @@ class Playlist {
       if(isNew) {
         DataBaseController().addRelation(this, track);
       }
-      Track existingTrack = _platform.allPlatformTracks.firstWhere((element) => 
-      element.hashCode == track.hashCode, orElse: null);
-      tracks.insert(0, MapEntry(existingTrack, DateTime.now()));
+      if(existingTrack != null)
+        tracks.insert(0, MapEntry(existingTrack, DateTime.now()));
+      else
+        tracks.insert(0, MapEntry(existingTrackQueue.key, DateTime.now()));
     }
     return track.id;
   }
@@ -139,9 +145,11 @@ class Playlist {
     List<Track> allTracks = tracks;
     _tracks.clear();
     for (Track track in allTracks) {
-      if(_platform.allPlatformTracks.isEmpty ||
-        _platform.allPlatformTracks.firstWhere((element) => 
-        element.hashCode == track.hashCode, orElse: null) == null) {
+      Track existingTrack = _platform.allPlatformTracks.firstWhere((element) => 
+        element.id == track.id && element.service == track.service, orElse: () => null);
+      MapEntry<Track, bool> existingTrackQueue = GlobalQueue.queue.value.firstWhere((element) => 
+        element.key.id == track.id && element.key.service == track.service, orElse: () => null);
+      if(_platform.allPlatformTracks.isEmpty || (existingTrack == null && existingTrackQueue == null)) {
         if(isNew) {
           DataBaseController().insertTrack(this, track);
         }
@@ -151,9 +159,10 @@ class Playlist {
         if(isNew) {
           DataBaseController().addRelation(this, track);
         }
-        Track existingTrack = _platform.allPlatformTracks.firstWhere((element) => 
-        element.hashCode == track.hashCode, orElse: null);
-        _tracks.add(MapEntry(existingTrack, track.addedDate));
+        if(existingTrack != null)
+          _tracks.add(MapEntry(existingTrack, track.addedDate));
+        else
+          _tracks.add(MapEntry(existingTrackQueue.key, track.addedDate));
       }
     }
     DataBaseController().isOperationFinished.value = true;

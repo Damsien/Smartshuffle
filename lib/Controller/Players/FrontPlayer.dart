@@ -191,7 +191,7 @@ class FrontPlayerController {
   // PRIVATE
 
   void _initQueue(int index) async {
-    List<Track> tracks = await DataBaseController().getQueue();
+    List<Track> tracks = GlobalQueue().buildQueue(await DataBaseController().getQueue());
 
     if(tracks.length != 0) {
       GlobalQueue.queue.value.removeAt(0);
