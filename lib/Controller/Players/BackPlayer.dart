@@ -101,10 +101,11 @@ class AudioPlayerTask extends BackgroundAudioTask {
     AudioServiceBackground.setState(
       controls: [],
       playing: false,
-      processingState: AudioProcessingState.stopped
+      processingState: AudioProcessingState.none
     );
     AudioServiceBackground.sendCustomEvent('STOP');
     await _player.stop();
+    await _player.dispose();
     return super.onStop();
   }
 

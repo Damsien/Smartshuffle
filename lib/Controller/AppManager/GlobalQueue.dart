@@ -8,6 +8,7 @@ import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/Model/Util.dart';
 
 class GlobalQueue {
   
@@ -247,8 +248,7 @@ class GlobalQueue {
     Track tr;
     for(Track track in tracks) {
       for(PlatformsController ctrl in PlatformsLister.platforms.values) {
-        tr = ctrl.platform.allPlatformTracks.firstWhere((element) => 
-          element.id == track.id && element.service == track.service, orElse: () => null);
+        tr = Util.checkTrackExistence(ctrl.platform, track);
         if(tr != null) {
           break;
         }

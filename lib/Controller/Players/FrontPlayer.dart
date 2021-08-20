@@ -256,6 +256,7 @@ class FrontPlayerController {
 
     await AudioService.stop();
     await AudioService.start(
+      androidStopForegroundOnPause: true,
       backgroundTaskEntrypoint: _entrypoint
     );
     await AudioService.customAction('LAUNCH_QUEUE', {'queue': queue});

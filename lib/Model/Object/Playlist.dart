@@ -8,6 +8,7 @@ import 'package:smartshuffle/Controller/AppManager/ServicesLister.dart';
 import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:smartshuffle/Model/Util.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsPopupItems.dart';
 
 class Playlist {
@@ -106,11 +107,8 @@ class Playlist {
   /*  TRACKS MANAGER  */
 
   String addTrack(Track track, {@required bool isNew}) {
-    Track existingTrack = _platform.allPlatformTracks.firstWhere((element) => 
-      element.id == track.id && element.service == track.service, orElse: () => null);
-    MapEntry<Track, bool> existingTrackQueue = GlobalQueue.queue.value.firstWhere((element) => 
-      element.key.id == track.id && element.key.service == track.service, orElse: () => null);
-    if(_platform.allPlatformTracks.isEmpty || (existingTrack == null && existingTrackQueue == null)) {
+    Track existingTrack = Util.checkTrackExistence(_platform, track);
+    if(_platform.allPlatformTracks.isEmpty || existingTrack == null) {
       if(isNew) {
         DataBaseController().insertTrack(this, track);
       }
@@ -120,10 +118,7 @@ class Playlist {
       if(isNew) {
         DataBaseController().addRelation(this, track);
       }
-      if(existingTrack != null)
-        tracks.insert(0, MapEntry(existingTrack, DateTime.now()));
-      else
-        tracks.insert(0, MapEntry(existingTrackQueue.key, DateTime.now()));
+      tracks.insert(0, MapEntry(existingTrack, DateTime.now()));
     }
     return track.id;
   }
@@ -145,11 +140,8 @@ class Playlist {
     List<Track> allTracks = tracks;
     _tracks.clear();
     for (Track track in allTracks) {
-      Track existingTrack = _platform.allPlatformTracks.firstWhere((element) => 
-        element.id == track.id && element.service == track.service, orElse: () => null);
-      MapEntry<Track, bool> existingTrackQueue = GlobalQueue.queue.value.firstWhere((element) => 
-        element.key.id == track.id && element.key.service == track.service, orElse: () => null);
-      if(_platform.allPlatformTracks.isEmpty || (existingTrack == null && existingTrackQueue == null)) {
+      Track existingTrack = Util.checkTrackExistence(_platform, track);
+      if(_platform.allPlatformTracks.isEmpty || existingTrack == null) {
         if(isNew) {
           DataBaseController().insertTrack(this, track);
         }
@@ -159,10 +151,7 @@ class Playlist {
         if(isNew) {
           DataBaseController().addRelation(this, track);
         }
-        if(existingTrack != null)
-          _tracks.add(MapEntry(existingTrack, track.addedDate));
-        else
-          _tracks.add(MapEntry(existingTrackQueue.key, track.addedDate));
+        _tracks.add(MapEntry(existingTrack, track.addedDate));
       }
     }
     DataBaseController().isOperationFinished.value = true;
