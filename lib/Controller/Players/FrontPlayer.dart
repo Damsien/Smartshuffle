@@ -92,7 +92,7 @@ class FrontPlayerController {
       //Play track
       if (track != null) {
 
-        if(track.id != currentTrack.value.id) {
+        if(currentTrack.value == null || track.id != currentTrack.value.id) {
           _playTrack(track);
           if(pageCtrl.hasClients) {
             if(isShuffle) {
