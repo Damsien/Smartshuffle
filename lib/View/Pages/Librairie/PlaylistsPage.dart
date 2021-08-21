@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 
 import 'package:smartshuffle/Model/Util.dart';
+import 'package:smartshuffle/View/ViewGetter/Librairie/CustomLibrairieWidget.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 
@@ -107,6 +109,10 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
       elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
     }
 
+    tabController.addListener(() {
+      
+    });
+
     return MaterialApp(
       theme: _themeData,
       debugShowCheckedModeBanner: false,
@@ -123,22 +129,34 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
       home: Scaffold(
         key: this.tabKey,
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: TabBar(
-            onTap: (int index) {
-              if(index == tabController.index) {
-                if(!isPlaylistOpen[tabs[tabController.index]]) {
-                  tabs[tabController.index].playlistScrollController.animateTo(0, duration: Duration(milliseconds: 150), curve: Curves.ease);
-                } else {
-                  tabs[tabController.index].tracksScrollController.animateTo(0, duration: Duration(milliseconds: 150), curve: Curves.ease);
-                }
-              }
-            },
-            controller: tabController,
-            indicatorColor: _materialColor.shade300,
-            tabs: elements
-          ),
-          foregroundColor: _materialColor.shade300,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(50),
+          child: Theme(
+            data: ThemeData(
+              brightness: Brightness.dark,
+              primaryColor: Colors.black,
+              highlightColor: Colors.transparent,
+              splashColor: Colors.transparent,
+            ),
+            child: AppBar(
+              title: TabBar(
+                overlayColor: MaterialStateProperty.all(Colors.transparent),
+                indicator: CircularTabIndicator(color: _materialColor.shade300, radius: 3, width: 70, index: tabController.index),
+                onTap: (int index) {
+                  if(index == tabController.index) {
+                    if(!isPlaylistOpen[tabs[tabController.index]]) {
+                      tabs[tabController.index].playlistScrollController.animateTo(0, duration: Duration(milliseconds: 150), curve: Curves.ease);
+                    } else {
+                      tabs[tabController.index].tracksScrollController.animateTo(0, duration: Duration(milliseconds: 150), curve: Curves.ease);
+                    }
+                  }
+                },
+                controller: tabController,
+                indicatorColor: _materialColor.shade300,
+                tabs: elements
+              ),
+            )
+          )
         ),
         body: WillPopScope(
             child: TabBarView(

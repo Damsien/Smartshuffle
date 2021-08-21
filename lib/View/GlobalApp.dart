@@ -130,6 +130,9 @@ class GlobalApp extends State<_GlobalApp> with TickerProviderStateMixin, Widgets
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarBrightness: Brightness.dark
+    ));
     WidgetsBinding.instance.addObserver(this);
     this.initPage();
     super.initState();
