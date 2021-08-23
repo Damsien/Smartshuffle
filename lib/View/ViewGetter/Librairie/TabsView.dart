@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:ui';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -18,6 +19,7 @@ import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 
 class TabView extends StatefulWidget {
@@ -36,7 +38,8 @@ class TabView extends StatefulWidget {
 
 class TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
 
-  Widget tab;
+  Playlist selectedPlaylist;
+  double trackTop;
 
   void refresh() {
     setState(() {});
@@ -44,14 +47,15 @@ class TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
 
   void returnToPlaylist() {
     setState(() {
-      tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist, scrollController: widget.playlistScrollController,);
+      trackTop = MediaQuery.of(context).size.height;
       widget.parent.isPlaylistOpen[widget] = false;
     });
   }
 
   void openPlaylist(Playlist playlist) {
     setState(() {
-      tab = TracksView(ctrl: widget.ctrl, playlist: playlist, returnToPlaylist: returnToPlaylist, notifyParent: refresh, scrollController: widget.tracksScrollController);
+      selectedPlaylist = playlist;
+      trackTop = 0;
       widget.parent.isPlaylistOpen[widget] = true;
     });
   }
@@ -59,16 +63,39 @@ class TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     widget.parent.isPlaylistOpen[widget] = false;
-    tab = PlaylistsView(ctrl: widget.ctrl, openPlaylist: openPlaylist, scrollController: widget.playlistScrollController,);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Container(
+    if(trackTop == null) trackTop = MediaQuery.of(context).size.height;
+
+    return Stack(
       key: PageStorageKey(widget.ctrl.platform.name),
-      child: tab,
+      children: [
+        PlaylistsView(
+          ctrl: widget.ctrl,
+          openPlaylist: openPlaylist,
+          scrollController: widget.playlistScrollController
+        ),
+        AnimatedPositioned(
+          top: trackTop,
+          curve: Curves.ease,
+          duration: Duration(milliseconds: 150),
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height-56-50,
+            child: TracksView(
+              ctrl: widget.ctrl,
+              playlist: selectedPlaylist,
+              returnToPlaylist: returnToPlaylist,
+              notifyParent: refresh,
+              scrollController: widget.tracksScrollController
+            )
+          )
+        ),
+      ]
     );
   }
 
@@ -112,6 +139,9 @@ class _TracksViewState extends State<TracksView> {
 
   List<Track> _tracks;
 
+  Text _textDisplayed;
+  Widget _littleTopBar;
+
   String _searchValue;
   void setResearch(String value) {
     if(_searchValue != value) {
@@ -135,200 +165,277 @@ class _TracksViewState extends State<TracksView> {
     }
   }
 
+  String _topText(Playlist playlist, bool isTop) {
+    String text;
+    if(isTop) {
+      final int tracksLength = playlist.getTracks.length;
+      Duration tracksDuration = Duration.zero;
+      for(Track track in playlist.getTracks) {
+        tracksDuration += track.totalDuration.value;
+      }
+      text = tracksLength.toString() + " " + AppLocalizations.of(context).globalTracks
+        + " - " + tracksDuration.toString().split('.')[0];
+    } else {
+      text = playlist.name;
+    }
+    return text;
+  }
+
   @override
   void initState() {
     _ctrl = widget.ctrl;
-    _playlist = widget.playlist;
     _returnToPlaylist = widget.returnToPlaylist;
-    _tracks = _playlist.getTracks;
     _scrollCtrl = widget.scrollController;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    _playlist = widget.playlist;
+
+    if(_playlist == null) return SizedBox.shrink();
+
+    _tracks = _playlist.getTracks;
+    if(_textDisplayed == null) _textDisplayed = Text(_topText(_playlist, true), key: ValueKey('Track:TopMode'));
+    if(_littleTopBar == null) _littleTopBar = SizedBox.shrink();
 
     Widget tracksList = _TracksLister(ctrl: _ctrl, playlist: _playlist, scrollController: _scrollCtrl, tracks: _tracks,);
 
     return WillPopScope(
       child: Container(
-        color: Colors.black54,
-        child: SingleChildScrollView(
-          controller: _scrollCtrl,
-          padding: EdgeInsets.only(bottom: 100),
-          child: Column(
-            children: [
-              Column(
+        decoration: BoxDecoration(
+          color: Colors.black
+        ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              controller: _scrollCtrl,
+              padding: EdgeInsets.only(bottom: 100),
+              child: Column(
                 children: [
-                  Container(
-                    width: WidgetsBinding.instance.window.physicalSize.width,
-                    height: 165,
-                    margin: EdgeInsets.only(left: 10, right: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          margin: EdgeInsets.only(top: 30, bottom: 20),
-                          child: Row(
-                            children: [
-                              InkWell(
-                                onTap: () => _returnToPlaylist(),
-                                child: Container(
-                                  child: Icon(Icons.arrow_back, size: 30),
-                                  margin: EdgeInsets.all(5),
-                                ),
-                              ),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                  Column(
+                    children: [
+                      Container(
+                        width: WidgetsBinding.instance.window.physicalSize.width,
+                        height: 150,
+                        margin: EdgeInsets.only(left: 15, right: 15),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              margin: EdgeInsets.only(top: 30, bottom: 20),
+                              child: Row(
                                 children: [
-                                  Container(
-                                    width: MediaQuery.of(context).size.width/2,
-                                    child: InkWell(
-                                      onTap: () => (_ctrl.features[PlatformsCtrlFeatures.PLAYLIST_RENAME] ?
-                                        TabsView(objectState: this).renamePlaylist(_playlist)
-                                        : SizedBox.shrink()
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: MediaQuery.of(context).size.width/2,
+                                        child: InkWell(
+                                          onTap: () => (_ctrl.features[PlatformsCtrlFeatures.PLAYLIST_RENAME] ?
+                                            TabsView(objectState: this).renamePlaylist(_playlist)
+                                            : SizedBox.shrink()
+                                          ),
+                                          child: Text(
+                                            _playlist.name, 
+                                            style: ((300/_playlist.name.length+5) > 30 ?
+                                              TextStyle(fontSize: 30) :
+                                              TextStyle(fontSize: (300/_playlist.name.length+5).toDouble())
+                                            ),
+                                          )
+                                        )
                                       ),
-                                      child: Text(
-                                        _playlist.name, 
-                                        style: ((300/_playlist.name.length+5) > 30 ?
-                                          TextStyle(fontSize: 30) :
-                                          TextStyle(fontSize: (300/_playlist.name.length+5).toDouble())
+                                      VisibilityDetector(
+                                        key: UniqueKey(),
+                                        child: Container(
+                                          width: MediaQuery.of(context).size.width/2,
+                                          child: Text(
+                                            _playlist.ownerName, 
+                                            style: ((300/_playlist.ownerName.length+5) > 30 ?
+                                              TextStyle(fontSize: 20) :
+                                              TextStyle(fontSize: (200/_playlist.ownerName.length+5).toDouble())
+                                            ),
+                                          )
                                         ),
+                                        onVisibilityChanged: (VisibilityInfo info) {
+                                          if(info.visibleFraction == 0 && _textDisplayed.key == ValueKey('Track:TopMode')) {
+                                            setState(() {
+                                              _littleTopBar = Container(
+                                                decoration: BoxDecoration(
+                                                  color: _materialColor.shade50
+                                                ),
+                                                width: MediaQuery.of(context).size.width,
+                                                height: 2,
+                                              );
+                                              _textDisplayed = Text(_topText(_playlist, false), key: ValueKey('Track:BotMode'));
+                                            });
+                                          } else if(info.visibleFraction > 0 && _textDisplayed.key == ValueKey('Track:BotMode')) {
+                                            setState(() {
+                                              _littleTopBar = SizedBox.shrink();
+                                              _textDisplayed = Text(_topText(_playlist, true), key: ValueKey('Track:TopMode'));
+                                            });
+                                          }
+                                        }
                                       )
-                                    )
-                                  ),
-                                  Container(
-                                    width: MediaQuery.of(context).size.width/2,
-                                    child: Text(
-                                      _playlist.ownerName, 
-                                      style: ((300/_playlist.ownerName.length+5) > 30 ?
-                                        TextStyle(fontSize: 20) :
-                                        TextStyle(fontSize: (200/_playlist.ownerName.length+5).toDouble())
-                                      ),
-                                    )
-                                  ),
+                                    ],
+                                  )
                                 ],
                               )
-                            ],
-                          )
+                            ),
+                            InkWell(
+                              onTap: () => {  },
+                              child: FractionallySizedBox(
+                                heightFactor: 0.5,
+                                child: AspectRatio(
+                                  aspectRatio: 1,
+                                  child: new Container(
+                                    decoration: new BoxDecoration(
+                                      image: new DecorationImage(
+                                        fit: BoxFit.cover,
+                                        alignment: FractionalOffset.center,
+                                        image: NetworkImage(_playlist.imageUrl),
+                                      )
+                                    ),
+                                  ),
+                                )
+                              )
+                            ),
+                          ]
                         ),
-                        InkWell(
-                          onTap: () => {  },
-                          child: FractionallySizedBox(
-                            heightFactor: 0.5,
-                            child: AspectRatio(
-                              aspectRatio: 1,
-                              child: new Container(
-                                decoration: new BoxDecoration(
-                                  image: new DecorationImage(
-                                    fit: BoxFit.cover,
-                                    alignment: FractionalOffset.center,
-                                    image: NetworkImage(_playlist.imageUrl),
-                                  )
-                                ),
+                      ),
+                      Container(
+                        width: WidgetsBinding.instance.window.physicalSize.width,
+                        child: ListTile(
+                          subtitle: Container(
+                            height: 45,
+                            child: TextField(
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+                                labelText: AppLocalizations.of(context).search+"..",
+                                filled: true,
                               ),
+                              onChanged: (val) {
+                                setResearch(val);
+                              },
+                            )
+                          ),
+                          trailing: InkWell(
+                            child: PopupMenuButton(
+                              icon: Icon(Icons.sort),
+                              tooltip: AppLocalizations.of(context).tabsViewSort,
+                              itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                                SortPopupItemLastAdded(_playlist).build(context),
+                                SortPopupItemTitle(_playlist).build(context),
+                                SortPopupItemArtist(_playlist).build(context)
+                              ],
+                              onSelected: (value) {
+                                setState(() {
+                                  _tracks = _playlist.sort(value);
+                                });
+                              },
                             )
                           )
-                        ),
-                      ]
-                    ),
-                  ),
-                  Container(
-                    width: WidgetsBinding.instance.window.physicalSize.width,
-                    child: ListTile(
-                      subtitle: Container(
-                        height: 45,
-                        child: TextField(
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
-                            labelText: AppLocalizations.of(context).search+"..",
-                            filled: true,
-                          ),
-                          onChanged: (val) {
-                            setResearch(val);
-                          },
                         )
                       ),
-                      trailing: InkWell(
-                        child: PopupMenuButton(
-                          icon: Icon(Icons.sort),
-                          tooltip: AppLocalizations.of(context).tabsViewSort,
-                          itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                            SortPopupItemLastAdded(_playlist).build(context),
-                            SortPopupItemTitle(_playlist).build(context),
-                            SortPopupItemArtist(_playlist).build(context)
+                      Container(
+                        margin: EdgeInsets.only(left: 17, right: 17),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              width: MediaQuery.of(context).size.width/2.5,
+                              margin: EdgeInsets.only(top: 5, bottom: 10),
+                              child: MaterialButton(
+                                onPressed: () => FrontPlayerController().createQueueAndPlay(_playlist, isShuffle: false),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Icon(Icons.play_arrow),
+                                    Text(AppLocalizations.of(context).tabsViewPlayingSimple,
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                shape: ContinuousRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5),
+                                  side: BorderSide(color: _materialColor.shade700)
+                                ),
+                              )
+                            ),
+                            Container(
+                              width: MediaQuery.of(context).size.width/2.5,
+                              margin: EdgeInsets.only(top: 5, bottom: 10),
+                              child: MaterialButton(
+                                onPressed: () => FrontPlayerController().createQueueAndPlay(_playlist, isShuffle: true),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Icon(Icons.shuffle),
+                                    Text(AppLocalizations.of(context).tabsViewPlayingShuffle,
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                shape: ContinuousRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5),
+                                  side: BorderSide(color: _materialColor.shade700)
+                                ),
+                              )
+                            ),
                           ],
-                          onSelected: (value) {
-                            setState(() {
-                              _tracks = _playlist.sort(value);
-                            });
-                          },
-                        )
-                      )
-                    )
+                        ),
+                      ),
+                    ]
                   ),
                   Container(
-                    margin: EdgeInsets.only(left: 17, right: 17),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          width: MediaQuery.of(context).size.width/2.5,
-                          margin: EdgeInsets.only(top: 5, bottom: 10),
-                          child: MaterialButton(
-                            onPressed: () => FrontPlayerController().createQueueAndPlay(_playlist, isShuffle: false),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Icon(Icons.play_arrow),
-                                Text(AppLocalizations.of(context).tabsViewPlayingSimple,
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            shape: ContinuousRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                              side: BorderSide(color: _materialColor.shade700)
-                            ),
-                          )
-                        ),
-                        Container(
-                          width: MediaQuery.of(context).size.width/2.5,
-                          margin: EdgeInsets.only(top: 5, bottom: 10),
-                          child: MaterialButton(
-                            onPressed: () => FrontPlayerController().createQueueAndPlay(_playlist, isShuffle: true),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Icon(Icons.shuffle),
-                                Text(AppLocalizations.of(context).tabsViewPlayingShuffle,
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            shape: ContinuousRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                              side: BorderSide(color: _materialColor.shade700)
-                            ),
-                          )
-                        ),
-                      ],
+                    height: 80*_tracks.length.toDouble(),
+                    child: tracksList
+                  )
+                ]
+              )
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.black
+              ),
+              height: 37,
+              width: MediaQuery.of(context).size.width,
+              padding: EdgeInsets.only(left: 10, right: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                    onTap: () => _returnToPlaylist(),
+                    child: Container(
+                      child: Icon(Icons.expand_more, size: 25),
+                      margin: EdgeInsets.all(5),
+                    ),
+                  ),
+                  AnimatedSwitcher(
+                    duration: Duration(milliseconds: 150),
+                    child: _textDisplayed
+                  ),
+                  InkWell(
+                    onTap: () => _returnToPlaylist(),
+                    child: Container(
+                      child: Icon(Icons.more_vert, size: 25),
+                      margin: EdgeInsets.all(5),
                     ),
                   ),
                 ]
               ),
-              Container(
-                height: 80*_tracks.length.toDouble(),
-                child: tracksList
-              )
-            ]
-          )
+            ),
+            AnimatedSwitcher(
+              duration: Duration(milliseconds: 150),
+              child: _littleTopBar,
+            )
+          ]
         )
       ),
       onWillPop: () async {
