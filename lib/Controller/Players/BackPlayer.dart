@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:audio_service/audio_service.dart';
@@ -224,6 +225,12 @@ class AudioPlayerTask extends BackgroundAudioTask {
         );
 
       }
+
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        AudioServiceBackground.sendCustomEvent({'SNACKBAR': 'no_internet_connexion'});
+      }
+
     } else {
       AudioServiceBackground.sendCustomEvent({'SNACKBAR': 'track_not_found'});
       AudioService.skipToNext();
