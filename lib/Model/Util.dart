@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:smartshuffle/Controller/AppManager/GlobalQueue.dart';
-import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
-import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 class GlobalTheme {
 
@@ -51,6 +49,10 @@ class SnackBarController {
             this.showSnackBar(SnackBar(content: Text(AppLocalizations.of(_scaffoldKey.currentContext).globalTrackNotFound)));
           } break;
 
+          case 'no_internet_connexion': {
+            showSnackBarError('no_internet_connexion');
+          } break;
+
         }
       }
     });
@@ -66,6 +68,16 @@ class SnackBarController {
 
   void showSnackBar(SnackBar snackBar) {
     ScaffoldMessenger.of(_scaffoldKey.currentContext).showSnackBar(snackBar);
+  }
+
+  void showSnackBarError(String type) {
+    switch(type) {
+
+      case 'no_internet_connexion': {
+        this.showSnackBar(SnackBar(content: Text(AppLocalizations.of(_scaffoldKey.currentContext).globalNoInternetConnexion)));
+      } break;
+
+    }
   }
   
 

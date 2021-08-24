@@ -34,7 +34,7 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
 
   bool exitPage = true;
   TabController tabController;
-  ValueNotifier<int> initialTabIndex = ValueNotifier<int>(0);
+  int initialTabIndex = 0;
 
   Map<TabView, bool> isPlaylistOpen = <TabView, bool>{};
 
@@ -98,20 +98,22 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
     StatesManager.setPlaylistsPageState(this);
 
     userPlatformsInit();
-    tabController = TabController(initialIndex: initialTabIndex.value, length: this.userPlatforms.length, vsync: this);
+    List<PlatformsController> platformsList = GlobalAppController.getAllConnectedControllers();
 
-    List<TabView> tabs = List.generate(tabController.length, (index) {
-      return TabView(GlobalAppController.getAllConnectedControllers()[index], parent: this);
+    if(initialTabIndex >= platformsList.length) initialTabIndex = 0;
+    tabController = TabController(initialIndex: initialTabIndex, length: this.userPlatforms.length, vsync: this);
+    tabController.addListener(() {
+      initialTabIndex = tabController.index;
+    });
+
+    List<TabView> tabs = List.generate(platformsList.length, (index) {
+      return TabView(platformsList[index], parent: this);
     });
 
     List elements = <Widget>[];
     for(MapEntry elem in this.userPlatforms.entries) {
       elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
     }
-
-    tabController.addListener(() {
-      
-    });
 
     return MaterialApp(
       theme: _themeData,

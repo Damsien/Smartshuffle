@@ -82,7 +82,7 @@ class TabViewState extends State<TabView> with AutomaticKeepAliveClientMixin {
         AnimatedPositioned(
           top: trackTop,
           curve: Curves.ease,
-          duration: Duration(milliseconds: 150),
+          duration: Duration(milliseconds: 400),
           child: Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height-56-50,
@@ -421,13 +421,14 @@ class _TracksViewState extends State<TracksView> {
                     duration: Duration(milliseconds: 150),
                     child: _textDisplayed
                   ),
-                  InkWell(
-                    onTap: () => _returnToPlaylist(),
-                    child: Container(
-                      child: Icon(Icons.more_vert, size: 25),
-                      margin: EdgeInsets.all(5),
-                    ),
-                  ),
+                  TabsView(objectState: this).playlistMainOptionsDialog(_playlist, iconSize: 20, ctrl: _ctrl,
+                  enable: {
+                    PopupMenuConstants.PLAYLISTSMAINDIALOG_RENAME: _ctrl.features[PlatformsCtrlFeatures.PLAYLIST_RENAME],
+                    PopupMenuConstants.PLAYLISTSMAINDIALOG_CLONE: _ctrl.features[PlatformsCtrlFeatures.PLAYLIST_CLONE],
+                    PopupMenuConstants.PLAYLISTSMAINDIALOG_MERGE: _ctrl.features[PlatformsCtrlFeatures.PLAYLIST_MERGE],
+                    PopupMenuConstants.PLAYLISTSMAINDIALOG_DELETE: _ctrl.features[PlatformsCtrlFeatures.PLAYLIST_REMOVE]
+                  }
+                  )
                 ]
               ),
             ),
@@ -1272,9 +1273,49 @@ class TabsView {
 
   /*  CRUD PLAYLISTS  */
 
+
+  PopupMenuButton playlistMainOptionsDialog(Playlist playlist, {
+    double iconSize,
+    @required PlatformsController ctrl,
+    int index,
+    Map<String, bool> enable
+  }) {
+    Map<String, PopupMenuEntry> popUpMenuEntry =
+    {
+      PopupMenuConstants.PLAYLISTSMAINDIALOG_RENAME: PlaylistsPopupItemRename().build(context),
+      PopupMenuConstants.PLAYLISTSMAINDIALOG_CLONE: PlaylistsPopupItemClone().build(context),
+      PopupMenuConstants.PLAYLISTSMAINDIALOG_MERGE: PlaylistsPopupItemMerge().build(context),
+      PopupMenuConstants.PLAYLISTSMAINDIALOG_DELETE: PlaylistsPopupItemDelete().build(context),
+    };
+
+    return PopupMenuButton(
+      iconSize: iconSize ?? 24.0,
+      icon: Icon(Icons.more_vert),
+      tooltip: AppLocalizations.of(context).options,
+      itemBuilder: (BuildContext context) {
+        if(enable == null) {
+          return popUpMenuEntry.values.toList();
+        } else {
+          List<PopupMenuEntry> tempoList = <PopupMenuEntry>[];
+          for(MapEntry<String, bool> me in enable.entries) {
+            if(me.value) {
+              tempoList.add(popUpMenuEntry[me.key]);
+            }
+          }
+          return tempoList;
+        }
+      },
+      onSelected: (value) {
+        playlistMainDialogOptions(playlist, value, name: playlist.name, ctrl: ctrl, index: index);
+        this.state.setState(() {});
+      },
+    );
+  }
+
+
   void playlistMainOptions(Playlist playlist, {
     @required PlatformsController ctrl,
-    @required int index,
+    int index,
     @required LongPressStartDetails detail,
     Map<String, bool> enable
   }) async {
