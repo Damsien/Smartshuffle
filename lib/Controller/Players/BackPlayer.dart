@@ -81,7 +81,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
   Future<void> _previousTrack() async {
     await AudioService.pause();
-    await _playTrack(trackQueue[currentIndex]);
+    await _playTrack(trackQueue[currentIndex-1]);
     currentIndex--;
   }
 
@@ -214,7 +214,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
         
         _player.positionStream.listen(
           (position) {
-            if(position.inMilliseconds >= mediaItem.duration.inMilliseconds) {
+            if(position.inSeconds >= AudioServiceBackground.mediaItem.duration.inSeconds-1) {
               if(!_isTrackDone) {
                 AudioService.skipToNext();
               }
@@ -256,7 +256,7 @@ class AudioPlayerTask extends BackgroundAudioTask {
         MapEntry<Track, File> foundTrack = await _getFilePath(track);
 
         if(foundTrack.value != null) {
-          _synchroTrackMediaitem(foundTrack.value, foundTrack.key, track);
+          // _synchroTrackMediaitem(foundTrack.value, foundTrack.key, track);
 
           currentIndex = arguments['index'];
           await _playTrack(track);

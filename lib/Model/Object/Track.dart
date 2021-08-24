@@ -150,8 +150,7 @@ class Track {
       MapEntry<Track, File> me = await PlatformsLister.platforms[_service].getFile(this);
       _streamTrack = me.key;
       if(_streamTrack.id != null) {
-        _totalDuration = _streamTrack.totalDuration;
-        _totalDuration.notifyListeners();
+        _totalDuration.value = _streamTrack.totalDuration.value;
         DataBaseController().updateTrack(this);
         return _file = me.value;
       } else {
