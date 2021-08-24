@@ -67,7 +67,6 @@ class AudioPlayerTask extends BackgroundAudioTask {
     if(currentIndex+1 >= trackQueue.length) {
       currentIndex = 0;
     }
-    log(trackQueue[currentIndex+1].toString());
     await _playTrack(trackQueue[currentIndex+1]);
     currentIndex++;
   }
@@ -213,11 +212,16 @@ class AudioPlayerTask extends BackgroundAudioTask {
         await _player.setFilePath(mediaItem.id);
         _isTrackDone = false;
         
+        log(AudioServiceBackground.mediaItem.duration.toString());
         _player.positionStream.listen(
           (position) {
-            if(position.inSeconds >= mediaItem.duration.inSeconds) {
+            print(position);
+            if(position.inSeconds >= AudioServiceBackground.mediaItem.duration.inSeconds-1) {
+              log('goff');
               if(!_isTrackDone) {
                 log('skip');
+                log(AudioServiceBackground.mediaItem.duration.toString());
+                log(position.toString());
                 AudioService.skipToNext();
               }
               _isTrackDone = true;
