@@ -8,7 +8,7 @@ import 'package:smartshuffle/Model/Object/Platform.dart';
 import 'package:smartshuffle/Model/Object/Playlist.dart';
 import 'package:smartshuffle/Model/Object/Track.dart';
 import 'package:smartshuffle/Model/Util.dart';
-import 'package:smartshuffle/View/Pages/Librairie/PlaylistsPage.dart';
+import 'package:connectivity/connectivity.dart';
 
 
 enum PlatformsCtrlFeatures {
@@ -81,9 +81,14 @@ abstract class PlatformsController {
 
   /*  CONNEXION    */
 
-  connect() {
-    DataBaseController().updatePlatform(platform);
-    StatesManager.updateStates();
+  connect() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      SnackBarController().showSnackBarError('no_internet_connexion');
+    } else {
+      DataBaseController().updatePlatform(platform);
+      StatesManager.updateStates();
+    }
   }
 
   disconnect() {

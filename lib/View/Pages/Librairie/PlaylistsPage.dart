@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:smartshuffle/Controller/Platforms/PlatformsController.dart';
 import 'package:smartshuffle/Controller/Players/FrontPlayer.dart';
 
 import 'package:smartshuffle/Model/Util.dart';
+import 'package:smartshuffle/View/ViewGetter/Librairie/CustomLibrairieWidget.dart';
 import 'package:smartshuffle/View/ViewGetter/Librairie/TabsView.dart';
 
 
@@ -32,7 +34,7 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
 
   bool exitPage = true;
   TabController tabController;
-  ValueNotifier<int> initialTabIndex = ValueNotifier<int>(0);
+  int initialTabIndex = 0;
 
   Map<TabView, bool> isPlaylistOpen = <TabView, bool>{};
 
@@ -69,17 +71,17 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
 
 
 
-  Widget tabBar() {
-    List elements = <Widget>[];
-    for(MapEntry elem in this.userPlatforms.entries) {
-      elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
-    }
-    return TabBar(
-      controller: this.tabController,
-      indicatorColor: _materialColor.shade300,
-      tabs: elements,
-    );
-  }
+  // Widget tabBar() {
+  //   List elements = <Widget>[];
+  //   for(MapEntry elem in this.userPlatforms.entries) {
+  //     elements.add(Tab(icon: ImageIcon(AssetImage(elem.value.platformInformations['icon']))));
+  //   }
+  //   return TabBar(
+  //     controller: this.tabController,
+  //     indicatorColor: _materialColor.shade300,
+  //     tabs: elements,
+  //   );
+  // }
 
   void userPlatformsInit() {
     this.userPlatforms.clear();
@@ -96,10 +98,16 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
     StatesManager.setPlaylistsPageState(this);
 
     userPlatformsInit();
-    tabController = TabController(initialIndex: initialTabIndex.value, length: this.userPlatforms.length, vsync: this);
+    List<PlatformsController> platformsList = GlobalAppController.getAllConnectedControllers();
 
-    List<TabView> tabs = List.generate(tabController.length, (index) {
-      return TabView(GlobalAppController.getAllConnectedControllers()[index], parent: this);
+    if(initialTabIndex >= platformsList.length) initialTabIndex = 0;
+    tabController = TabController(initialIndex: initialTabIndex, length: this.userPlatforms.length, vsync: this);
+    tabController.addListener(() {
+      initialTabIndex = tabController.index;
+    });
+
+    List<TabView> tabs = List.generate(platformsList.length, (index) {
+      return TabView(platformsList[index], parent: this);
     });
 
     List elements = <Widget>[];
@@ -123,13 +131,34 @@ class PlaylistsPageState extends State<PlaylistsPage> with AutomaticKeepAliveCli
       home: Scaffold(
         key: this.tabKey,
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: TabBar(
-            controller: tabController,
-            indicatorColor: _materialColor.shade300,
-            tabs: elements
-          ),
-          foregroundColor: _materialColor.shade300,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(50),
+          child: Theme(
+            data: ThemeData(
+              brightness: Brightness.dark,
+              primaryColor: Colors.black,
+              highlightColor: Colors.transparent,
+              splashColor: Colors.transparent,
+            ),
+            child: AppBar(
+              title: TabBar(
+                overlayColor: MaterialStateProperty.all(Colors.transparent),
+                indicator: CircularTabIndicator(color: _materialColor.shade300, radius: 3, width: 70, index: tabController.index),
+                onTap: (int index) {
+                  if(index == tabController.index) {
+                    if(!isPlaylistOpen[tabs[tabController.index]]) {
+                      tabs[tabController.index].playlistScrollController.animateTo(0, duration: Duration(milliseconds: 150), curve: Curves.ease);
+                    } else {
+                      tabs[tabController.index].tracksScrollController.animateTo(0, duration: Duration(milliseconds: 150), curve: Curves.ease);
+                    }
+                  }
+                },
+                controller: tabController,
+                indicatorColor: _materialColor.shade300,
+                tabs: elements
+              ),
+            )
+          )
         ),
         body: WillPopScope(
             child: TabBarView(

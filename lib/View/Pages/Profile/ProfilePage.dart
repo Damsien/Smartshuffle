@@ -150,7 +150,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                     )
                   ),
                   SizedBox(
-                    height: 20,
+                    height: 100,
                   )
                 ],
               )

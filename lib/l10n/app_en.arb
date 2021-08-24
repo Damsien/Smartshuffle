@@ -30,7 +30,9 @@
     "globalReport": "Report",
     "globalPrecision": "Precision",
     "globalMoreInfo": "More info",
+    
     "globalTrackNotFound": "Error : track not found",
+    "globalNoInternetConnexion": "Error : no internet connexion",
 
     "globalArtist": "Artist",
     "globalArtists": "Artists",

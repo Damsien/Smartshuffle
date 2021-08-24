@@ -30,7 +30,9 @@
     "globalReport": "Signaler",
     "globalPrecision": "Précision",
     "globalMoreInfo": "Plus d'infos",
+
     "globalTrackNotFound": "Erreur: musique introuvable",
+    "globalNoInternetConnexion": "Erreur : Aucune connection",
     
     "globalArtist": "Artiste",
     "globalArtists": "Artistes",
