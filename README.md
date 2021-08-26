@@ -7,7 +7,7 @@ A smartphone music streaming application that allows you to listen to all of the
 - Merge multiplatform playlists (have one playlist containing tracks from different platform)
 - Listen to all the tracks for free
 
-## Streaming platforms
+## Streaming platforms supported
 
 ### V.beta (current) :
 
