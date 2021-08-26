@@ -226,14 +226,16 @@ class AudioPlayerTask extends BackgroundAudioTask {
 
       }
 
+    } else {
+
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.none) {
         AudioServiceBackground.sendCustomEvent({'SNACKBAR': 'no_internet_connexion'});
+        AudioService.stop();
+      } else {
+        AudioServiceBackground.sendCustomEvent({'SNACKBAR': 'track_not_found'});
+        AudioService.skipToNext();
       }
-
-    } else {
-      AudioServiceBackground.sendCustomEvent({'SNACKBAR': 'track_not_found'});
-      AudioService.skipToNext();
     }
 
   }
